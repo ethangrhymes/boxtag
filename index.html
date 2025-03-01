@@ -28,7 +28,7 @@
             touch-action: none;
         }
         .box {
-            width: 80px; /* Increased for better visibility */
+            width: 80px;
             height: 80px;
             position: absolute;
             border-radius: 5px;
@@ -144,11 +144,6 @@
         }
         smoothMovePlayer();
 
-        function updatePosition(element, x, y) {
-            element.style.left = `${x}px`;
-            element.style.top = `${y}px`;
-        }
-
         function startTimer() {
             clearInterval(timerInterval);
             timerInterval = setInterval(() => {
@@ -200,35 +195,10 @@
             updatePosition(enemy.element, x, y);
         }
 
-        function moveEnemies() {
-            if (!gameActive) return;
-            enemies.forEach(enemy => {
-                let dx = playerX - enemy.x;
-                let dy = playerY - enemy.y;
-                let distance = Math.sqrt(dx * dx + dy * dy);
-
-                enemy.x += (dx / distance) * enemySpeed;
-                enemy.y += (dy / distance) * enemySpeed;
-
-                updatePosition(enemy.element, enemy.x, enemy.y);
-
-                if (distance < 60) gameOver();
-            });
-
-            requestAnimationFrame(moveEnemies);
-        }
-
         function gameOver() {
             gameActive = false;
             clearInterval(timerInterval);
             gameOverText.style.opacity = "1";
-
-            if (totalSurvivalTime > highScore) {
-                highScore = totalSurvivalTime;
-                localStorage.setItem("highScore", highScore);
-            }
-            highScoreText.innerHTML = `High Score: ${highScore}`;
-            highScoreText.style.opacity = "1";
         }
 
         function nextLevel() {
@@ -239,17 +209,9 @@
         }
 
         function startLevel() {
-            gameActive = false;
-            levelText.innerHTML = `LEVEL ${level} - START!`;
-            levelText.style.opacity = "1";
-
-            setTimeout(() => {
-                levelText.style.opacity = "0";
-                gameActive = true;
-                startTimer();
-                moveEnemies();
-                shrinkGameArea();
-            }, 3000);
+            gameActive = true;
+            startTimer();
+            shrinkGameArea();
         }
 
         resetPlayerPosition();
