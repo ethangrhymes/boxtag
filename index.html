@@ -112,12 +112,24 @@
         let originalWidth = gameArea.clientWidth;
         let originalHeight = gameArea.clientHeight;
 
+        // PC Mouse Movement
         gameArea.addEventListener("mousemove", (event) => {
-            let rect = gameArea.getBoundingClientRect();
-            playerX = Math.min(Math.max(event.clientX - rect.left - 20, 0), gameArea.clientWidth - 40);
-            playerY = Math.min(Math.max(event.clientY - rect.top - 20, 0), gameArea.clientHeight - 40);
-            updatePosition(player, playerX, playerY);
+            movePlayer(event.clientX, event.clientY);
         });
+
+        // Mobile Touch Movement
+        gameArea.addEventListener("touchmove", (event) => {
+            event.preventDefault(); // Prevents scrolling on mobile
+            let touch = event.touches[0]; // Get the first touch
+            movePlayer(touch.clientX, touch.clientY);
+        }, { passive: false });
+
+        function movePlayer(clientX, clientY) {
+            let rect = gameArea.getBoundingClientRect();
+            playerX = Math.min(Math.max(clientX - rect.left - 20, 0), gameArea.clientWidth - 40);
+            playerY = Math.min(Math.max(clientY - rect.top - 20, 0), gameArea.clientHeight - 40);
+            updatePosition(player, playerX, playerY);
+        }
 
         function createEnemy() {
             let enemy = document.createElement("div");
