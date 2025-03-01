@@ -140,6 +140,14 @@
             touchY = Math.min(Math.max(clientY - rect.top - 15, 0), gameArea.clientHeight - 30);
         }
 
+        function smoothMovePlayer() {
+            playerX += (touchX - playerX) * 0.2;  // Smooth movement
+            playerY += (touchY - playerY) * 0.2;
+            updatePosition(player, playerX, playerY);
+            requestAnimationFrame(smoothMovePlayer);
+        }
+        smoothMovePlayer(); // Start smooth movement loop
+
         function updatePosition(element, x, y) {
             element.style.left = `${x}px`;
             element.style.top = `${y}px`;
