@@ -25,10 +25,10 @@
             background-color: black;
             overflow: hidden;
             transition: width 0.5s, height 0.5s;
-            touch-action: none; /* Prevents scrolling interference on mobile */
+            touch-action: none;
         }
         .box {
-            width: 60px; /* Increased size for better visibility */
+            width: 60px;
             height: 60px;
             position: absolute;
             border-radius: 5px;
@@ -99,28 +99,26 @@
         let totalSurvivalTime = 0;
         let highScore = localStorage.getItem("highScore") || 0;
 
-        // Center player at the start
+        let originalWidth = gameArea.clientWidth;
+        let originalHeight = gameArea.clientHeight;
+
         function resetPlayerPosition() {
-            playerX = gameArea.clientWidth / 2 - 30; // Adjusted for new size
+            playerX = gameArea.clientWidth / 2 - 30;
             playerY = gameArea.clientHeight / 2 - 30;
             updatePosition(player, playerX, playerY);
         }
 
-        // PC Mouse Movement
         gameArea.addEventListener("mousemove", (event) => {
             movePlayer(event.clientX, event.clientY);
         });
 
-        // Mobile Touch Movement
         gameArea.addEventListener("touchstart", (event) => {
-            console.log("Touch start detected");
             event.preventDefault();
             let touch = event.touches[0];
             movePlayer(touch.clientX, touch.clientY);
         }, { passive: false });
 
         gameArea.addEventListener("touchmove", (event) => {
-            console.log("Touch move detected");
             event.preventDefault();
             let touch = event.touches[0];
             movePlayer(touch.clientX, touch.clientY);
@@ -143,15 +141,36 @@
             timeLeft--;
             totalSurvivalTime++;
 
+            // Random color and size changes
             timerText.textContent = timeLeft;
+            timerText.style.color = ["red", "green", "blue", "purple", "yellow"][Math.floor(Math.random() * 5)];
+            timerText.style.fontSize = `${40 + Math.random() * 20}px`;
 
             if (timeLeft % 5 === 0) createEnemy();
+            if (Math.random() < 0.5) shrinkGameArea(); // Random chance to shrink at any time
 
             if (timeLeft <= 0) {
                 nextLevel();
             } else {
                 setTimeout(updateTimer, 1000);
             }
+        }
+
+        function shrinkGameArea() {
+            let newWidth = originalWidth * (0.4 + Math.random() * 0.5);
+            let newHeight = originalHeight * (0.4 + Math.random() * 0.5);
+
+            if (Math.random() > 0.8) {
+                newWidth = originalWidth;
+                newHeight = originalHeight;
+            }
+
+            gameArea.style.width = `${newWidth}px`;
+            gameArea.style.height = `${newHeight}px`;
+
+            // Set a random interval for the next shrink event
+            let randomTime = Math.random() * 3000 + 2000; // Between 2 and 5 seconds
+            if (gameActive) setTimeout(shrinkGameArea, randomTime);
         }
 
         function createEnemy() {
@@ -217,10 +236,10 @@
                 gameActive = true;
                 updateTimer();
                 moveEnemies();
+                shrinkGameArea();
             }, 3000);
         }
 
-        // Start Game
         resetPlayerPosition();
         startLevel();
     </script>
