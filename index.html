@@ -109,25 +109,21 @@
         function resetPlayerPosition() {
             playerX = gameArea.clientWidth / 2 - 15;
             playerY = gameArea.clientHeight / 2 - 15;
-            touchX = playerX;
-            touchY = playerY;
             updatePosition(player, playerX, playerY);
         }
 
         gameArea.addEventListener("mousemove", (event) => {
-            movePlayer(event.clientX, event.clientY);
+            if (gameActive) {
+                movePlayer(event.clientX, event.clientY);
+            }
         });
-
-        gameArea.addEventListener("touchstart", (event) => {
-            event.preventDefault();
-            let touch = event.touches[0];
-            movePlayer(touch.clientX, touch.clientY);
-        }, { passive: false });
 
         gameArea.addEventListener("touchmove", (event) => {
             event.preventDefault();
-            let touch = event.touches[0];
-            movePlayer(touch.clientX, touch.clientY);
+            if (gameActive) {
+                let touch = event.touches[0];
+                movePlayer(touch.clientX, touch.clientY);
+            }
         }, { passive: false });
 
         gameOverText.addEventListener("click", () => {
@@ -136,10 +132,8 @@
 
         function movePlayer(clientX, clientY) {
             let rect = gameArea.getBoundingClientRect();
-            touchX = Math.min(Math.max(clientX - rect.left - 15, 0), gameArea.clientWidth - 30);
-            touchY = Math.min(Math.max(clientY - rect.top - 15, 0), gameArea.clientHeight - 30);
-            playerX = touchX; 
-            playerY = touchY;  
+            playerX = Math.min(Math.max(clientX - rect.left - 15, 0), gameArea.clientWidth - 30);
+            playerY = Math.min(Math.max(clientY - rect.top - 15, 0), gameArea.clientHeight - 30);
             updatePosition(player, playerX, playerY);
         }
 
@@ -224,7 +218,6 @@
             enemies = [];
             resetPlayerPosition();
             startTimer();
-            moveEnemies();
             shrinkGameArea();
             gameOverText.style.opacity = "0";
         }
