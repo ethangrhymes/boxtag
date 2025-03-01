@@ -25,11 +25,11 @@
             background-color: black;
             overflow: hidden;
             transition: width 0.5s, height 0.5s;
-            touch-action: none; /* Prevents mobile scrolling issues */
+            touch-action: none; /* Prevents scrolling interference on mobile */
         }
         .box {
-            width: 40px;
-            height: 40px;
+            width: 60px; /* Increased size for better visibility */
+            height: 60px;
             position: absolute;
             border-radius: 5px;
         }
@@ -40,6 +40,8 @@
         .enemy {
             background-color: red;
             z-index: 2;
+            width: 40px;
+            height: 40px;
         }
         #levelText, #gameOverText {
             font-size: 40px;
@@ -83,8 +85,12 @@
     <script>
         let gameArea = document.getElementById("gameArea");
         let player = document.getElementById("player");
+        let levelText = document.getElementById("levelText");
+        let gameOverText = document.getElementById("gameOverText");
+        let highScoreText = document.getElementById("highScore");
+        let timerText = document.getElementById("timer");
 
-        let playerX = gameArea.clientWidth / 2, playerY = gameArea.clientHeight / 2;
+        let playerX, playerY;
         let enemies = [];
         let enemySpeed = 2;
         let timeLeft = 60;
@@ -92,6 +98,13 @@
         let gameActive = false;
         let totalSurvivalTime = 0;
         let highScore = localStorage.getItem("highScore") || 0;
+
+        // Center player at the start
+        function resetPlayerPosition() {
+            playerX = gameArea.clientWidth / 2 - 30; // Adjusted for new size
+            playerY = gameArea.clientHeight / 2 - 30;
+            updatePosition(player, playerX, playerY);
+        }
 
         // PC Mouse Movement
         gameArea.addEventListener("mousemove", (event) => {
@@ -115,10 +128,8 @@
 
         function movePlayer(clientX, clientY) {
             let rect = gameArea.getBoundingClientRect();
-            console.log(`Player moved to: ${clientX}, ${clientY}`);
-
-            playerX = Math.min(Math.max(clientX - rect.left - 20, 0), gameArea.clientWidth - 40);
-            playerY = Math.min(Math.max(clientY - rect.top - 20, 0), gameArea.clientHeight - 40);
+            playerX = Math.min(Math.max(clientX - rect.left - 30, 0), gameArea.clientWidth - 60);
+            playerY = Math.min(Math.max(clientY - rect.top - 30, 0), gameArea.clientHeight - 60);
             updatePosition(player, playerX, playerY);
         }
 
@@ -127,29 +138,90 @@
             element.style.top = `${y}px`;
         }
 
+        function updateTimer() {
+            if (!gameActive) return;
+            timeLeft--;
+            totalSurvivalTime++;
+
+            timerText.textContent = timeLeft;
+
+            if (timeLeft % 5 === 0) createEnemy();
+
+            if (timeLeft <= 0) {
+                nextLevel();
+            } else {
+                setTimeout(updateTimer, 1000);
+            }
+        }
+
+        function createEnemy() {
+            let enemy = document.createElement("div");
+            enemy.classList.add("box", "enemy");
+            gameArea.appendChild(enemy);
+
+            let x, y;
+            do {
+                x = Math.random() * (gameArea.clientWidth - 40);
+                y = Math.random() * (gameArea.clientHeight - 40);
+            } while (Math.abs(x - playerX) < 100 && Math.abs(y - playerY) < 100);
+
+            enemies.push({ element: enemy, x, y });
+
+            updatePosition(enemy.element, x, y);
+        }
+
+        function moveEnemies() {
+            if (!gameActive) return;
+            enemies.forEach(enemy => {
+                let dx = playerX - enemy.x;
+                let dy = playerY - enemy.y;
+                let distance = Math.sqrt(dx * dx + dy * dy);
+
+                enemy.x += (dx / distance) * enemySpeed;
+                enemy.y += (dy / distance) * enemySpeed;
+
+                updatePosition(enemy.element, enemy.x, enemy.y);
+
+                if (distance < 60) gameOver();
+            });
+
+            requestAnimationFrame(moveEnemies);
+        }
+
         function gameOver() {
             gameActive = false;
-            document.getElementById("gameOverText").style.opacity = "1";
+            gameOverText.style.opacity = "1";
 
             if (totalSurvivalTime > highScore) {
                 highScore = totalSurvivalTime;
                 localStorage.setItem("highScore", highScore);
             }
-            document.getElementById("highScore").innerHTML = `High Score: ${highScore}`;
-            document.getElementById("highScore").style.opacity = "1";
+            highScoreText.innerHTML = `High Score: ${highScore}`;
+            highScoreText.style.opacity = "1";
+        }
+
+        function nextLevel() {
+            level++;
+            enemySpeed += 0.5;
+            timeLeft = 60;
+            startLevel();
         }
 
         function startLevel() {
             gameActive = false;
-            document.getElementById("levelText").innerHTML = `LEVEL ${level} - START!`;
-            document.getElementById("levelText").style.opacity = "1";
+            levelText.innerHTML = `LEVEL ${level} - START!`;
+            levelText.style.opacity = "1";
 
             setTimeout(() => {
-                document.getElementById("levelText").style.opacity = "0";
+                levelText.style.opacity = "0";
                 gameActive = true;
+                updateTimer();
+                moveEnemies();
             }, 3000);
         }
 
+        // Start Game
+        resetPlayerPosition();
         startLevel();
     </script>
 </body>
