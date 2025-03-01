@@ -138,15 +138,15 @@
             let rect = gameArea.getBoundingClientRect();
             touchX = Math.min(Math.max(clientX - rect.left - 15, 0), gameArea.clientWidth - 30);
             touchY = Math.min(Math.max(clientY - rect.top - 15, 0), gameArea.clientHeight - 30);
+            playerX = touchX; 
+            playerY = touchY;  
+            updatePosition(player, playerX, playerY);
         }
 
-        function smoothMovePlayer() {
-            playerX += (touchX - playerX) * 0.2;
-            playerY += (touchY - playerY) * 0.2;
-            updatePosition(player, playerX, playerY);
-            requestAnimationFrame(smoothMovePlayer);
+        function updatePosition(element, x, y) {
+            element.style.left = `${x}px`;
+            element.style.top = `${y}px`;
         }
-        smoothMovePlayer();
 
         function startTimer() {
             clearInterval(timerInterval);
