@@ -161,9 +161,10 @@
             do {
                 x = Math.random() * (gameArea.clientWidth - 30);
                 y = Math.random() * (gameArea.clientHeight - 30);
-            } while (Math.abs(x - playerX) < 80 && Math.abs(y - playerY) < 80);
+            } while (Math.abs(x - playerX) < 100 && Math.abs(y - playerY) < 100);
 
-            enemies.push({ element: enemy, x, y });
+            let enemyObj = { element: enemy, x, y };
+            enemies.push(enemyObj);
             updatePosition(enemy.element, x, y);
         }
 
