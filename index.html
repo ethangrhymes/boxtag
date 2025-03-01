@@ -28,7 +28,7 @@
             touch-action: none;
         }
         .box {
-            width: 30px;
+            width: 30px;  /* Adjusted for small player */
             height: 30px;
             position: absolute;
             border-radius: 5px;
@@ -40,8 +40,8 @@
         .enemy {
             background-color: red;
             z-index: 2;
-            width: 40px;
-            height: 40px;
+            width: 30px;  /* Adjust enemy size to match */
+            height: 30px;
         }
         #levelText, #gameOverText {
             font-size: 40px;
@@ -102,13 +102,10 @@
         let originalWidth = gameArea.clientWidth;
         let originalHeight = gameArea.clientHeight;
         let timerInterval;
-        let isMobile = /Mobi|Android/i.test(navigator.userAgent);
-
-        if (isMobile) enemySpeed = 1.5; // Slower enemies on mobile
 
         function resetPlayerPosition() {
-            playerX = gameArea.clientWidth / 2 - 40;
-            playerY = gameArea.clientHeight / 2 - 40;
+            playerX = gameArea.clientWidth / 2 - 15;  // Centered for 30px size
+            playerY = gameArea.clientHeight / 2 - 15;
             touchX = playerX;
             touchY = playerY;
             updatePosition(player, playerX, playerY);
@@ -132,51 +129,13 @@
 
         function movePlayer(clientX, clientY) {
             let rect = gameArea.getBoundingClientRect();
-            touchX = Math.min(Math.max(clientX - rect.left - 40, 0), gameArea.clientWidth - 80);
-            touchY = Math.min(Math.max(clientY - rect.top - 40, 0), gameArea.clientHeight - 80);
+            touchX = Math.min(Math.max(clientX - rect.left - 15, 0), gameArea.clientWidth - 30);
+            touchY = Math.min(Math.max(clientY - rect.top - 15, 0), gameArea.clientHeight - 30);
         }
 
-        function smoothMovePlayer() {
-            playerX += (touchX - playerX) * 0.2;
-            playerY += (touchY - playerY) * 0.2;
-            updatePosition(player, playerX, playerY);
-            requestAnimationFrame(smoothMovePlayer);
-        }
-        smoothMovePlayer();
-
-        function startTimer() {
-            clearInterval(timerInterval);
-            timerInterval = setInterval(() => {
-                if (!gameActive) return;
-
-                timeLeft--;
-                totalSurvivalTime++;
-
-                timerText.textContent = timeLeft;
-                timerText.style.color = ["red", "green", "blue", "purple", "yellow"][Math.floor(Math.random() * 5)];
-                timerText.style.fontSize = `${40 + Math.random() * 20}px`;
-
-                if (timeLeft % 5 === 0) createEnemy();
-                if (Math.random() < 0.5) shrinkGameArea();
-
-                if (timeLeft <= 0) nextLevel();
-            }, 1000);
-        }
-
-        function shrinkGameArea() {
-            let newWidth = originalWidth * (0.6 + Math.random() * 0.3);
-            let newHeight = originalHeight * (0.6 + Math.random() * 0.3);
-
-            if (Math.random() > 0.9) {
-                newWidth = originalWidth;
-                newHeight = originalHeight;
-            }
-
-            gameArea.style.width = `${newWidth}px`;
-            gameArea.style.height = `${newHeight}px`;
-
-            let randomTime = Math.random() * 3000 + 2000;
-            if (gameActive) setTimeout(shrinkGameArea, randomTime);
+        function updatePosition(element, x, y) {
+            element.style.left = `${x}px`;
+            element.style.top = `${y}px`;
         }
 
         function createEnemy() {
@@ -186,36 +145,39 @@
 
             let x, y;
             do {
-                x = Math.random() * (gameArea.clientWidth - 40);
-                y = Math.random() * (gameArea.clientHeight - 40);
-            } while (Math.abs(x - playerX) < 150 && Math.abs(y - playerY) < 150);
+                x = Math.random() * (gameArea.clientWidth - 30);
+                y = Math.random() * (gameArea.clientHeight - 30);
+            } while (Math.abs(x - playerX) < 80 && Math.abs(y - playerY) < 80);  // Increased safe zone
 
             enemies.push({ element: enemy, x, y });
 
             updatePosition(enemy.element, x, y);
         }
 
+        function moveEnemies() {
+            enemies.forEach(enemy => {
+                let dx = playerX - enemy.x;
+                let dy = playerY - enemy.y;
+                let distance = Math.sqrt(dx * dx + dy * dy);
+
+                enemy.x += (dx / distance) * enemySpeed;
+                enemy.y += (dy / distance) * enemySpeed;
+
+                updatePosition(enemy.element, enemy.x, enemy.y);
+
+                if (distance < 30) gameOver();  // Adjusted collision for 30px size
+            });
+
+            requestAnimationFrame(moveEnemies);
+        }
+
         function gameOver() {
             gameActive = false;
-            clearInterval(timerInterval);
             gameOverText.style.opacity = "1";
         }
 
-        function nextLevel() {
-            level++;
-            enemySpeed += 0.5;
-            timeLeft = 60;
-            startLevel();
-        }
-
-        function startLevel() {
-            gameActive = true;
-            startTimer();
-            shrinkGameArea();
-        }
-
         resetPlayerPosition();
-        startLevel();
+        moveEnemies();
     </script>
 </body>
 </html>
