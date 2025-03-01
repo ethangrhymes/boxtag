@@ -28,7 +28,7 @@
             touch-action: none;
         }
         .box {
-            width: 30px;  /* Adjusted for small player */
+            width: 30px;  
             height: 30px;
             position: absolute;
             border-radius: 5px;
@@ -40,7 +40,7 @@
         .enemy {
             background-color: red;
             z-index: 2;
-            width: 30px;  /* Adjust enemy size to match */
+            width: 30px;  
             height: 30px;
         }
         #levelText, #gameOverText {
@@ -78,7 +78,7 @@
         <div id="player" class="box"></div>
         <div id="timer">60</div>
         <div id="levelText"></div>
-        <div id="gameOverText">GAME OVER</div>
+        <div id="gameOverText">GAME OVER - Tap to Restart</div>
         <div id="highScore">High Score: 0</div>
     </div>
 
@@ -104,7 +104,7 @@
         let timerInterval;
 
         function resetPlayerPosition() {
-            playerX = gameArea.clientWidth / 2 - 15;  // Centered for 30px size
+            playerX = gameArea.clientWidth / 2 - 15;
             playerY = gameArea.clientHeight / 2 - 15;
             touchX = playerX;
             touchY = playerY;
@@ -127,6 +127,10 @@
             movePlayer(touch.clientX, touch.clientY);
         }, { passive: false });
 
+        gameArea.addEventListener("click", () => {
+            if (!gameActive) startLevel();  // Restart game when clicking after game over
+        });
+
         function movePlayer(clientX, clientY) {
             let rect = gameArea.getBoundingClientRect();
             touchX = Math.min(Math.max(clientX - rect.left - 15, 0), gameArea.clientWidth - 30);
@@ -138,6 +142,21 @@
             element.style.top = `${y}px`;
         }
 
+        function startTimer() {
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (!gameActive) return;
+
+                timeLeft--;
+                totalSurvivalTime++;
+
+                timerText.textContent = timeLeft;
+
+                if (timeLeft % 5 === 0) createEnemy();
+                if (timeLeft <= 0) nextLevel();
+            }, 1000);
+        }
+
         function createEnemy() {
             let enemy = document.createElement("div");
             enemy.classList.add("box", "enemy");
@@ -147,7 +166,7 @@
             do {
                 x = Math.random() * (gameArea.clientWidth - 30);
                 y = Math.random() * (gameArea.clientHeight - 30);
-            } while (Math.abs(x - playerX) < 80 && Math.abs(y - playerY) < 80);  // Increased safe zone
+            } while (Math.abs(x - playerX) < 80 && Math.abs(y - playerY) < 80);
 
             enemies.push({ element: enemy, x, y });
 
@@ -155,6 +174,7 @@
         }
 
         function moveEnemies() {
+            if (!gameActive) return;
             enemies.forEach(enemy => {
                 let dx = playerX - enemy.x;
                 let dy = playerY - enemy.y;
@@ -165,7 +185,7 @@
 
                 updatePosition(enemy.element, enemy.x, enemy.y);
 
-                if (distance < 30) gameOver();  // Adjusted collision for 30px size
+                if (distance < 30) gameOver();
             });
 
             requestAnimationFrame(moveEnemies);
@@ -173,11 +193,38 @@
 
         function gameOver() {
             gameActive = false;
+            clearInterval(timerInterval);
             gameOverText.style.opacity = "1";
+            gameOverText.style.cursor = "pointer";
+
+            if (totalSurvivalTime > highScore) {
+                highScore = totalSurvivalTime;
+                localStorage.setItem("highScore", highScore);
+            }
+            highScoreText.innerHTML = `High Score: ${highScore}`;
+            highScoreText.style.opacity = "1";
+        }
+
+        function nextLevel() {
+            level++;
+            enemySpeed += 0.5;
+            timeLeft = 60;
+            startLevel();
+        }
+
+        function startLevel() {
+            gameActive = true;
+            timeLeft = 60;
+            enemies.forEach(enemy => enemy.element.remove()); 
+            enemies = [];
+            resetPlayerPosition();
+            startTimer();
+            moveEnemies();
+            gameOverText.style.opacity = "0";
         }
 
         resetPlayerPosition();
-        moveEnemies();
+        startLevel();
     </script>
 </body>
 </html>
