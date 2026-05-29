@@ -252,6 +252,55 @@
     .footer { margin-top: 24px; text-align: center; font-size: 11px; color: #1e1e1e; letter-spacing: 0.1em; }
 
 
+    .utility-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:14px; }
+    .field { display:flex; flex-direction:column; gap:5px; min-width:110px; }
+    .field label { font-size:9px; color:var(--dim); letter-spacing:.15em; text-transform:uppercase; }
+    select, input[type="text"], input[type="number"], input[type="range"] {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 3px;
+      padding: 7px 9px;
+      font-size: 12px;
+    }
+    input[type="range"] { padding:0; accent-color: var(--gold); }
+    .mobile-actions { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+    .practice-shell { max-width: 920px; margin: 0 auto; }
+    .practice-head { display:flex; justify-content:space-between; align-items:flex-start; gap:14px; flex-wrap:wrap; margin-bottom:12px; }
+    .practice-title { font-size: clamp(24px, 7vw, 48px); color:var(--text-bright); line-height:1.05; }
+    .practice-subtitle { color:var(--muted); font-size:13px; margin-top:5px; line-height:1.5; }
+    .bottom-toolbar { position: sticky; bottom: 0; z-index: 40; margin: 20px -10px -48px; padding: 10px; background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(10px); border-top: 1px solid var(--border); display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+    .sequence-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:12px; margin-bottom:16px; }
+    .sequence-card { background:var(--surface); border:1px solid var(--border); border-radius:4px; padding:12px; overflow:hidden; }
+    .sequence-card.active { border-color: var(--c); box-shadow: 0 0 0 1px color-mix(in srgb, var(--c) 35%, transparent); }
+    .status-note { font-size:11px; color:var(--muted); line-height:1.6; padding:10px 12px; background:var(--surface-2); border:1px solid var(--border); border-radius:3px; }
+    .saved-list { display:grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap:8px; }
+    .saved-card { background:var(--surface-2); border:1px solid var(--border); border-radius:3px; padding:10px; }
+    .quiz-answer { min-height: 44px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .toast { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); background: var(--text-bright); color: var(--bg); padding: 9px 14px; border-radius: 999px; font-size: 12px; z-index: 1000; box-shadow: 0 8px 28px #0006; opacity:0; pointer-events:none; transition: opacity .2s, bottom .2s; }
+    .toast.show { opacity:1; bottom: 28px; }
+
+    @media (max-width: 700px) {
+      .modebar { gap: 6px; }
+      .segmented { flex-basis: 100%; }
+      .export-btn, .theme-btn { flex: 1 1 auto; }
+      .global { display:block; }
+      .global .card { margin-bottom: 10px; }
+      .fret-scroll { border:1px solid var(--border); border-radius:4px; background:var(--surface-2); }
+      .cell { width: 46px; height: 44px; }
+      .fret-num, .marker-cell { width:46px; }
+      .fretboard { padding: 8px 6px 10px 0; }
+      .bottom-toolbar { margin-left:-10px; margin-right:-10px; }
+    }
+
+    @media (orientation: landscape) and (max-height: 520px) {
+      body { padding-top: 10px; }
+      .header { margin-bottom: 10px; }
+      .global, .summary { margin-bottom: 10px; }
+      .cell { height: 36px; }
+    }
+
+
     .theme-btn {
       padding: 8px 13px;
       border-radius: 3px;
@@ -286,6 +335,13 @@
     const KEYS = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
     const KEY_DISPLAY = {"C#":"C#/Db","D#":"D#/Eb","F#":"F#/Gb","G#":"G#/Ab","A#":"A#/Bb"};
     const OPEN_STRINGS = ["C","G","D","A"];
+    const TUNINGS = {
+      "CGDA": { label: "CGDA - tenor standard", strings: ["C","G","D","A"] },
+      "GDAE": { label: "GDAE - Irish tenor / octave mandolin", strings: ["G","D","A","E"] },
+      "DGBE": { label: "DGBE - Chicago tuning", strings: ["D","G","B","E"] },
+      "CGBD": { label: "CGBD - plectrum banjo", strings: ["C","G","B","D"] },
+      "CUSTOM": { label: "Custom", strings: ["C","G","D","A"] }
+    };
     const FRET_COUNT = 12;
 
     function noteAtFret(open, fret) { return CHROMATIC[(CHROMATIC.indexOf(open) + fret) % 12]; }
@@ -435,9 +491,13 @@
     const state = {
       theme: savedTheme,
       mode: "single",
+      practiceMode: false,
       selectedKey: "G",
       selectedType: "maj",
       capo: 0,
+      tuningName: "CGDA",
+      openStrings: ["C","G","D","A"],
+      customTuningText: "C G D A",
       scaleKey: "G",
       scaleType: null,
       showVoicings: false,
@@ -450,6 +510,7 @@
       showShared: false,
       showVL: false,
       progMapMode: "combined",
+      sequenceIdx: 0,
       vlFrom: 0,
       vlTo: 1,
       itNote1: null,
@@ -459,7 +520,103 @@
       itStr2: null,
       itFret2: null,
       itStep: 1,
+      audioWave: "triangle",
+      audioVolume: 0.16,
+      arpDelay: 0.08,
+      progTempo: 900,
+      loopProgression: false,
+      loopTimer: null,
+      savedCharts: [],
+      savedName: "",
+      quizQuestion: null,
+      quizAnswer: null,
+      quizScore: 0,
+      quizStreak: 0,
+      earQuestion: null,
+      earAnswer: null,
+      earScore: 0,
     };
+
+
+
+    function toast(message) {
+      let el = document.getElementById("toast");
+      if (!el) {
+        el = document.createElement("div");
+        el.id = "toast";
+        el.className = "toast";
+        document.body.appendChild(el);
+      }
+      el.textContent = message;
+      el.classList.add("show");
+      clearTimeout(toast._t);
+      toast._t = setTimeout(() => el.classList.remove("show"), 1800);
+    }
+
+    function getOpenStrings() { return state.openStrings && state.openStrings.length === 4 ? state.openStrings : OPEN_STRINGS; }
+
+    function openStringOffsets() {
+      const strings = getOpenStrings();
+      const offsets = [0];
+      for (let i = 1; i < strings.length; i++) offsets[i] = offsets[i - 1] + semiBetweenDir(strings[i - 1], strings[i]);
+      return offsets;
+    }
+
+    function loadSavedCharts() {
+      try { state.savedCharts = JSON.parse(localStorage.getItem("cgda-saved-charts") || "[]"); }
+      catch (e) { state.savedCharts = []; }
+    }
+
+    function persistSavedCharts() {
+      try { localStorage.setItem("cgda-saved-charts", JSON.stringify(state.savedCharts)); } catch (e) {}
+    }
+
+    function serializeState() {
+      return {
+        mode: state.mode,
+        selectedKey: state.selectedKey,
+        selectedType: state.selectedType,
+        capo: state.capo,
+        tuningName: state.tuningName,
+        openStrings: getOpenStrings(),
+        scaleKey: state.scaleKey,
+        scaleType: state.scaleType,
+        fretRange: state.fretRange,
+        progChords: state.progChords,
+        editingIdx: state.editingIdx,
+        progMapMode: state.progMapMode,
+        theme: state.theme
+      };
+    }
+
+    function applySerializedState(data) {
+      if (!data || typeof data !== "object") return;
+      ["mode","selectedKey","selectedType","scaleKey","scaleType","progMapMode","theme","tuningName"].forEach(k => { if (data[k] !== undefined) state[k] = data[k]; });
+      if (Number.isFinite(data.capo)) state.capo = data.capo;
+      if (Array.isArray(data.fretRange) && data.fretRange.length === 2) state.fretRange = data.fretRange;
+      if (Array.isArray(data.progChords) && data.progChords.length) state.progChords = data.progChords.filter(c => c && CHROMATIC.includes(c.key) && CHORD_TYPES[c.type]).slice(0,8);
+      if (Array.isArray(data.openStrings) && data.openStrings.length === 4 && data.openStrings.every(n => CHROMATIC.includes(n))) state.openStrings = data.openStrings;
+      if (Number.isFinite(data.editingIdx)) state.editingIdx = Math.max(0, Math.min(data.editingIdx, state.progChords.length - 1));
+      state.customTuningText = getOpenStrings().join(" ");
+    }
+
+    function loadFromURL() {
+      try {
+        const params = new URLSearchParams(location.search);
+        const raw = params.get("state");
+        if (raw) applySerializedState(JSON.parse(atob(raw)));
+      } catch (e) {}
+    }
+
+    function stateURL() {
+      const url = new URL(location.href);
+      url.search = "";
+      url.searchParams.set("state", btoa(JSON.stringify(serializeState())));
+      return url.toString();
+    }
+
+    loadSavedCharts();
+    loadFromURL();
 
     const audio = (() => {
       let ctx = null;
@@ -477,11 +634,11 @@
           const g = c.createGain();
           osc.connect(g);
           g.connect(c.destination);
-          osc.type = "triangle";
+          osc.type = state.audioWave || "triangle";
           osc.frequency.value = noteFreq(note, oct);
           const t = c.currentTime + delay;
           g.gain.setValueAtTime(0, t);
-          g.gain.linearRampToValueAtTime(0.16, t + 0.02);
+          g.gain.linearRampToValueAtTime(Number(state.audioVolume) || 0.16, t + 0.02);
           g.gain.exponentialRampToValueAtTime(0.001, t + dur);
           osc.start(t);
           osc.stop(t + dur);
@@ -493,12 +650,12 @@
         setTimeout(() => { playNote(n1, 4, 1.4, 0); playNote(n2, 4, 1.4, 0); }, 1300);
       }
       function playChord(tones, arp = false) {
-        tones.forEach((t, i) => playNote(t, 4, 1.2, arp ? i * 0.08 : 0));
+        tones.forEach((t, i) => playNote(t, 4, 1.2, arp ? i * (Number(state.arpDelay) || 0.08) : 0));
       }
       function playProgression(chords) {
         chords.forEach((ch, i) => {
           const t = buildTones(ch.key, CHORD_TYPES[ch.type]?.intervals || [0,4,7]);
-          setTimeout(() => playChord(t, true), i * 900);
+          setTimeout(() => playChord(t, true), i * (Number(state.progTempo) || 900));
         });
       }
       return { playNote, playInterval, playChord, playProgression };
@@ -507,7 +664,7 @@
     function current() {
       const chordDef = CHORD_TYPES[state.selectedType] || CHORD_TYPES.maj;
       const singleTones = buildTones(state.selectedKey, chordDef.intervals);
-      const effectiveOpen = OPEN_STRINGS.map(s => noteAtFret(s, state.capo));
+      const effectiveOpen = getOpenStrings().map(s => noteAtFret(s, state.capo));
       const scaleDef = state.scaleType ? SCALES[state.scaleType] : null;
       const scaleTones = scaleDef ? buildTones(state.scaleKey, scaleDef.intervals) : [];
       const displayFrets = Array.from({ length: state.fretRange[1] - state.fretRange[0] + 1 }, (_, i) => i + state.fretRange[0]);
@@ -569,7 +726,7 @@
 
     function buildPrintSVG(mode, selectedKey, selectedType, singleTones, progChords, capo, scaleKey, scaleType) {
       const chordDef = CHORD_TYPES[selectedType] || CHORD_TYPES.maj;
-      const effectiveOpen = OPEN_STRINGS.map(s => noteAtFret(s, capo));
+      const effectiveOpen = getOpenStrings().map(s => noteAtFret(s, capo));
       const W = 1100, H = 720;
       const fbLeft = 72, fbRight = W - 52, fbTop = 160, stringSpacing = 68, dotR = 14;
       const fbWidth = fbRight - fbLeft, fretW = fbWidth / (FRET_COUNT + 1), fbHeight = 3 * stringSpacing;
@@ -716,7 +873,7 @@
 
       const numberRow = displayFrets.map(f => `<div class="fret-num ${[3,5,7,9,12].includes(f) ? "marked" : ""}">${f}</div>`).join("");
       const rows = [...effectiveOpen].reverse().map((open, si) => {
-        const stringIdx = OPEN_STRINGS.length - 1 - si;
+        const stringIdx = getOpenStrings().length - 1 - si;
         const thick = [1,1.5,2,2.5][si];
         const cells = displayFrets.map(fret => {
           const note = noteAtFret(open, fret);
@@ -786,11 +943,15 @@
       const { effectiveOpen, scaleDef } = current();
       const capoButtons = Array.from({ length: 8 }, (_, i) => btn(i === 0 ? "None" : `Fret ${i}`, state.capo === i, "#a8c4e8", `app.set('capo',${i})`)).join("");
       const scaleTypeButtons = btn("Off", state.scaleType === null, "#555", `app.set('scaleType',null)`) + Object.entries(SCALES).map(([k,v]) => btn(v.label, state.scaleType === k, v.color, `app.set('scaleType','${k}')`)).join("");
+      const tuningOptions = Object.entries(TUNINGS).map(([k,v]) => `<option value="${esc(k)}" ${state.tuningName === k ? "selected" : ""}>${esc(v.label)}</option>`).join("");
+      const waveformOptions = ["sine","triangle","square","sawtooth"].map(w => `<option value="${w}" ${state.audioWave === w ? "selected" : ""}>${w}</option>`).join("");
       return `<div class="global">
-        <div class="card grow"><div class="section-label">Capo</div><div class="row">${capoButtons}</div>${state.capo > 0 ? `<div style="margin-top:6px;font-size:11px;color:#555">Effective: ${esc(effectiveOpen.join(" / "))}</div>` : ""}</div>
+        <div class="card grow"><div class="section-label">Capo</div><div class="row">${capoButtons}</div>${state.capo > 0 ? `<div style="margin-top:6px;font-size:11px;color:var(--muted)">Effective: ${esc(effectiveOpen.join(" / "))}</div>` : ""}</div>
+        <div class="card grow"><div class="section-label">Tuning</div><div class="field"><select onchange="app.setTuning(this.value)">${tuningOptions}</select></div><div style="display:flex;gap:6px;margin-top:8px;align-items:center"><input type="text" value="${esc(state.customTuningText)}" oninput="app.setCustomTuningText(this.value)" placeholder="C G D A" style="flex:1;min-width:120px"><button type="button" class="pill" style="--c:#a8c4e8" onclick="app.applyCustomTuning()">Apply</button></div><div style="font-size:11px;color:var(--muted);margin-top:6px">Open strings: ${esc(getOpenStrings().join(" / "))}</div></div>
         <div class="card" style="flex:1 1 220px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><div class="section-label" style="margin-bottom:0">Scale Overlay</div>${btn(state.showScalePanel ? "hide" : "config", state.showScalePanel, "#6dd4a8", "app.toggle('showScalePanel')", "")}</div>
-          ${state.showScalePanel ? `<div style="margin-bottom:8px"><div class="mini-label">Root</div><div class="row">${keyButtons(state.scaleKey, scaleDef?.color || "#6dd4a8", "app.setScaleKey")}</div></div><div><div class="mini-label">Type</div><div class="row">${scaleTypeButtons}</div></div>` : state.scaleType ? `<div style="font-size:12px;color:${scaleDef.color}">${esc(state.scaleKey)} ${esc(scaleDef.label)} <button type="button" onclick="app.set('scaleType',null)" style="margin-left:8px;font-size:10px;color:#555;background:none;border:none;cursor:pointer">x</button></div>` : `<div style="font-size:11px;color:#333">No scale active</div>`}
+          ${state.showScalePanel ? `<div style="margin-bottom:8px"><div class="mini-label">Root</div><div class="row">${keyButtons(state.scaleKey, scaleDef?.color || "#6dd4a8", "app.setScaleKey")}</div></div><div><div class="mini-label">Type</div><div class="row">${scaleTypeButtons}</div></div>` : state.scaleType ? `<div style="font-size:12px;color:${scaleDef.color}">${esc(state.scaleKey)} ${esc(scaleDef.label)} <button type="button" onclick="app.set('scaleType',null)" style="margin-left:8px;font-size:10px;color:#555;background:none;border:none;cursor:pointer">x</button></div>` : `<div style="font-size:11px;color:var(--dim)">No scale active</div>`}
         </div>
+        <div class="card" style="flex:1 1 260px"><div class="section-label">Audio</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div class="field"><label>Wave</label><select onchange="app.set('audioWave',this.value)">${waveformOptions}</select></div><div class="field"><label>Progression ms</label><input type="number" min="250" max="2000" step="50" value="${state.progTempo}" onchange="app.set('progTempo',Number(this.value))"></div><div class="field"><label>Volume</label><input type="range" min="0.04" max="0.32" step="0.01" value="${state.audioVolume}" oninput="app.set('audioVolume',Number(this.value))"></div><div class="field"><label>Arp delay</label><input type="range" min="0" max="0.22" step="0.01" value="${state.arpDelay}" oninput="app.set('arpDelay',Number(this.value))"></div></div></div>
       </div>`;
     }
 
@@ -832,6 +993,141 @@
       return `<div class="voicing-card"><div class="voicing-title">voicing ${idx+1}</div><div style="display:flex"><div style="display:flex;flex-direction:column;justify-content:space-around;padding-right:6px">${stringLabels}</div><div style="position:relative">${fretWires}${rows}<div style="display:flex;margin-top:4px">${labels}</div></div></div></div>`;
     }
 
+
+
+    function renderSequenceView() {
+      const savedMap = state.progMapMode;
+      const savedIdx = state.editingIdx;
+      const cards = state.progChords.map((ch, i) => {
+        state.progMapMode = "selected";
+        state.editingIdx = i;
+        const fb = renderFretboard("progression");
+        const col = PROG_COLORS[i % PROG_COLORS.length];
+        const tones = buildTones(ch.key, CHORD_TYPES[ch.type]?.intervals || []);
+        return `<div class="sequence-card ${savedIdx === i ? "active" : ""}" style="--c:${col}"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:8px"><div><div style="font-size:18px;color:${col}">${i+1}. ${esc(ch.key)} ${esc(CHORD_TYPES[ch.type]?.label)}</div><div style="font-size:11px;color:var(--muted)">${esc(tones.join(" "))}</div></div><button type="button" class="play-btn" onclick="app.playChordByIndex(${i})">Play</button></div>${fb}</div>`;
+      }).join("");
+      state.progMapMode = savedMap;
+      state.editingIdx = savedIdx;
+      return `<div class="sequence-grid">${cards}</div>`;
+    }
+
+    function renderPractice() {
+      const { chordDef, singleTones } = current();
+      const chordTitle = state.mode === "progression"
+        ? `Progression: ${state.progChords.map(ch => `${ch.key} ${CHORD_TYPES[ch.type]?.label}`).join(" / ")}`
+        : `${state.selectedKey} ${chordDef.label}`;
+      const subtitle = `${getOpenStrings().join(" / ")} tuning${state.capo ? ` · capo ${state.capo}` : ""}${state.scaleType ? ` · ${state.scaleKey} ${SCALES[state.scaleType].label}` : ""}`;
+      const fb = state.mode === "progression" && state.progMapMode === "sequence" ? renderSequenceView() : renderFretboard(state.mode === "progression" ? "progression" : "single");
+      const tones = state.mode === "single" ? `<div class="row" style="margin:10px 0 14px">${singleTones.map((t,i)=>`<span class="tone-pill" style="--c:${i===0?"#ffffff":chordDef.color}" onclick="app.playNote('${t}')">${esc(t)} ${esc(chordDef.intLabels?.[i] || "")}</span>`).join("")}</div>` : "";
+      return `<div class="practice-shell"><div class="practice-head"><div><div class="practice-title">${esc(chordTitle)}</div><div class="practice-subtitle">${esc(subtitle)}</div></div><div class="row"><button type="button" class="play-btn" onclick="${state.mode === "progression" ? "app.playProgression()" : "app.playSingleChord()"}">Play</button>${btn("Exit practice", true, "#e87a3a", "app.togglePractice()")}</div></div>${tones}${fb}<div class="bottom-toolbar"><button type="button" class="play-btn" onclick="${state.mode === "progression" ? "app.playProgression()" : "app.playSingleChord()"}">Play</button><button type="button" class="export-btn" onclick="app.sharePNG()">Share PNG</button><button type="button" class="export-btn" onclick="app.copyStateLink()">Copy Link</button>${btn("Edit", false, "#a8c4e8", "app.togglePractice()")}</div></div>`;
+    }
+
+    function renderSavedCharts() {
+      const list = state.savedCharts.length ? `<div class="saved-list">${state.savedCharts.map((item,i)=>`<div class="saved-card"><div style="font-size:13px;color:var(--text-bright);margin-bottom:4px">${esc(item.name)}</div><div style="font-size:10px;color:var(--muted);margin-bottom:8px">${esc(item.summary || "Saved chart")}</div><div class="row"><button type="button" class="pill" style="--c:#6dd4a8" onclick="app.loadSavedChart(${i})">Load</button><button type="button" class="pill" style="--c:#e87a7a" onclick="app.deleteSavedChart(${i})">Delete</button></div></div>`).join("")}</div>` : `<div class="status-note">No saved charts yet. Save a chord or progression and it will be stored in this browser with localStorage.</div>`;
+      return `<div class="card" style="margin-bottom:14px"><div class="section-label">Saved Charts</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"><input type="text" value="${esc(state.savedName)}" placeholder="Name this chart" oninput="app.set('savedName',this.value)" style="flex:1;min-width:180px"><button type="button" class="export-btn" onclick="app.saveCurrentChart()">Save Current</button></div>${list}</div>`;
+    }
+
+    function buildCardSVG() {
+      const { chordDef, singleTones } = current();
+      const svg = buildPrintSVG(state.mode === "interval" ? "single" : state.mode, state.selectedKey, state.selectedType, singleTones, state.progChords, state.capo, state.scaleKey, state.scaleType);
+      return svg;
+    }
+
+    function svgToPngBlob(svg, scale = 2) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        const matchW = svg.match(/width="(\d+)"/);
+        const matchH = svg.match(/height="(\d+)"/);
+        const w = matchW ? Number(matchW[1]) : 1100;
+        const h = matchH ? Number(matchH[1]) : 720;
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = w * scale;
+          canvas.height = h * scale;
+          const ctx = canvas.getContext("2d");
+          ctx.scale(scale, scale);
+          ctx.drawImage(img, 0, 0);
+          canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error("Could not create PNG")), "image/png", 0.95);
+        };
+        img.onerror = reject;
+        img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+      });
+    }
+
+    async function savePNG() {
+      try {
+        const blob = await svgToPngBlob(buildCardSVG(), 2);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "cgda-chord-tone-map.png";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        toast("PNG saved");
+      } catch (e) { alert("PNG export failed: " + e.message); }
+    }
+
+    async function sharePNG() {
+      try {
+        const blob = await svgToPngBlob(buildCardSVG(), 2);
+        const file = new File([blob], "cgda-chord-tone-map.png", { type: "image/png" });
+        if (navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
+          await navigator.share({ title: "CGDA Chord Tone Map", text: "Chord tone map", files: [file] });
+          toast("Share sheet opened");
+        } else {
+          await savePNG();
+        }
+      } catch (e) { if (e.name !== "AbortError") alert("Share failed: " + e.message); }
+    }
+
+    async function copyStateLink() {
+      const url = stateURL();
+      try { await navigator.clipboard.writeText(url); toast("Link copied"); }
+      catch (e) { prompt("Copy this link", url); }
+    }
+
+    function renderQuiz() {
+      if (!state.quizQuestion) newQuizQuestion();
+      const q = state.quizQuestion;
+      const result = state.quizAnswer ? `<div class="status-note" style="border-color:${state.quizAnswer.correct ? "#6dd4a8" : "#e87a7a"}">${state.quizAnswer.correct ? "Correct." : `Not quite. Correct answer: ${esc(q.answer)}`}</div>` : "";
+      return `<div class="card" style="margin-bottom:14px"><div class="section-label">Chord-Tone Quiz</div><div style="font-size:18px;color:var(--text-bright);margin-bottom:8px">${esc(q.prompt)}</div><div class="quiz-answer">${q.choices.map(choice=>btn(choice, false, "#e8c547", `app.answerQuiz('${choice}')`)).join("")}</div><div style="font-size:12px;color:var(--muted);margin:10px 0">Score: ${state.quizScore} · Streak: ${state.quizStreak}</div>${result}<div class="row" style="margin-top:10px"><button type="button" class="export-btn" onclick="app.newQuizQuestion()">Next Question</button></div></div>${renderFretboard("single")}`;
+    }
+
+    function newQuizQuestion() {
+      const root = KEYS[Math.floor(Math.random() * KEYS.length)];
+      const typeKeys = ["maj","min","7","maj7","min7","sus2","sus4","dim"];
+      const type = typeKeys[Math.floor(Math.random() * typeKeys.length)];
+      const def = CHORD_TYPES[type];
+      const tones = buildTones(root, def.intervals);
+      const targetIdx = Math.floor(Math.random() * tones.length);
+      const label = def.intLabels[targetIdx];
+      const answer = tones[targetIdx];
+      const choices = [...new Set([answer, ...KEYS.sort(()=>Math.random()-.5).slice(0,5)])].slice(0,4).sort(()=>Math.random()-.5);
+      state.selectedKey = root; state.selectedType = type;
+      state.quizQuestion = { prompt: `In ${root} ${def.label}, what note is the ${label}?`, answer, choices };
+      state.quizAnswer = null;
+    }
+
+    function renderEarTraining() {
+      if (!state.earQuestion) newEarQuestion();
+      const q = state.earQuestion;
+      const choices = Object.entries(CHORD_TYPES).filter(([k]) => ["maj","min","7","maj7","min7","sus2","sus4","dim"].includes(k));
+      const result = state.earAnswer ? `<div class="status-note" style="border-color:${state.earAnswer.correct ? "#6dd4a8" : "#e87a7a"}">${state.earAnswer.correct ? "Correct." : `Answer: ${esc(CHORD_TYPES[q.type].label)}`}</div>` : "";
+      return `<div class="card" style="margin-bottom:14px"><div class="section-label">Ear Training</div><div style="font-size:18px;color:var(--text-bright);margin-bottom:8px">Listen and identify the chord quality</div><div class="row" style="margin-bottom:12px"><button type="button" class="play-btn" onclick="app.playEarQuestion()">Play Chord</button><button type="button" class="export-btn" onclick="app.newEarQuestion()">New Chord</button></div><div class="quiz-answer">${choices.map(([k,v])=>btn(v.label, false, v.color, `app.answerEar('${k}')`)).join("")}</div><div style="font-size:12px;color:var(--muted);margin:10px 0">Score: ${state.earScore}</div>${result}</div>${renderFretboard("single")}`;
+    }
+
+    function newEarQuestion() {
+      const typeKeys = ["maj","min","7","maj7","min7","sus2","sus4","dim"];
+      const type = typeKeys[Math.floor(Math.random() * typeKeys.length)];
+      const root = KEYS[Math.floor(Math.random() * KEYS.length)];
+      state.earQuestion = { root, type };
+      state.earAnswer = null;
+      state.selectedKey = root;
+      state.selectedType = type;
+    }
+
     function renderProgression() {
       const library = state.progLibOpen ? renderProgressionLibrary() : "";
       const chordCards = state.progChords.map((ch,ci) => {
@@ -845,9 +1141,9 @@
       const activeChord = state.progChords[Math.min(state.editingIdx, state.progChords.length - 1)];
       const mapHelp = state.progMapMode === "combined"
         ? "Combined view merges duplicate pitch classes; a small white corner dot means that note belongs to more than one chord."
-        : `Selected chord view is showing only chord ${state.editingIdx + 1}: ${esc(activeChord.key)} ${esc(CHORD_TYPES[activeChord.type]?.label)}.`;
-      const mapControls = `<div class="card" style="margin-bottom:14px"><div class="section-label">Progression fretboard view</div><div class="row">${btn("Combined", state.progMapMode === "combined", "#e8c547", "app.set('progMapMode','combined')")}${btn("Selected chord", state.progMapMode === "selected", "#6dd4a8", "app.set('progMapMode','selected')")}</div><div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5">${mapHelp}</div></div>`;
-      return `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">${btn(state.progLibOpen ? "Hide library" : "Load preset", state.progLibOpen, "#6dd4a8", "app.toggle('progLibOpen')")}${state.progChords.length < 8 ? btn("+ Add", false, "#e8c547", "app.addChord()") : ""}${btn(state.showShared ? "Shared ON" : "Shared tones", state.showShared, "#ffffff", "app.toggle('showShared')")}${btn(state.showVL ? "Hide VL" : "Voice leading", state.showVL, "#c47ed4", "app.toggle('showVL')")}<button type="button" class="play-btn" onclick="app.playProgression()">Play</button></div>${library}<div class="row" style="gap:8px;margin-bottom:14px">${chordCards}</div>${editor}${shared}${state.showVL ? renderVoiceLeading() : ""}${mapControls}${renderFretboard("progression")}${colors}`;
+        : state.progMapMode === "sequence" ? "Sequence view gives each chord its own fretboard so shared tones do not obscure interval labels." : `Selected chord view is showing only chord ${state.editingIdx + 1}: ${esc(activeChord.key)} ${esc(CHORD_TYPES[activeChord.type]?.label)}.`;
+      const mapControls = `<div class="card" style="margin-bottom:14px"><div class="section-label">Progression fretboard view</div><div class="row">${btn("Combined", state.progMapMode === "combined", "#e8c547", "app.set('progMapMode','combined')")}${btn("Selected chord", state.progMapMode === "selected", "#6dd4a8", "app.set('progMapMode','selected')")}${btn("Sequence", state.progMapMode === "sequence", "#c47ed4", "app.set('progMapMode','sequence')")}</div><div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5">${mapHelp}</div></div>`;
+      return `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">${btn(state.progLibOpen ? "Hide library" : "Load preset", state.progLibOpen, "#6dd4a8", "app.toggle('progLibOpen')")}${state.progChords.length < 8 ? btn("+ Add", false, "#e8c547", "app.addChord()") : ""}${btn(state.showShared ? "Shared ON" : "Shared tones", state.showShared, "#ffffff", "app.toggle('showShared')")}${btn(state.showVL ? "Hide VL" : "Voice leading", state.showVL, "#c47ed4", "app.toggle('showVL')")}<button type="button" class="play-btn" onclick="app.playProgression()">Play</button></div>${library}<div class="row" style="gap:8px;margin-bottom:14px">${chordCards}</div>${editor}${shared}${state.showVL ? renderVoiceLeading() : ""}${mapControls}${state.progMapMode === "sequence" ? renderSequenceView() : renderFretboard("progression")}${colors}`;
     }
 
     function renderProgressionLibrary() {
@@ -887,7 +1183,7 @@
     }
 
     function renderIntervalTrainer() {
-      const STR_OFF = [0,7,14,21];
+      const STR_OFF = openStringOffsets();
       const absA = state.itStr1 !== null ? STR_OFF[state.itStr1] + state.itFret1 : null;
       const absB = state.itStr2 !== null ? STR_OFF[state.itStr2] + state.itFret2 : null;
       const itInt = absA !== null && absB !== null ? Math.abs(absB - absA) % 12 : null;
@@ -915,9 +1211,11 @@
 
     function render() {
       document.documentElement.setAttribute("data-theme", state.theme);
-      const content = state.mode === "single" ? renderSingle() : state.mode === "progression" ? renderProgression() : renderIntervalTrainer();
+      const content = state.practiceMode ? renderPractice() : state.mode === "single" ? renderSingle() : state.mode === "progression" ? renderProgression() : state.mode === "interval" ? renderIntervalTrainer() : state.mode === "quiz" ? renderQuiz() : renderEarTraining();
       const themeLabel = state.theme === "dark" ? "Light mode" : "Dark mode";
-      document.getElementById("app").innerHTML = `<div class="wrap"><div class="header"><div class="eyebrow">Tenor Guitar / CGDA / Standard Fifths Tuning</div><h1>Ultimate Chord Tone Map</h1><div class="subtle">Portable HTML - Single Chord / Progression / Voice Leading / Interval Trainer / PDF Export</div></div><div class="modebar"><div class="segmented"><button type="button" class="tab ${state.mode === "single" ? "active" : ""}" onclick="app.setMode('single')">Single Chord</button><button type="button" class="tab ${state.mode === "progression" ? "active" : ""}" onclick="app.setMode('progression')">Progression</button><button type="button" class="tab ${state.mode === "interval" ? "active" : ""}" onclick="app.setMode('interval')">Intervals</button></div><button type="button" class="theme-btn" onclick="app.toggleTheme()">${themeLabel}</button>${state.mode !== "interval" ? `<button type="button" class="export-btn" onclick="app.printChart()">Print / Save PDF</button><button type="button" class="export-btn" onclick="app.downloadSVG()">Download SVG</button>` : ""}</div>${state.mode !== "interval" ? renderGlobalPanels() : ""}${content}<div class="footer">Open strings C / G / D / A - Built for Rivolta Duocata - CGDA Standard Tuning</div></div>`;
+      const tuningText = getOpenStrings().join(" / ");
+      const exportButtons = state.mode !== "interval" && state.mode !== "quiz" && state.mode !== "ear" ? `<button type="button" class="export-btn" onclick="app.sharePNG()">Share PNG</button><button type="button" class="export-btn" onclick="app.savePNG()">Save PNG</button><button type="button" class="export-btn" onclick="app.downloadSVG()">SVG</button><button type="button" class="export-btn" onclick="app.copyStateLink()">Copy Link</button><button type="button" class="export-btn" onclick="app.printChart()">Print</button>` : "";
+      document.getElementById("app").innerHTML = `<div class="wrap"><div class="header"><div class="eyebrow">Tenor Guitar / ${esc(tuningText)} Tuning</div><h1>Ultimate Chord Tone Map</h1><div class="subtle">Portable HTML · responsive reference, practice, quiz, ear training, PNG share/export</div></div><div class="modebar"><div class="segmented"><button type="button" class="tab ${state.mode === "single" ? "active" : ""}" onclick="app.setMode('single')">Single</button><button type="button" class="tab ${state.mode === "progression" ? "active" : ""}" onclick="app.setMode('progression')">Progression</button><button type="button" class="tab ${state.mode === "interval" ? "active" : ""}" onclick="app.setMode('interval')">Intervals</button><button type="button" class="tab ${state.mode === "quiz" ? "active" : ""}" onclick="app.setMode('quiz')">Quiz</button><button type="button" class="tab ${state.mode === "ear" ? "active" : ""}" onclick="app.setMode('ear')">Ear</button></div><button type="button" class="theme-btn" onclick="app.toggleTheme()">${themeLabel}</button><button type="button" class="theme-btn" onclick="app.togglePractice()">${state.practiceMode ? "Edit mode" : "Practice mode"}</button>${exportButtons}</div>${!state.practiceMode && state.mode !== "interval" && state.mode !== "quiz" && state.mode !== "ear" ? renderGlobalPanels() : ""}${!state.practiceMode && state.mode !== "interval" && state.mode !== "quiz" && state.mode !== "ear" ? renderSavedCharts() : ""}${content}<div class="footer">Open strings ${esc(tuningText)} · Single-file GitHub Pages app</div></div>`;
     }
 
     const app = {
@@ -928,7 +1226,8 @@
         try { localStorage.setItem("cgda-theme", state.theme); } catch (e) {}
         render();
       },
-      setMode(mode) { state.mode = mode; render(); },
+      togglePractice() { state.practiceMode = !state.practiceMode; render(); },
+      setMode(mode) { state.mode = mode; state.practiceMode = false; render(); },
       setSelectedKey(k) { state.selectedKey = k; render(); },
       setSelectedType(k) { state.selectedType = k; render(); },
       setScaleKey(k) { state.scaleKey = k; render(); },
@@ -968,6 +1267,45 @@
       },
       resetInterval() { state.itStep = 1; state.itNote1 = null; state.itNote2 = null; state.itStr1 = null; state.itFret1 = null; state.itStr2 = null; state.itFret2 = null; render(); },
       playCurrentInterval() { if (state.itNote1 && state.itNote2) audio.playInterval(state.itNote1, state.itNote2); },
+      setTuning(name) {
+        state.tuningName = name;
+        const t = TUNINGS[name] || TUNINGS.CGDA;
+        if (name !== "CUSTOM") {
+          state.openStrings = [...t.strings];
+          state.customTuningText = state.openStrings.join(" ");
+        }
+        render();
+      },
+      setCustomTuningText(value) { state.customTuningText = value; },
+      applyCustomTuning() {
+        const parts = String(state.customTuningText).toUpperCase().replaceAll("♯", "#").replaceAll("♭", "B").split(/[\s,\/]+/).filter(Boolean);
+        const notes = parts.map(p => p.replace("DB","C#").replace("EB","D#").replace("GB","F#").replace("AB","G#").replace("BB","A#"));
+        if (notes.length !== 4 || !notes.every(n => CHROMATIC.includes(n))) { alert("Enter four notes like C G D A or D G B E."); return; }
+        state.tuningName = "CUSTOM";
+        state.openStrings = notes;
+        state.customTuningText = notes.join(" ");
+        render();
+      },
+      saveCurrentChart() {
+        const name = state.savedName.trim() || (state.mode === "progression" ? `Progression ${state.progChords.map(c => c.key).join("-")}` : `${state.selectedKey} ${CHORD_TYPES[state.selectedType]?.label}`);
+        const summary = state.mode === "progression" ? state.progChords.map(c => `${c.key} ${CHORD_TYPES[c.type]?.label}`).join(" / ") : `${state.selectedKey} ${CHORD_TYPES[state.selectedType]?.label}`;
+        state.savedCharts.unshift({ name, summary, created: Date.now(), data: serializeState() });
+        state.savedCharts = state.savedCharts.slice(0, 30);
+        state.savedName = "";
+        persistSavedCharts();
+        toast("Chart saved");
+        render();
+      },
+      loadSavedChart(i) { const item = state.savedCharts[i]; if (item) { applySerializedState(item.data); toast("Chart loaded"); render(); } },
+      deleteSavedChart(i) { state.savedCharts.splice(i,1); persistSavedCharts(); render(); },
+      savePNG,
+      sharePNG,
+      copyStateLink,
+      newQuizQuestion() { newQuizQuestion(); render(); },
+      answerQuiz(choice) { const correct = state.quizQuestion && choice === state.quizQuestion.answer; state.quizAnswer = { correct }; if (correct) { state.quizScore++; state.quizStreak++; } else { state.quizStreak = 0; } render(); },
+      newEarQuestion() { newEarQuestion(); render(); },
+      playEarQuestion() { if (!state.earQuestion) newEarQuestion(); const q = state.earQuestion; audio.playChord(buildTones(q.root, CHORD_TYPES[q.type].intervals), true); },
+      answerEar(type) { const correct = state.earQuestion && type === state.earQuestion.type; state.earAnswer = { correct }; if (correct) state.earScore++; render(); },
       printChart,
       downloadSVG,
     };
