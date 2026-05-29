@@ -235,6 +235,17 @@
   const FRET_COUNT = 12;
 
   const INSTRUMENTS = {
+    "guitar": {
+      label: "Guitar (6-string)",
+      tunings: {
+        "EADGBE": { label: "EADGBE — standard", strings: ["E","A","D","G","B","E"] },
+        "DADGBE": { label: "Drop D", strings: ["D","A","D","G","B","E"] },
+        "DADGAD": { label: "DADGAD — Celtic", strings: ["D","A","D","G","A","D"] },
+        "OPENG":  { label: "Open G — DGDGBD", strings: ["D","G","D","G","B","D"] },
+        "OPEND":  { label: "Open D — DADF#AD", strings: ["D","A","D","F#","A","D"] },
+        "EbST":   { label: "Half-step down — Eb Ab Db Gb Bb Eb", strings: ["D#","G#","C#","F#","A#","D#"] }
+      }
+    },
     "tenor": {
       label: "Tenor Guitar",
       tunings: {
@@ -249,7 +260,19 @@
       tunings: {
         "EADG": { label: "EADG — standard 4-string", strings: ["E","A","D","G"] },
         "DADG": { label: "DADG — drop D", strings: ["D","A","D","G"] },
-        "BEAD": { label: "BEAD — low B (5-string low four)", strings: ["B","E","A","D"] }
+        "BEADG": { label: "BEADG — 5-string", strings: ["B","E","A","D","G"] },
+        "BEAD": { label: "BEAD — low B four", strings: ["B","E","A","D"] }
+      }
+    },
+    "mandolin": {
+      label: "Mandolin",
+      tunings: { "GDAE": { label: "GDAE — standard (fifths)", strings: ["G","D","A","E"] } }
+    },
+    "ukulele": {
+      label: "Ukulele",
+      tunings: {
+        "GCEA": { label: "GCEA — standard (re-entrant)", strings: ["G","C","E","A"] },
+        "DGBE": { label: "DGBE — baritone", strings: ["D","G","B","E"] }
       }
     },
     "plectrum": {
@@ -261,7 +284,7 @@
     },
     "custom": {
       label: "Custom",
-      tunings: { "CUSTOM": { label: "Custom — enter four notes", strings: ["C","G","D","A"] } }
+      tunings: { "CUSTOM": { label: "Custom — enter notes (4–6)", strings: ["C","G","D","A"] } }
     }
   };
 
@@ -502,6 +525,17 @@
   }
   function cssColor(color) { return String(color || "#888").replace(/[^#a-fA-F0-9]/g, ""); }
 
+  const FLAT_NAMES = { "C#":"Db","D#":"Eb","F#":"Gb","G#":"Ab","A#":"Bb" };
+  // Spell a note according to the user's accidental preference (display only).
+  function spell(note) {
+    if (state.accidental === "flat" && FLAT_NAMES[note]) return FLAT_NAMES[note];
+    return note;
+  }
+  // What to show inside a fretboard dot: interval label or the note name.
+  function dotLabel(intervalLabel, note) {
+    return state.noteDisplay === "note" ? spell(note) : intervalLabel;
+  }
+
   // ── Persistence ──
   const savedTheme = (() => {
     try { const t = localStorage.getItem("os-theme"); return t === "light" || t === "dark" ? t : "dark"; }
@@ -512,6 +546,7 @@
     theme: savedTheme,
     mode: "single",
     showHelp: false,
+    showPrefs: false,
     instrument: "tenor",
     tuningName: "CGDA",
     openStrings: ["C","G","D","A"],
@@ -545,10 +580,28 @@
     quizQuestion: null, quizAnswer: null, quizScore: 0, quizStreak: 0,
     earQuestion: null, earAnswer: null, earScore: 0,
     finderChords: [{key:"C",type:"maj"},{key:"G",type:"maj"},{key:"A",type:"min"},{key:"F",type:"maj"}],
-    finderEditIdx: 0
+    finderEditIdx: 0,
+    // Display preferences
+    noteDisplay: "interval",   // "interval" or "note"
+    accidental: "sharp",        // "sharp" or "flat"
+    leftHanded: false,
+    progLoop: false,
+    // Chord identifier
+    idNotes: [],                // array of {string,fret,note}
+    // Modes explorer
+    modeParent: "major",
+    modeParentKey: "C",
+    // Fretboard trainer
+    trainerTarget: null,
+    trainerFound: [],
+    trainerStart: 0,
+    trainerTime: null,
+    // Progression suggester
+    suggestKey: "C",
+    suggestMood: "bright"
   };
 
-  function getOpenStrings() { return (state.openStrings && state.openStrings.length === 4) ? state.openStrings : ["C","G","D","A"]; }
+  function getOpenStrings() { return (state.openStrings && state.openStrings.length >= 4 && state.openStrings.length <= 6) ? state.openStrings : ["C","G","D","A"]; }
 
   function openStringOffsets() {
     const strings = getOpenStrings();
@@ -588,7 +641,7 @@
     if (Number.isFinite(data.capo)) state.capo = data.capo;
     if (Array.isArray(data.fretRange) && data.fretRange.length === 2) state.fretRange = data.fretRange;
     if (Array.isArray(data.progChords) && data.progChords.length) state.progChords = data.progChords.filter(c => c && CHROMATIC.includes(c.key) && CHORD_TYPES[c.type]).slice(0,8);
-    if (Array.isArray(data.openStrings) && data.openStrings.length === 4 && data.openStrings.every(n => CHROMATIC.includes(n))) state.openStrings = data.openStrings;
+    if (Array.isArray(data.openStrings) && data.openStrings.length >= 4 && data.openStrings.length <= 6 && data.openStrings.every(n => CHROMATIC.includes(n))) state.openStrings = data.openStrings;
     if (Number.isFinite(data.editingIdx)) state.editingIdx = Math.max(0, Math.min(data.editingIdx, state.progChords.length - 1));
     state.customTuningText = getOpenStrings().join(" ");
   }
@@ -607,37 +660,106 @@
   loadFromURL();
 
   // ── Audio ──
+  // Reliable Web Audio with a one-time unlock on first user gesture. The context is
+  // created lazily, resumed (and a silent buffer played for iOS) the first time the
+  // user interacts anywhere, so every play button on every screen works consistently.
   const audio = (() => {
     let ctx = null;
-    function getCtx() { if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)(); return ctx; }
-    function noteFreq(note, oct = 4) { return 440 * Math.pow(2, ((oct - 4) * 12 + CHROMATIC.indexOf(note) - 9) / 12); }
-    function playNote(note, oct = 4, dur = 0.9, delay = 0) {
-      try {
-        const c = getCtx(); if (c.state === "suspended") c.resume();
-        const osc = c.createOscillator(); const g = c.createGain();
-        osc.connect(g); g.connect(c.destination);
-        osc.type = state.audioWave || "triangle";
-        osc.frequency.value = noteFreq(note, oct);
-        const t = c.currentTime + delay;
-        g.gain.setValueAtTime(0, t);
-        g.gain.linearRampToValueAtTime(Number(state.audioVolume) || 0.16, t + 0.02);
-        g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-        osc.start(t); osc.stop(t + dur);
-      } catch (e) {}
+    let unlocked = false;
+
+    function getCtx() {
+      if (!ctx) {
+        try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { ctx = null; }
+      }
+      return ctx;
     }
+
+    function unlock() {
+      const c = getCtx();
+      if (!c) return;
+      if (c.state === "suspended" && c.resume) { c.resume().catch(() => {}); }
+      if (!unlocked) {
+        try {
+          // Play a one-sample silent buffer — required to fully unlock audio on iOS/Safari.
+          const buffer = c.createBuffer(1, 1, 22050);
+          const src = c.createBufferSource();
+          src.buffer = buffer;
+          src.connect(c.destination);
+          src.start(0);
+          unlocked = true;
+        } catch (e) {}
+      }
+    }
+
+    // Unlock on the first interaction of any kind, once.
+    function installUnlockHandlers() {
+      const handler = () => { unlock(); };
+      ["pointerdown", "touchstart", "mousedown", "keydown"].forEach(ev =>
+        document.addEventListener(ev, handler, { once: false, passive: true })
+      );
+    }
+
+    function noteFreq(note, oct = 4) { return 440 * Math.pow(2, ((oct - 4) * 12 + CHROMATIC.indexOf(note) - 9) / 12); }
+
+    function playNote(note, oct = 4, dur = 0.9, delay = 0) {
+      const c = getCtx();
+      if (!c) return;
+      // Always attempt a resume right before playing — handlers may fire while still suspended.
+      if (c.state === "suspended" && c.resume) { c.resume().catch(() => {}); }
+      const start = () => {
+        try {
+          const osc = c.createOscillator();
+          const g = c.createGain();
+          osc.connect(g); g.connect(c.destination);
+          osc.type = state.audioWave || "triangle";
+          osc.frequency.value = noteFreq(note, oct);
+          const t = c.currentTime + delay;
+          const vol = Number(state.audioVolume) || 0.16;
+          g.gain.setValueAtTime(0.0001, t);
+          g.gain.linearRampToValueAtTime(vol, t + 0.02);
+          g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
+          osc.start(t);
+          osc.stop(t + dur + 0.05);
+        } catch (e) {}
+      };
+      // If the context is running, play now. If it is mid-resume, wait a tick and play.
+      if (c.state === "running") start();
+      else setTimeout(start, 60);
+    }
+
     function playInterval(n1, n2) {
       playNote(n1, 4, 1.1, 0);
       setTimeout(() => playNote(n2, 4, 1.1, 0), 550);
       setTimeout(() => { playNote(n1, 4, 1.3, 0); playNote(n2, 4, 1.3, 0); }, 1200);
     }
-    function playChord(tones, arp = false) { tones.forEach((t, i) => playNote(t, 4, 1.2, arp ? i * 0.07 : 0)); }
-    function playProgression(chords) {
-      chords.forEach((ch, i) => {
-        const t = buildTones(ch.key, CHORD_TYPES[ch.type]?.intervals || [0,4,7]);
-        setTimeout(() => playChord(t, true), i * (Number(state.progTempo) || 800));
+    function playChord(tones, arp = false) {
+      // Spread notes across octaves so chords with many tones sound natural rather than clustered.
+      let oct = 3;
+      let prevIdx = -1;
+      tones.forEach((t, i) => {
+        const idx = CHROMATIC.indexOf(t);
+        if (idx <= prevIdx) oct++; // ascending voicing — bump octave when we wrap
+        prevIdx = idx;
+        playNote(t, oct, 1.3, arp ? i * 0.07 : 0);
       });
     }
-    return { playNote, playInterval, playChord, playProgression };
+
+    let progTimers = [];
+    function stopProgression() { progTimers.forEach(id => clearTimeout(id)); progTimers = []; }
+    function playProgression(chords, loop) {
+      stopProgression();
+      const step = Number(state.progTempo) || 800;
+      const run = () => {
+        chords.forEach((ch, i) => {
+          const t = buildTones(ch.key, CHORD_TYPES[ch.type]?.intervals || [0,4,7]);
+          progTimers.push(setTimeout(() => playChord(t, true), i * step));
+        });
+        if (loop) progTimers.push(setTimeout(run, chords.length * step));
+      };
+      run();
+    }
+
+    return { unlock, installUnlockHandlers, playNote, playInterval, playChord, playProgression, stopProgression, getCtx };
   })();
 
   function current() {
@@ -873,17 +995,35 @@
     return svg;
   }
 
-  function printChart() {
-    const svg = buildPrintSVG();
-    const svgDataUri = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Open Strings — ${esc(state.selectedKey)} ${esc(CHORD_TYPES[state.selectedType]?.label||"")}</title><style>*{margin:0;padding:0;box-sizing:border-box;}html,body{width:100%;height:100%;}body{display:flex;align-items:center;justify-content:center;padding:12px;}img{max-width:100%;height:auto;display:block;}@media print{@page{size:landscape;margin:0.25in;}img{width:100%;height:auto;page-break-inside:avoid;}}</style></head><body><img id="printImage" src="${svgDataUri}" alt="Chord tone map"></body></html>`;
-    const iframe = document.createElement("iframe");
-    iframe.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;";
-    document.body.appendChild(iframe);
-    const iw = iframe.contentWindow, id = iw.document;
-    id.open(); id.write(html); id.close();
-    const img = id.getElementById("printImage");
-    img.onload = () => { setTimeout(() => { iw.focus(); iw.print(); setTimeout(() => { if (iframe.parentNode) document.body.removeChild(iframe); }, 1000); }, 250); };
+  async function printChart() {
+    // Render the chart to a PNG first (same image as the PNG export), then print it in an
+    // isolated document so the browser prints ONLY the chart, never the whole app screen.
+    let dataUrl;
+    try {
+      const blob = await svgToPngBlob(buildPrintSVG(), 2);
+      dataUrl = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(blob); });
+    } catch (e) {
+      // Fall back to the SVG directly if PNG rasterization fails
+      dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(buildPrintSVG())}`;
+    }
+    const title = `Open Strings — ${state.mode === "progression" ? "Progression" : state.selectedKey + " " + (CHORD_TYPES[state.selectedType]?.label || "")}`;
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(title)}</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;background:#fff}body{display:flex;align-items:center;justify-content:center;padding:16px}img{max-width:100%;height:auto;display:block}
+@media print{@page{size:landscape;margin:0.3in}body{padding:0}img{width:100%;height:auto;page-break-inside:avoid}}</style></head>
+<body><img id="chart" src="${dataUrl}" alt="Open Strings chart"></body></html>`;
+
+    const win = window.open("", "_blank");
+    if (win) {
+      win.document.open(); win.document.write(html); win.document.close();
+      const img = win.document.getElementById("chart");
+      const go = () => { try { win.focus(); win.print(); } catch (e) {} };
+      if (img && !img.complete) { img.onload = () => setTimeout(go, 200); img.onerror = () => setTimeout(go, 200); }
+      else setTimeout(go, 300);
+    } else {
+      // Popup blocked — open the image in a new tab so the user can print/save manually.
+      const w2 = window.open(dataUrl, "_blank");
+      if (!w2) { toast("Allow pop-ups to print, or use PNG export"); }
+    }
   }
 
   function downloadSVG() {
@@ -948,14 +1088,17 @@
     const rangeButtons = [[0,12,"All"],[0,5,"0–5"],[3,8,"3–8"],[5,12,"5–12"],[7,12,"7–12"]]
       .map(([a,b,l]) => btn(l, state.fretRange[0] === a && state.fretRange[1] === b, "#a8c4e8", `app.setFretRange(${a},${b})`)).join("");
     const numberRow = displayFrets.map(f => `<div class="fret-num ${[3,5,7,9,12].includes(f) ? "marked" : ""}">${f}</div>`).join("");
+    const lefty = state.leftHanded;
 
     const rows = [...effectiveOpen].reverse().map((open, si) => {
       const stringIdx = strings.length - 1 - si;
       const origOpen = [...strings].reverse()[si];
       const thick = 1 + si * 0.5;
-      const cells = displayFrets.map(fret => {
+      const fretsForRow = lefty ? [...displayFrets].reverse() : displayFrets;
+      const cells = fretsForRow.map(fret => {
         const note = noteAtFret(open, fret);
         const isNut = fret === 0;
+        const nutSide = lefty ? "right" : "left";
         let content = "";
         if (fbMode === "interval") {
           const isA = state.itStr1 === stringIdx && state.itFret1 === fret;
@@ -969,9 +1112,9 @@
             const col = ghostA ? "#e8c547" : "#7eb8d4";
             content = `<div class="scale-dot" style="--c:${col};width:22px;height:22px"></div>`;
           } else {
-            content = `<span class="faded-note">${esc(note)}</span>`;
+            content = `<span class="faded-note">${esc(spell(note))}</span>`;
           }
-          return `<div class="cell" onclick="app.intervalClick(${stringIdx},${fret},'${note}')" role="button" aria-label="${esc(open)} string fret ${fret}, ${esc(note)}"><div class="string-line" style="height:${thick}px;left:${isNut ? "50%" : "0"}"></div>${isNut ? `<div class="nut-line"></div>` : ""}${fret > 0 ? `<div class="fret-wire"></div>` : ""}${content}</div>`;
+          return `<div class="cell" onclick="app.intervalClick(${stringIdx},${fret},'${note}')" role="button" aria-label="${esc(open)} string fret ${fret}, ${esc(spell(note))}"><div class="string-line" style="height:${thick}px;${nutSide}:${isNut ? "50%" : "0"}"></div>${isNut ? `<div class="nut-line" style="${lefty?"left:auto;right:50%;transform:translateX(50%)":""}"></div>` : ""}${fret > 0 ? `<div class="fret-wire" style="${lefty?"left:auto;right:0":""}"></div>` : ""}${content}</div>`;
         }
 
         let dot = null;
@@ -979,17 +1122,17 @@
         const isShared = sharedTones.has(note);
         if (fbMode === "single") {
           const idx = singleTones.indexOf(note);
-          if (idx >= 0) dot = { color: chordColor, isRoot: idx === 0, label: chordDef.intLabels?.[idx] || "?", multi: false };
+          if (idx >= 0) dot = { color: chordColor, isRoot: idx === 0, label: dotLabel(chordDef.intLabels?.[idx] || "?", note), multi: false };
         } else {
           if (state.progMapMode === "selected") {
             const ai = Math.min(state.editingIdx, state.progChords.length - 1);
             const ch = state.progChords[ai];
             const tones = buildTones(ch.key, CHORD_TYPES[ch.type]?.intervals || []);
             const idx = tones.indexOf(note);
-            if (idx >= 0) dot = { color: PROG_COLORS[ai % PROG_COLORS.length], isRoot: idx === 0, label: CHORD_TYPES[ch.type]?.intLabels?.[idx] || "?", multi: false };
+            if (idx >= 0) dot = { color: PROG_COLORS[ai % PROG_COLORS.length], isRoot: idx === 0, label: dotLabel(CHORD_TYPES[ch.type]?.intLabels?.[idx] || "?", note), multi: false };
           } else {
             const hits = progDot(note);
-            if (hits.length > 0) { const p = hits.find(h => h.isRoot) || hits[0]; dot = { color: p.color, isRoot: p.isRoot, label: p.label, multi: hits.length > 1 }; }
+            if (hits.length > 0) { const p = hits.find(h => h.isRoot) || hits[0]; dot = { color: p.color, isRoot: p.isRoot, label: dotLabel(p.label, note), multi: hits.length > 1 }; }
           }
         }
 
@@ -999,22 +1142,26 @@
         } else if (isSN && scaleDef) {
           inner = `<div class="scale-dot" style="--c:${cssColor(scaleDef.color)}"></div>`;
         } else {
-          inner = `<span class="faded-note">${esc(note)}</span>`;
+          inner = `<span class="faded-note">${esc(spell(note))}</span>`;
         }
-        return `<div class="cell" onclick="app.playNote('${note}')" role="button" aria-label="${esc(open)} string fret ${fret}, ${esc(note)}"><div class="string-line" style="height:${thick}px;left:${isNut ? "50%" : "0"}"></div>${isNut ? `<div class="nut-line"></div>` : ""}${fret > 0 ? `<div class="fret-wire"></div>` : ""}${inner}</div>`;
+        return `<div class="cell" onclick="app.playNote('${note}')" role="button" aria-label="${esc(open)} string fret ${fret}, ${esc(spell(note))}"><div class="string-line" style="height:${thick}px;${nutSide}:${isNut ? "50%" : "0"}"></div>${isNut ? `<div class="nut-line" style="${lefty?"left:auto;right:50%;transform:translateX(50%)":""}"></div>` : ""}${fret > 0 ? `<div class="fret-wire" style="${lefty?"left:auto;right:0":""}"></div>` : ""}${inner}</div>`;
       }).join("");
-      const capoTag = state.capo > 0 ? `<span class="capo-orig">(${esc(origOpen)})</span>` : "";
-      return `<div class="string-row"><div class="string-label">${esc(open)}${capoTag}</div>${cells}</div>`;
+      const capoTag = state.capo > 0 ? `<span class="capo-orig">(${esc(spell(origOpen))})</span>` : "";
+      const label = `<div class="string-label">${esc(spell(open))}${capoTag}</div>`;
+      return `<div class="string-row">${lefty ? "" : label}${cells}${lefty ? label.replace('text-align:right','text-align:left') : ""}</div>`;
     }).join("");
 
-    const markerRow = displayFrets.map(f => {
+    const markerFrets = lefty ? [...displayFrets].reverse() : displayFrets;
+    const markerRow = markerFrets.map(f => {
       if ([3,5,7,9].includes(f)) return `<div class="marker-cell"><div class="marker"></div></div>`;
       if (f === 12) return `<div class="marker-cell"><div class="marker double"><span></span><span></span></div></div>`;
       return `<div class="marker-cell"></div>`;
     }).join("");
+    const numbersFinal = lefty ? [...displayFrets].reverse().map(f => `<div class="fret-num ${[3,5,7,9,12].includes(f) ? "marked" : ""}">${f}</div>`).join("") : numberRow;
 
     const minW = 52 + displayFrets.length * 46;
-    return `<div class="fret-toolbar"><span class="mini-label" style="margin:0">Fret range</span>${rangeButtons}</div><div class="fret-scroll"><div class="fretboard" style="min-width:${minW}px"><div class="fret-numbers">${numberRow}</div>${rows}<div class="markers">${markerRow}</div></div></div>`;
+    const leftMargin = lefty ? `<style>.markers,.fret-numbers{margin-left:0;margin-right:52px}</style>` : "";
+    return `<div class="fret-toolbar"><span class="mini-label" style="margin:0">Fret range</span>${rangeButtons}</div><div class="fret-scroll"><div class="fretboard" style="min-width:${minW}px">${leftMargin}<div class="fret-numbers" style="${lefty?"margin-left:0;justify-content:flex-start":""}">${numbersFinal}</div>${rows}<div class="markers" style="${lefty?"margin-left:0":""}">${markerRow}</div></div></div>`;
   }
 
   // ── Global panels (tuning, capo, scale) ──
@@ -1022,7 +1169,7 @@
     const inst = INSTRUMENTS[state.instrument];
     const instOptions = Object.entries(INSTRUMENTS).map(([k,v]) => `<option value="${k}" ${state.instrument===k?"selected":""}>${esc(v.label)}</option>`).join("");
     const tuningOptions = Object.entries(inst.tunings).map(([k,v]) => `<option value="${k}" ${state.tuningName===k?"selected":""}>${esc(v.label)}</option>`).join("");
-    const customField = state.instrument === "custom" ? `<div class="field" style="flex:1 1 200px"><label>Custom notes (four, low→high)</label><div style="display:flex;gap:6px"><input type="text" id="customTuning" value="${esc(state.customTuningText)}" oninput="app.setCustomTuningText(this.value)" style="flex:1" aria-label="Custom tuning notes" /><button type="button" class="util-btn" onclick="app.applyCustomTuning()">Set</button></div></div>` : "";
+    const customField = state.instrument === "custom" ? `<div class="field" style="flex:1 1 200px"><label>Custom notes (4–6, low→high)</label><div style="display:flex;gap:6px"><input type="text" id="customTuning" value="${esc(state.customTuningText)}" oninput="app.setCustomTuningText(this.value)" style="flex:1" aria-label="Custom tuning notes" /><button type="button" class="util-btn" onclick="app.applyCustomTuning()">Set</button></div></div>` : "";
     const capoButtons = Array.from({length:8}, (_,i) => btn(i===0?"None":`Fret ${i}`, state.capo===i, "#a8c4e8", `app.set('capo',${i})`)).join("");
     const scaleTypeButtons = `<button type="button" class="pill ${state.scaleType===null?"active":""}" style="--c:#888" onclick="app.set('scaleType',null)">Off</button>` +
       Object.entries(SCALES).map(([k,v]) => btn(v.label, state.scaleType===k, v.color, `app.set('scaleType','${k}')`)).join("");
@@ -1215,6 +1362,8 @@
       ${btn(state.showShared?"Shared tones ✓":"Shared tones", state.showShared, "#fff", "app.toggle('showShared')")}
       ${btn(state.showVL?"Hide voice leading":"Voice leading", state.showVL, "#c47ed4", "app.toggle('showVL')")}
       <button type="button" class="play-btn" onclick="app.playProgression()">Play progression</button>
+      ${btn(state.progLoop?"Loop ✓":"Loop", state.progLoop, "#6dd4a8", "app.toggleLoop()")}
+      <button type="button" class="util-btn" onclick="app.stopAudio()">Stop</button>
     </div>`;
 
     const colorLegend = `<div class="legend"><div class="legend-title">Chord colors</div>${state.progChords.map((ch,ci) => { const col = PROG_COLORS[ci%PROG_COLORS.length]; return `<div class="legend-item"><div style="width:10px;height:10px;border-radius:50%;background:${col}"></div><span class="legend-text">${ci+1}. ${esc(ch.key)} ${esc(CHORD_TYPES[ch.type]?.label)}</span></div>`; }).join("")}</div>`;
@@ -1363,12 +1512,163 @@
   function renderHelp() {
     return `<div class="help-panel"><h3>How to use Open Strings</h3><ul>
       <li><strong>Single</strong> — pick a root and chord type to see every chord tone across the neck. Tap dots to hear them; expand the diatonic panel to see all chords in a key.</li>
-      <li><strong>Progression</strong> — build or load a chord progression, view shared tones and voice leading between chords, and play it back.</li>
+      <li><strong>Progression</strong> — build or load a progression, view shared tones and voice leading, and loop playback with a metronome.</li>
       <li><strong>Intervals</strong> — tap any two notes to measure the distance between them and learn where that shape repeats.</li>
-      <li><strong>Finder</strong> — enter a song's chords to discover its likely key.</li>
-      <li><strong>Quiz & Ear</strong> — test your chord-tone knowledge and train your ear.</li>
-      <li>Switch <strong>instrument and tuning</strong> at the top, overlay a <strong>scale</strong>, set a <strong>capo</strong>, then <strong>save, print, or share</strong> your chart. Everything runs offline in one file.</li>
+      <li><strong>Identify</strong> — tap notes on the neck and get the chord name back.</li>
+      <li><strong>Finder</strong> — enter a song's chords to discover its likely key. <strong>Modes</strong> — explore the modes of any scale. <strong>Suggest</strong> — get progressions by key and mood.</li>
+      <li><strong>Quiz</strong>, <strong>Ear</strong>, and <strong>Trainer</strong> — test chord-tone knowledge, train your ear, and learn the neck.</li>
+      <li>Set <strong>instrument, tuning, capo, scale</strong> up top; adjust <strong>preferences</strong> (note names, sharps/flats, left-handed, audio); then <strong>save, print, or share</strong>. Everything runs offline in one file.</li>
     </ul></div>`;
+  }
+
+  // ── Preferences panel ──
+  function renderPreferences() {
+    const waveBtns = ["triangle","sine","square","sawtooth"].map(w => btn(w, state.audioWave===w, "#a8c4e8", `app.set('audioWave','${w}')`)).join("");
+    return `<div class="card" style="margin-bottom:16px"><div class="section-label">Preferences</div>
+      <div style="display:flex;flex-wrap:wrap;gap:18px">
+        <div><div class="mini-label">Dot labels</div><div class="row">${btn("Intervals", state.noteDisplay==="interval", "#e8c547", "app.set('noteDisplay','interval')")}${btn("Note names", state.noteDisplay==="note", "#e8c547", "app.set('noteDisplay','note')")}</div></div>
+        <div><div class="mini-label">Accidentals</div><div class="row">${btn("Sharps ♯", state.accidental==="sharp", "#7eb8d4", "app.set('accidental','sharp')")}${btn("Flats ♭", state.accidental==="flat", "#7eb8d4", "app.set('accidental','flat')")}</div></div>
+        <div><div class="mini-label">Handedness</div><div class="row">${btn("Right-handed", !state.leftHanded, "#6dd4a8", "app.set('leftHanded',false)")}${btn("Left-handed", state.leftHanded, "#6dd4a8", "app.set('leftHanded',true)")}</div></div>
+        <div><div class="mini-label">Tone</div><div class="row">${waveBtns}</div></div>
+        <div style="min-width:160px"><div class="mini-label">Volume</div><input type="range" min="0.02" max="0.4" step="0.02" value="${state.audioVolume}" oninput="app.set('audioVolume',parseFloat(this.value))" style="width:100%" aria-label="Volume" /></div>
+        <div style="min-width:160px"><div class="mini-label">Progression tempo</div><input type="range" min="300" max="1400" step="50" value="${state.progTempo}" oninput="app.set('progTempo',parseInt(this.value))" style="width:100%" aria-label="Tempo" /><div class="info-text" style="font-size:10px">${Math.round(60000/state.progTempo)} BPM</div></div>
+      </div></div>`;
+  }
+
+  // ── Chord Identifier ──
+  function renderIdentify() {
+    const strings = getOpenStrings();
+    const picked = state.idNotes;
+    const noteSet = new Set(picked.map(p => p.note));
+    const match = identifyChord(noteSet);
+    let resultHtml;
+    if (picked.length < 2) {
+      resultHtml = `<div class="info-text">Tap notes on the fretboard to build a chord. Tap a marked note again to remove it.</div>`;
+    } else if (match) {
+      const conf = match.exact ? "exact match" : "closest match (extra or missing tones)";
+      resultHtml = `<div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap"><span style="font-size:24px;color:${match.def.color}">${esc(spell(match.root))} ${esc(match.def.label)}</span><span class="interval-meta" style="--c:${match.def.color}">${conf}</span><button type="button" class="pill" style="--c:${match.def.color};margin-left:auto" onclick="app.playIdentified('${match.root}','${match.key}')">Hear chord</button></div><div class="info-text" style="margin-top:8px">Selected notes: ${[...noteSet].map(n=>esc(spell(n))).join(", ")}</div>`;
+    } else {
+      resultHtml = `<div class="info-text">No standard chord matches those notes (${[...noteSet].map(n=>esc(spell(n))).join(", ")}). Try removing a note.</div>`;
+    }
+
+    // Fretboard where tapping toggles selection
+    const { displayFrets } = current();
+    const lefty = state.leftHanded;
+    const effectiveOpen = strings.map(s => noteAtFret(s, state.capo));
+    const rows = [...effectiveOpen].reverse().map((open, si) => {
+      const stringIdx = strings.length - 1 - si;
+      const thick = 1 + si * 0.5;
+      const fretsForRow = lefty ? [...displayFrets].reverse() : displayFrets;
+      const cells = fretsForRow.map(fret => {
+        const note = noteAtFret(open, fret);
+        const isNut = fret === 0;
+        const isPicked = picked.some(p => p.string === stringIdx && p.fret === fret);
+        const inner = isPicked ? `<div class="dot" style="--c:#e8c547"><span>${esc(state.noteDisplay==="note"?spell(note):"●")}</span></div>` : `<span class="faded-note">${esc(spell(note))}</span>`;
+        return `<div class="cell" onclick="app.toggleIdNote(${stringIdx},${fret},'${note}')"><div class="string-line" style="height:${thick}px;left:${isNut?"50%":"0"}"></div>${isNut?`<div class="nut-line"></div>`:""}${fret>0?`<div class="fret-wire"></div>`:""}${inner}</div>`;
+      }).join("");
+      return `<div class="string-row"><div class="string-label">${esc(spell(open))}</div>${cells}</div>`;
+    }).join("");
+    const minW = 52 + displayFrets.length * 46;
+    const numberRow = displayFrets.map(f => `<div class="fret-num ${[3,5,7,9,12].includes(f)?"marked":""}">${f}</div>`).join("");
+
+    return `<div class="card" style="margin-bottom:14px"><div class="section-label">Chord Identifier</div>${resultHtml}<div class="row" style="margin-top:10px">${picked.length?`<button type="button" class="util-btn" onclick="app.clearIdNotes()">Clear</button>`:""}</div></div><div class="fret-scroll"><div class="fretboard" style="min-width:${minW}px"><div class="fret-numbers">${numberRow}</div>${rows}</div></div>`;
+  }
+
+  // ── Modes Explorer ──
+  function renderModes() {
+    const parents = { "major": { label: "Major scale", modes: ["Ionian","Dorian","Phrygian","Lydian","Mixolydian","Aeolian","Locrian"], intervals: [0,2,4,5,7,9,11] },
+                      "melodic": { label: "Melodic minor", modes: ["Melodic minor","Dorian b2","Lydian augmented","Lydian dominant","Mixolydian b6","Locrian #2","Altered"], intervals: [0,2,3,5,7,9,11] },
+                      "harmonic": { label: "Harmonic minor", modes: ["Harmonic minor","Locrian #6","Ionian #5","Dorian #4","Phrygian dominant","Lydian #2","Altered bb7"], intervals: [0,2,3,5,7,8,11] } };
+    const p = parents[state.modeParent];
+    const parentBtns = Object.entries(parents).map(([k,v]) => btn(v.label, state.modeParent===k, "#c47ed4", `app.set('modeParent','${k}')`)).join("");
+    const keyRow = keyButtons(state.modeParentKey, "#c47ed4", "app.setModeParentKey");
+    // Each mode = rotation of the parent scale
+    const rows = p.modes.map((modeName, i) => {
+      const rootOffset = p.intervals[i];
+      const modeRoot = transpose(state.modeParentKey, rootOffset);
+      // Build the mode's interval set relative to its own root
+      const rotated = p.intervals.map(iv => ((iv - rootOffset) + 12) % 12).sort((a,b)=>a-b);
+      const notes = rotated.map(iv => spell(transpose(modeRoot, iv)));
+      return `<div class="saved-card"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span style="font-size:14px;color:var(--text-bright)">${esc(modeRoot)} ${esc(modeName)}</span><button type="button" class="pill" style="--c:#c47ed4;font-size:10px" onclick="app.playScale('${modeRoot}',[${rotated.join(",")}])">Hear</button></div><div class="info-text" style="font-size:11px;margin-top:4px">${notes.map(esc).join("  ")}</div></div>`;
+    }).join("");
+    return `<div class="card" style="margin-bottom:14px"><div class="section-label">Modes Explorer</div><div class="info-text" style="margin-bottom:12px">Every mode is the parent scale started from a different degree. Pick a parent scale and key to see all seven modes, their notes, and how they relate.</div><div class="mini-label">Parent scale</div><div class="row" style="margin-bottom:10px">${parentBtns}</div><div class="mini-label">Key</div><div class="row">${keyRow}</div></div><div class="saved-list">${rows}</div>`;
+  }
+
+  // ── Progression Suggester ──
+  const SUGGEST_MOODS = {
+    "bright":     { label: "Bright & uplifting", progs: [["I","V","vi","IV"],["I","IV","V"],["I","V","IV"],["IV","I","V","vi"]] },
+    "melancholy": { label: "Melancholy", progs: [["vi","IV","I","V"],["i","bVI","bIII","bVII"],["vi","V","IV","V"],["i","iv","bVII","bIII"]] },
+    "tense":      { label: "Tense & dramatic", progs: [["i","bVI","bVII","i"],["i","bII","i"],["i","V","i"],["i","iv","V"]] },
+    "gospel":     { label: "Gospel & soulful", progs: [["I","iii","IV","iv"],["I","I7","IV","iv"],["vi","ii","V","I"],["IV","iv","I"]] },
+    "dreamy":     { label: "Dreamy & floating", progs: [["Imaj7","IVmaj7"],["Imaj7","iii","IV","V"],["ii","IV","I"],["Imaj7","vi","ii","V"]] }
+  };
+  const ROMAN_MAP = { "I":[0,"maj"],"II":[2,"maj"],"III":[4,"maj"],"IV":[5,"maj"],"V":[7,"maj"],"VI":[9,"maj"],"VII":[11,"maj"],
+    "i":[0,"min"],"ii":[2,"min"],"iii":[4,"min"],"iv":[5,"min"],"v":[7,"min"],"vi":[9,"min"],"vii":[11,"min"],
+    "bII":[1,"maj"],"bIII":[3,"maj"],"bVI":[8,"maj"],"bVII":[10,"maj"],
+    "I7":[0,"7"],"Imaj7":[0,"maj7"],"IVmaj7":[5,"maj7"],"ii7":[2,"min7"] };
+  function romanToChord(roman, key) {
+    let token = roman;
+    let type = "maj";
+    if (ROMAN_MAP[token]) { const [off, t] = ROMAN_MAP[token]; return { key: transpose(key, off), type: t }; }
+    // fallback: strip quality suffixes
+    const m = token.match(/^(b?[iIvV]+)(.*)$/);
+    if (m && ROMAN_MAP[m[1]]) { const [off] = ROMAN_MAP[m[1]]; const isMin = m[1] === m[1].toLowerCase(); return { key: transpose(key, off), type: m[2] || (isMin?"min":"maj") }; }
+    return { key, type: "maj" };
+  }
+  function renderSuggest() {
+    const moodBtns = Object.entries(SUGGEST_MOODS).map(([k,v]) => btn(v.label, state.suggestMood===k, "#6dd4a8", `app.set('suggestMood','${k}')`)).join("");
+    const keyRow = keyButtons(state.suggestKey, "#6dd4a8", "app.setSuggestKey");
+    const mood = SUGGEST_MOODS[state.suggestMood];
+    const cards = mood.progs.map((prog, i) => {
+      const chords = prog.map(r => romanToChord(r, state.suggestKey));
+      const display = chords.map(c => `${spell(c.key)} ${CHORD_TYPES[c.type]?.label.replace(' ','')}`).join("  →  ");
+      const romans = prog.join(" – ");
+      const enc = encodeURIComponent(JSON.stringify(chords));
+      return `<div class="saved-card"><div style="font-size:12px;color:var(--dim);font-style:italic;margin-bottom:3px">${esc(romans)}</div><div style="font-size:14px;color:var(--text-bright);margin-bottom:8px">${esc(display)}</div><div class="row"><button type="button" class="pill" style="--c:#6dd4a8;font-size:11px" onclick="app.loadSuggested('${enc}')">Load</button><button type="button" class="pill" style="--c:#e8c547;font-size:11px" onclick="app.playSuggested('${enc}')">Hear</button></div></div>`;
+    }).join("");
+    return `<div class="card" style="margin-bottom:14px"><div class="section-label">Progression Suggester</div><div class="info-text" style="margin-bottom:12px">Pick a key and a mood to get curated progressions. Load one into Progression mode to explore its voice leading, or hear it right away.</div><div class="mini-label">Key</div><div class="row" style="margin-bottom:10px">${keyRow}</div><div class="mini-label">Mood</div><div class="row">${moodBtns}</div></div><div class="saved-list">${cards}</div>`;
+  }
+
+  // ── Fretboard Note Trainer ──
+  function renderTrainer() {
+    const strings = getOpenStrings();
+    const { displayFrets } = current();
+    const target = state.trainerTarget;
+    const effectiveOpen = strings.map(s => noteAtFret(s, state.capo));
+    let statusHtml;
+    if (!target) {
+      statusHtml = `<div class="info-text">Tap “New target” to begin. You'll be asked to find every instance of a note across the neck.</div>`;
+    } else {
+      const allPositions = [];
+      strings.forEach((open, si) => { displayFrets.forEach(f => { if (noteAtFret(open, f) === target) allPositions.push(si + ":" + f); }); });
+      const remaining = allPositions.length - state.trainerFound.length;
+      const done = remaining <= 0;
+      statusHtml = `<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span style="font-size:20px;color:var(--text-bright)">Find every <strong style="color:#e8c547">${esc(spell(target))}</strong></span><span class="info-text">${state.trainerFound.length} / ${allPositions.length} found</span>${state.trainerTime?`<span class="info-text">· ${state.trainerTime}s</span>`:""}</span>${done?`<span class="interval-meta" style="--c:#6dd4a8">Complete</span>`:""}</div>`;
+    }
+    const rows = [...effectiveOpen].reverse().map((open, si) => {
+      const stringIdx = strings.length - 1 - si;
+      const thick = 1 + si * 0.5;
+      const cells = displayFrets.map(fret => {
+        const note = noteAtFret(open, fret);
+        const isNut = fret === 0;
+        const key = stringIdx + ":" + fret;
+        const found = state.trainerFound.includes(key);
+        const inner = found ? `<div class="dot" style="--c:#6dd4a8"><span>${esc(state.noteDisplay==="note"?spell(note):"✓")}</span></div>` : `<span class="faded-note" style="opacity:${target?0.3:1}">${target?"":esc(spell(note))}</span>`;
+        return `<div class="cell" onclick="app.trainerGuess(${stringIdx},${fret},'${note}')"><div class="string-line" style="height:${thick}px;left:${isNut?"50%":"0"}"></div>${isNut?`<div class="nut-line"></div>`:""}${fret>0?`<div class="fret-wire"></div>`:""}${inner}</div>`;
+      }).join("");
+      return `<div class="string-row"><div class="string-label">${esc(spell(open))}</div>${cells}</div>`;
+    }).join("");
+    const minW = 52 + displayFrets.length * 46;
+    const numberRow = displayFrets.map(f => `<div class="fret-num ${[3,5,7,9,12].includes(f)?"marked":""}">${f}</div>`).join("");
+    return `<div class="card" style="margin-bottom:14px"><div class="section-label">Fretboard Note Trainer</div>${statusHtml}<div class="row" style="margin-top:10px"><button type="button" class="accent-btn" onclick="app.newTrainerTarget()">New target</button></div><div class="info-text" style="margin-top:8px">Great for learning a new tuning — the positions change with every instrument and capo setting.</div></div><div class="fret-scroll"><div class="fretboard" style="min-width:${minW}px"><div class="fret-numbers">${numberRow}</div>${rows}</div></div>`;
+  }
+
+  // ── Tuner reference tones ──
+  function renderTuner() {
+    const strings = getOpenStrings();
+    const effectiveOpen = strings.map(s => noteAtFret(s, state.capo));
+    const buttons = effectiveOpen.map((n, i) => `<button type="button" class="util-btn" style="font-size:16px;padding:14px 18px" onclick="app.playTunerNote('${n}',${i})">${esc(spell(n))}<div style="font-size:9px;color:var(--dim);margin-top:3px">string ${i+1}</div></button>`).join("");
+    return `<div class="card"><div class="section-label">Tuner — Reference Tones</div><div class="info-text" style="margin-bottom:14px">Tap each string to hear its reference pitch and tune by ear. Reflects your current tuning${state.capo>0?" and capo":""}.</div><div class="row" style="gap:10px">${buttons}</div></div>`;
   }
 
   // ── Main render ──
@@ -1379,9 +1679,14 @@
       case "single": content = renderSingle(); break;
       case "progression": content = renderProgression(); break;
       case "interval": content = renderIntervalTrainer(); break;
+      case "identify": content = renderIdentify(); break;
       case "finder": content = renderFinder(); break;
+      case "modes": content = renderModes(); break;
+      case "suggest": content = renderSuggest(); break;
       case "quiz": content = renderQuiz(); break;
       case "ear": content = renderEar(); break;
+      case "trainer": content = renderTrainer(); break;
+      case "tuner": content = renderTuner(); break;
       default: content = renderSingle();
     }
     const themeLabel = state.theme === "dark" ? "Light" : "Dark";
@@ -1389,26 +1694,30 @@
     const showsExport = ["single","progression"].includes(state.mode);
     const exportButtons = showsExport ? `<button type="button" class="util-btn" onclick="app.sharePNG()">Share</button><button type="button" class="util-btn" onclick="app.savePNG()">PNG</button><button type="button" class="util-btn" onclick="app.downloadSVG()">SVG</button><button type="button" class="util-btn" onclick="app.copyStateLink()">Link</button><button type="button" class="util-btn" onclick="app.printChart()">Print</button>` : "";
 
+    // Primary tabs (most-used) + grouped "More" select for the rest
+    const primary = [["single","Single"],["progression","Progression"],["interval","Intervals"],["identify","Identify"]];
+    const moreModes = [["finder","Key Finder"],["modes","Modes Explorer"],["suggest","Progression Suggester"],["quiz","Chord-Tone Quiz"],["ear","Ear Training"],["trainer","Fretboard Trainer"],["tuner","Tuner"]];
+    const primaryTabs = primary.map(([m,l]) => `<button type="button" role="tab" class="tab ${state.mode===m?"active":""}" onclick="app.setMode('${m}')">${l}</button>`).join("");
+    const inMore = moreModes.some(([m]) => m === state.mode);
+    const moreLabel = inMore ? (moreModes.find(([m]) => m === state.mode)[1]) : "More tools";
+    const moreOptions = `<option value="">${esc(moreLabel)}</option>` + moreModes.map(([m,l]) => `<option value="${m}" ${state.mode===m?"selected":""}>${esc(l)}</option>`).join("");
+
     document.getElementById("app").innerHTML = `<div class="wrap">
-      <div class="header"><div class="eyebrow">${esc(instrumentLabel())} · ${esc(getOpenStrings().join(" "))}</div><h1>Open Strings</h1><div class="tagline">A theory &amp; practice studio for four-string instruments</div></div>
+      <div class="header"><div class="eyebrow">${esc(instrumentLabel())} · ${esc(getOpenStrings().map(spell).join(" "))}</div><h1>Open Strings</h1><div class="tagline">A theory &amp; practice studio for stringed instruments</div></div>
       <div class="toolbar">
-        <div class="segmented" role="tablist">
-          <button type="button" role="tab" class="tab ${state.mode==="single"?"active":""}" onclick="app.setMode('single')">Single</button>
-          <button type="button" role="tab" class="tab ${state.mode==="progression"?"active":""}" onclick="app.setMode('progression')">Progression</button>
-          <button type="button" role="tab" class="tab ${state.mode==="interval"?"active":""}" onclick="app.setMode('interval')">Intervals</button>
-          <button type="button" role="tab" class="tab ${state.mode==="finder"?"active":""}" onclick="app.setMode('finder')">Finder</button>
-          <button type="button" role="tab" class="tab ${state.mode==="quiz"?"active":""}" onclick="app.setMode('quiz')">Quiz</button>
-          <button type="button" role="tab" class="tab ${state.mode==="ear"?"active":""}" onclick="app.setMode('ear')">Ear</button>
-        </div>
+        <div class="segmented" role="tablist">${primaryTabs}</div>
+        <select class="util-btn ${inMore?"active-more":""}" onchange="if(this.value)app.setMode(this.value)" aria-label="More tools" style="${inMore?"border-color:var(--gold);color:var(--gold)":""}">${moreOptions}</select>
         <button type="button" class="util-btn" onclick="app.toggleTheme()" aria-label="Toggle theme">${themeLabel}</button>
         <button type="button" class="util-btn" onclick="app.toggle('showHelp')">${state.showHelp?"Hide help":"Help"}</button>
+        <button type="button" class="util-btn" onclick="app.toggle('showPrefs')">${state.showPrefs?"Hide prefs":"Preferences"}</button>
         ${exportButtons}
       </div>
       ${state.showHelp ? renderHelp() : ""}
+      ${state.showPrefs ? renderPreferences() : ""}
       ${showsGlobal ? renderGlobalPanels() : ""}
       ${showsGlobal ? renderSavedCharts() : ""}
       ${content}
-      <div class="footer">Open Strings · single-file offline app · works on GitHub Pages<br>Open strings ${esc(getOpenStrings().join(" "))} · ${esc(tuningLabel())}</div>
+      <div class="footer">Open Strings · single-file offline app · works on GitHub Pages<br>${esc(getOpenStrings().map(spell).join(" "))} · ${esc(tuningLabel())}</div>
     </div>`;
   }
 
@@ -1427,7 +1736,59 @@
     playSingleChord() { const { singleTones } = current(); audio.playChord(singleTones, true); },
     playVoicing(notes) { if (Array.isArray(notes)) audio.playChord(notes, true); },
     playChordByIndex(i) { const ch = state.progChords[i]; audio.playChord(buildTones(ch.key, CHORD_TYPES[ch.type]?.intervals || []), true); },
-    playProgression() { audio.playProgression(state.progChords); },
+    playProgression() { audio.playProgression(state.progChords, state.progLoop); },
+    toggleLoop() { state.progLoop = !state.progLoop; if (!state.progLoop) audio.stopProgression(); render(); },
+    stopAudio() { audio.stopProgression(); },
+    // Chord identifier
+    toggleIdNote(string, fret, note) {
+      const i = state.idNotes.findIndex(p => p.string === string && p.fret === fret);
+      if (i >= 0) state.idNotes.splice(i, 1);
+      else { state.idNotes.push({ string, fret, note }); audio.playNote(note); }
+      render();
+    },
+    clearIdNotes() { state.idNotes = []; render(); },
+    playIdentified(root, key) { audio.playChord(buildTones(root, CHORD_TYPES[key].intervals), true); },
+    // Modes
+    setModeParentKey(k) { state.modeParentKey = k; render(); },
+    playScale(root, intervals) { intervals.forEach((iv, i) => audio.playNote(transpose(root, iv), 4, 0.5, i * 0.18)); },
+    // Suggester
+    setSuggestKey(k) { state.suggestKey = k; render(); },
+    loadSuggested(enc) { try { const chords = JSON.parse(decodeURIComponent(enc)); state.progChords = chords.slice(0, 8); state.editingIdx = 0; state.mode = "progression"; toast("Loaded into Progression"); render(); } catch (e) {} },
+    playSuggested(enc) { try { const chords = JSON.parse(decodeURIComponent(enc)); audio.playProgression(chords, false); } catch (e) {} },
+    // Trainer
+    newTrainerTarget() {
+      const strings = getOpenStrings();
+      const { displayFrets } = current();
+      const pool = new Set();
+      strings.forEach(open => displayFrets.forEach(f => pool.add(noteAtFret(open, f))));
+      const arr = [...pool];
+      state.trainerTarget = arr[Math.floor(Math.random() * arr.length)];
+      state.trainerFound = [];
+      state.trainerStart = Date.now();
+      state.trainerTime = null;
+      render();
+    },
+    trainerGuess(string, fret, note) {
+      if (!state.trainerTarget) return;
+      if (note === state.trainerTarget) {
+        const key = string + ":" + fret;
+        if (!state.trainerFound.includes(key)) {
+          state.trainerFound.push(key);
+          audio.playNote(note);
+          // Check completion
+          const strings = getOpenStrings();
+          const { displayFrets } = current();
+          let total = 0;
+          strings.forEach((open, si) => displayFrets.forEach(f => { if (noteAtFret(open, f) === state.trainerTarget) total++; }));
+          if (state.trainerFound.length >= total) state.trainerTime = ((Date.now() - state.trainerStart) / 1000).toFixed(1);
+        }
+      } else {
+        toast(`That's ${spell(note)} — keep looking`);
+      }
+      render();
+    },
+    // Tuner
+    playTunerNote(note, i) { audio.playNote(note, 3 + Math.floor(i / 3), 1.6); },
     addChord() { if (state.progChords.length < 8) { state.progChords.push({ key: "C", type: "maj" }); state.editingIdx = state.progChords.length - 1; render(); } },
     removeChord(i) { state.progChords = state.progChords.filter((_, idx) => idx !== i); state.editingIdx = Math.max(0, Math.min(state.editingIdx, state.progChords.length - 1)); render(); },
     setProgChord(i, field, value) { state.progChords = state.progChords.map((c, idx) => idx === i ? { ...c, [field]: value } : c); render(); },
@@ -1465,7 +1826,7 @@
     applyCustomTuning() {
       const parts = String(state.customTuningText).toUpperCase().replace(/♯/g,"#").replace(/♭/g,"B").split(/[\s,\/]+/).filter(Boolean);
       const notes = parts.map(p => p.replace("DB","C#").replace("EB","D#").replace("GB","F#").replace("AB","G#").replace("BB","A#"));
-      if (notes.length !== 4 || !notes.every(n => CHROMATIC.includes(n))) { alert("Enter four notes, low to high — for example: C G D A"); return; }
+      if (notes.length < 4 || notes.length > 6 || !notes.every(n => CHROMATIC.includes(n))) { alert("Enter 4 to 6 notes, low to high — for example: C G D A or E A D G B E"); return; }
       state.instrument = "custom"; state.tuningName = "CUSTOM"; state.openStrings = notes; state.customTuningText = notes.join(" "); render();
     },
     setSavedName(v) { state.savedName = v; },
@@ -1493,6 +1854,7 @@
   };
 
   window.app = app;
+  audio.installUnlockHandlers();
   render();
   </script>
 </body>
