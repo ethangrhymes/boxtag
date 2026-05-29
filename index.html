@@ -355,16 +355,67 @@
     "hw_dim":     { label: "Half-Whole Dim.",  intervals: [0,1,3,4,6,7,9,10],color: "#7ed4a0" }
   };
 
-  // CGDA-specific voicings (only shown for that tuning)
-  const VOICINGS_CGDA = {
-    "maj":  { "C":[[0,0,0,3],[3,2,0,0],[0,0,2,3],[3,5,5,3]], "G":[[5,4,2,0],[0,0,0,2],[5,7,7,5]], "D":[[2,0,0,2],[7,6,4,2],[2,2,4,5]], "A":[[4,2,2,0],[9,9,7,5]], "E":[[0,1,1,0],[0,0,1,4]], "F":[[1,2,2,1],[1,1,2,0]], "B":[[3,0,0,4],[3,4,4,2]] },
-    "min":  { "C":[[0,1,0,3],[3,1,0,0],[3,4,5,3]], "G":[[5,3,2,0],[0,3,2,0],[5,7,6,5]], "D":[[2,0,3,2],[7,5,4,2]], "A":[[4,2,2,4],[9,8,7,5]], "E":[[0,0,1,0],[0,3,4,0]] },
-    "7":    { "C":[[0,3,2,3],[3,2,2,3]], "G":[[5,3,2,3],[0,0,2,1]], "D":[[2,0,2,2],[7,6,4,4]], "A":[[4,2,0,0],[9,9,7,7]] },
-    "maj7": { "C":[[0,0,0,2],[3,2,0,0]], "G":[[5,4,2,2],[0,0,0,0]], "D":[[2,0,0,1],[7,6,4,1]], "A":[[4,2,1,0],[9,9,7,4]] },
-    "min7": { "C":[[0,1,0,1],[3,1,2,3]], "G":[[5,3,2,3],[0,3,0,0]], "D":[[2,0,3,0],[7,5,4,4]], "A":[[4,2,2,3],[9,8,7,7]] },
-    "sus4": { "C":[[0,1,0,3],[3,3,0,0]], "G":[[0,0,0,0],[5,7,7,5]], "D":[[2,0,0,0],[7,7,4,2]], "A":[[0,2,2,0],[4,2,2,2]] },
-    "sus2": { "C":[[0,2,0,3],[3,0,0,0]], "G":[[0,0,0,2],[5,4,5,0]], "D":[[2,0,0,0],[7,6,4,2]], "A":[[4,2,0,0],[9,9,7,5]] }
-  };
+  // Voicings are generated algorithmically from the chord tones and the active tuning,
+  // so they are always correct for any instrument, tuning, key, and chord type.
+  function generateVoicings(openStrings, root, intervals, opts) {
+    opts = opts || {};
+    const maxFret = opts.maxFret != null ? opts.maxFret : 12;
+    const maxSpan = opts.maxSpan != null ? opts.maxSpan : 4;
+    const maxResults = opts.maxResults != null ? opts.maxResults : 4;
+    const chordTones = buildTones(root, intervals);
+    const toneSet = new Set(chordTones);
+    const nStrings = openStrings.length;
+    const need = Math.min(intervals.length, 3);
+
+    // Candidate frets per string whose note is a chord tone
+    const candidates = openStrings.map(open => {
+      const list = [];
+      for (let f = 0; f <= maxFret; f++) { if (toneSet.has(noteAtFret(open, f))) list.push(f); }
+      return list;
+    });
+
+    const results = [];
+    function recurse(si, chosen) {
+      if (si === nStrings) {
+        const played = chosen.filter(c => c !== null);
+        if (played.length < Math.min(3, nStrings)) return;
+        const firstPlayed = chosen.findIndex(c => c !== null);
+        let lastPlayed = -1;
+        for (let i = chosen.length - 1; i >= 0; i--) { if (chosen[i] !== null) { lastPlayed = i; break; } }
+        // Reject interior mutes — you cannot silently skip a middle string in normal play
+        for (let i = firstPlayed; i <= lastPlayed; i++) { if (chosen[i] === null) return; }
+        const notes = chosen.map((f, i) => f === null ? null : noteAtFret(openStrings[i], f)).filter(x => x);
+        const distinct = new Set(notes);
+        if (!distinct.has(root)) return;
+        if (distinct.size < need) return;
+        const fretted = played.filter(f => f > 0);
+        if (fretted.length && (Math.max(...fretted) - Math.min(...fretted) > maxSpan)) return;
+        results.push(chosen.slice());
+        return;
+      }
+      for (const f of candidates[si]) recurse(si + 1, chosen.concat(f));
+      recurse(si + 1, chosen.concat(null));
+    }
+    recurse(0, []);
+
+    function score(v) {
+      const played = v.filter(c => c !== null);
+      const fretted = played.filter(f => f > 0);
+      const minF = fretted.length ? Math.min(...fretted) : 0;
+      const span = fretted.length ? Math.max(...fretted) - minF : 0;
+      const openCount = played.filter(f => f === 0).length;
+      const muteCount = v.length - played.length;
+      let bassIsRoot = 0;
+      for (let i = 0; i < v.length; i++) { if (v[i] !== null) { bassIsRoot = noteAtFret(openStrings[i], v[i]) === root ? 1 : 0; break; } }
+      const allStrings = played.length === v.length ? 1 : 0;
+      return minF * 1.5 + span * 1.5 + muteCount * 4 - openCount - bassIsRoot * 3 - allStrings * 2;
+    }
+    results.sort((a, b) => score(a) - score(b));
+
+    const seen = new Set(), out = [];
+    for (const v of results) { const sig = v.join(","); if (seen.has(sig)) continue; seen.add(sig); out.push(v); if (out.length >= maxResults) break; }
+    return out;
+  }
 
   // Progressions by genre — Roman numerals + semitone offsets + qualities
   const PROGRESSION_LIBRARY = {
@@ -1017,13 +1068,14 @@
     // Diatonic panel
     const diatonicPanel = renderDiatonicPanel();
 
-    // Voicings
+    // Voicings — generated live for the current tuning
     let voicingSection = "";
-    if (state.tuningName === "CGDA") {
-      const vt = ["maj","min","7","maj7","min7","sus4","sus2"].includes(state.selectedType) ? state.selectedType : "maj";
-      const vs = VOICINGS_CGDA[vt]?.[state.selectedKey] || [];
-      const cards = vs.length ? vs.map((v,i) => renderVoicingCard(v,i,chordColor)).join("") : `<div class="info-text" style="padding:8px">No charted voicings for this key — try a nearby key or root.</div>`;
-      voicingSection = `<div style="margin-top:18px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div class="section-label" style="margin:0">Playable Voicings (CGDA)</div><button type="button" class="pill" style="--c:${chordColor};font-size:11px;padding:3px 10px" onclick="app.toggle('showVoicings')">${state.showVoicings?"hide":"show"}</button></div>${state.showVoicings ? `<div class="voicing-wrap">${cards}</div>` : ""}</div>`;
+    {
+      const strings = getOpenStrings();
+      const spanByInst = state.instrument === "bass" ? 5 : 4;
+      const vs = state.showVoicings ? generateVoicings(strings, state.selectedKey, chordDef.intervals, { maxSpan: spanByInst }) : [];
+      const cards = vs.length ? vs.map((v,i) => renderVoicingCard(v, i, chordColor, strings)).join("") : `<div class="info-text" style="padding:8px">No comfortable voicing found for this chord on the current tuning within reach. Try a different inversion by ear, or a nearby key.</div>`;
+      voicingSection = `<div style="margin-top:18px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div class="section-label" style="margin:0">Playable Voicings (${esc(strings.join(" "))})</div><button type="button" class="pill" style="--c:${chordColor};font-size:11px;padding:3px 10px" onclick="app.toggle('showVoicings')">${state.showVoicings?"hide":"show"}</button></div>${state.showVoicings ? `<div class="voicing-wrap">${cards}</div><div class="info-text" style="margin-top:8px">Generated for ${esc(strings.join(" "))}. Diagrams read low string (left label) to high; × means that string is not played. Position numbers show the fret.</div>` : ""}</div>`;
     }
 
     const legend = renderLegend(chordColor);
@@ -1055,26 +1107,76 @@
       <div class="info-text" style="margin-top:10px">These seven chords are built from the ${esc(state.selectedKey)} ${state.diatonicMode} scale. Tap any to load it on the fretboard.</div></div>`;
   }
 
-  function renderVoicingCard(voicing, idx, chordColor) {
-    const valid = voicing.filter(f => f !== null && f > 0);
-    if (!valid.length) return "";
-    const minF = Math.min(...valid), maxF = Math.max(...voicing.filter(f => f !== null));
-    const dMin = Math.max(0, minF - 1), dMax = Math.max(dMin + 4, maxF);
-    const frets = Array.from({length: dMax - dMin + 1}, (_,i) => i + dMin);
-    const labels = ["A","D","G","C"];
-    const stringRows = [...voicing].reverse().map((fp,si) => {
-      const dots = frets.map(f => {
-        if (fp === f && fp !== null) {
-          return `<div style="position:absolute;left:${(frets.indexOf(fp))*18-7}px;top:-7px;width:14px;height:14px;border-radius:50%;background:${fp===0?"transparent":chordColor};border:${fp===0?`2px solid ${chordColor}`:"none"};z-index:2"></div>`;
+  function renderVoicingCard(voicing, idx, chordColor, strings) {
+    strings = strings || getOpenStrings();
+    const root = state.selectedKey;
+    const fretted = voicing.filter(f => f !== null && f > 0);
+    const anyFretted = fretted.length > 0;
+    const minF = anyFretted ? Math.min(...fretted) : 0;
+    const maxF = anyFretted ? Math.max(...fretted) : 0;
+    // Window: start at 0 if any open notes used and shape is low, else frame around the fretted region
+    const usesOpen = voicing.some(f => f === 0);
+    let dMin, dMax;
+    if (usesOpen || minF <= 2) { dMin = 0; dMax = Math.max(4, maxF); }
+    else { dMin = minF - 1; dMax = Math.max(dMin + 4, maxF + 1); }
+    const span = dMax - dMin;
+    const colW = 20;
+    const frets = Array.from({ length: span + 1 }, (_, i) => i + dMin);
+
+    // Labels high (top) to low (bottom) — diagram drawn top=high string
+    const labelsHighToLow = [...strings].reverse();
+    const voicingHighToLow = [...voicing].reverse();
+
+    const rowHeight = 20;
+    const stringRows = voicingHighToLow.map((fp) => {
+      let marker = "";
+      if (fp === null) {
+        marker = `<span style="position:absolute;left:-13px;top:-6px;font-size:11px;color:var(--dim)">×</span>`;
+      } else {
+        const fi = frets.indexOf(fp);
+        if (fi >= 0) {
+          const isRoot = noteAtFret(strings[voicing.length - 1 - voicingHighToLow.indexOf(fp)], fp) === root;
+          // recompute isRoot reliably below per-string instead
         }
-        return "";
-      }).join("");
-      const mute = fp === null ? `<span style="position:absolute;left:-12px;top:-5px;font-size:11px;color:var(--dim)">×</span>` : "";
-      return `<div style="display:flex;height:18px;align-items:center"><div style="position:relative;width:${frets.length*18}px;height:2px;background:var(--wire)">${mute}${dots}</div></div>`;
-    }).join("");
-    const gridLines = frets.map((f,fi) => `<div style="position:absolute;left:${fi*18}px;top:0;bottom:0;width:1px;background:${f===0?"var(--nut)":"var(--fret)"}"></div>`).join("");
-    const fretNums = frets.map(f => `<div style="width:18px;text-align:center;font-size:8px;color:var(--faint);font-family:monospace">${f}</div>`).join("");
-    return `<div class="voicing-card"><div class="voicing-title">voicing ${idx+1}</div><div style="display:flex"><div style="display:flex;flex-direction:column;justify-content:space-around;padding-right:6px">${labels.map(l=>`<div style="font-size:9px;color:var(--muted);text-align:right;height:18px;display:flex;align-items:center">${l}</div>`).join("")}</div><div style="position:relative">${gridLines}${stringRows}<div style="display:flex;margin-top:4px">${fretNums}</div></div></div></div>`;
+      }
+      return marker;
+    });
+
+    // Build rows reliably with explicit string index
+    let rowsHtml = "";
+    for (let row = 0; row < strings.length; row++) {
+      const stringIndex = strings.length - 1 - row; // top row = highest string
+      const fp = voicing[stringIndex];
+      let cell = "";
+      if (fp === null) {
+        cell = `<span style="position:absolute;left:-13px;top:-6px;font-size:11px;color:var(--dim)">×</span>`;
+      } else {
+        const note = noteAtFret(strings[stringIndex], fp);
+        const isRoot = note === root;
+        const fi = frets.indexOf(fp);
+        const left = fi >= 0 ? fi * colW + colW / 2 - 7 : -100;
+        if (fp === 0) {
+          cell = `<div style="position:absolute;left:-13px;top:-6px;width:11px;height:11px;border-radius:50%;border:2px solid ${isRoot ? "var(--text-bright)" : chordColor};background:transparent" title="${esc(note)} (open)"></div>`;
+        } else {
+          cell = `<div style="position:absolute;left:${left}px;top:-7px;width:15px;height:15px;border-radius:50%;background:${isRoot ? "var(--root-fill)" : chordColor};border:${isRoot ? `2px solid ${chordColor}` : "none"};z-index:2;display:flex;align-items:center;justify-content:center" title="${esc(note)}"><span style="font-size:7px;font-weight:bold;color:${isRoot ? chordColor : "var(--dot-text)"};font-family:monospace">${isRoot ? "R" : ""}</span></div>`;
+        }
+      }
+      rowsHtml += `<div style="display:flex;align-items:center;height:${rowHeight}px;gap:6px"><div style="width:16px;text-align:right;font-size:9px;color:var(--muted)">${esc(strings[stringIndex])}</div><div style="position:relative;width:${frets.length * colW}px;height:2px;background:var(--wire)">${cell}</div></div>`;
+    }
+
+    const gridLines = frets.map((f, fi) => `<div style="position:absolute;left:${fi * colW}px;top:0;bottom:18px;width:1px;background:${f === 0 ? "var(--nut)" : "var(--fret)"}"></div>`).join("");
+    const fretNums = frets.map(f => `<div style="width:${colW}px;text-align:center;font-size:8px;color:var(--faint);font-family:monospace">${f}</div>`).join("");
+
+    // Notes for playback (low to high), skipping mutes
+    const playNotes = voicing.map((f, i) => f === null ? null : noteAtFret(strings[i], f)).filter(x => x);
+    const playArg = playNotes.map(n => `'${n}'`).join(",");
+
+    return `<div class="voicing-card"><div class="voicing-title">voicing ${idx + 1}</div>
+      <div style="position:relative;padding-left:22px">
+        <div style="position:relative;margin-left:0">${gridLines}<div style="position:relative">${rowsHtml}</div><div style="display:flex;margin-top:2px;padding-left:0">${fretNums}</div></div>
+      </div>
+      <button type="button" class="pill" style="--c:${chordColor};font-size:10px;padding:2px 8px;margin-top:8px;width:100%" onclick="app.playVoicing([${playArg}])">Hear</button>
+    </div>`;
   }
 
   function renderLegend(chordColor) {
@@ -1323,6 +1425,7 @@
     loadDiatonic(root, type) { state.selectedKey = root; state.selectedType = type; render(); },
     playNote(note) { audio.playNote(note); },
     playSingleChord() { const { singleTones } = current(); audio.playChord(singleTones, true); },
+    playVoicing(notes) { if (Array.isArray(notes)) audio.playChord(notes, true); },
     playChordByIndex(i) { const ch = state.progChords[i]; audio.playChord(buildTones(ch.key, CHORD_TYPES[ch.type]?.intervals || []), true); },
     playProgression() { audio.playProgression(state.progChords); },
     addChord() { if (state.progChords.length < 8) { state.progChords.push({ key: "C", type: "maj" }); state.editingIdx = state.progChords.length - 1; render(); } },
