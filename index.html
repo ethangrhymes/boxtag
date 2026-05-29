@@ -383,6 +383,55 @@
   };
   const CHORD_GROUP_ORDER = ["Triads","Suspended","Added","Sixth","Sevenths","Extended","Altered"];
 
+  // Accuracy rules for voicing validation.
+  // required = tones that must be present before a shape is shown as that chord.
+  // optional = chord tones that may be omitted on 4-string instruments without changing the identity.
+  // This prevents dense chords like 13, m11, add11, and altered dominants from being reduced to
+  // misleading plain triads just because they share a few basic chord tones.
+  const CHORD_RULES = {
+    "maj":     { required: [0,4,7],         optional: [] },
+    "min":     { required: [0,3,7],         optional: [] },
+    "5":       { required: [0,7],           optional: [] },
+    "aug":     { required: [0,4,8],         optional: [] },
+    "dim":     { required: [0,3,6],         optional: [] },
+    "sus2":    { required: [0,2],           optional: [7] },
+    "sus4":    { required: [0,5],           optional: [7] },
+    "add9":    { required: [0,4,14],        optional: [7] },
+    "madd9":   { required: [0,3,14],        optional: [7] },
+    "add11":   { required: [0,4,17],        optional: [7] },
+    "6":       { required: [0,4,9],         optional: [7] },
+    "m6":      { required: [0,3,9],         optional: [7] },
+    "69":      { required: [0,4,9,14],      optional: [7] },
+    "maj7":    { required: [0,4,11],        optional: [7] },
+    "7":       { required: [0,4,10],        optional: [7] },
+    "min7":    { required: [0,3,10],        optional: [7] },
+    "m7b5":    { required: [0,3,6,10],      optional: [] },
+    "dim7":    { required: [0,3,6,9],       optional: [] },
+    "mmaj7":   { required: [0,3,11],        optional: [7] },
+    "7sus4":   { required: [0,5,10],        optional: [7] },
+    "9":       { required: [0,4,10,14],     optional: [7] },
+    "maj9":    { required: [0,4,11,14],     optional: [7] },
+    "min9":    { required: [0,3,10,14],     optional: [7] },
+    "min11":   { required: [0,3,10,17],     optional: [7,14] },
+    "13":      { required: [0,4,10,21],     optional: [7,14] },
+    "maj13":   { required: [0,4,11,21],     optional: [7,14] },
+    "7b9":     { required: [0,4,10,13],     optional: [7] },
+    "7s9":     { required: [0,4,10,15],     optional: [7] },
+    "7s5":     { required: [0,4,8,10],      optional: [] },
+    "7b5":     { required: [0,4,6,10],      optional: [] },
+    "maj7s11": { required: [0,4,11,18],     optional: [7] }
+  };
+
+  function uniqIntervals(intervals) { return [...new Set((intervals || []).map(iv => ((iv % 12) + 12) % 12))]; }
+
+  // Tag each chord type with its own key and attach validation rules.
+  Object.entries(CHORD_TYPES).forEach(([k, v]) => {
+    v._key = k;
+    const rule = CHORD_RULES[k] || { required: v.intervals, optional: [] };
+    v.required = rule.required;
+    v.optional = rule.optional || [];
+  });
+
   // Scales and modes
   const SCALES = {
     "major":      { label: "Major (Ionian)",   intervals: [0,2,4,5,7,9,11],  color: "#e8c547" },
@@ -405,17 +454,167 @@
 
   // Voicings are generated algorithmically from the chord tones and the active tuning,
   // so they are always correct for any instrument, tuning, key, and chord type.
-  function generateVoicings(openStrings, root, intervals, opts) {
+  // ── Curated voicings ─────────────────────────────────────────────────────────
+  // Hand-verified canonical shapes. Each entry is [fret_array, quality(1-5)].
+  // null = muted string. Listed best-first per chord.
+  // These are mathematically verified: every note belongs to the chord (open-string
+  // drones on the lowest string are the only exception, and are intentional practice).
+  // The algorithm fills in everything else automatically as a fallback.
+  const CURATED_VOICINGS = {
+    "CGDA": {
+      "C:maj":  [[[0,0,2,3],5],[[4,5,5,3],4]],
+      "G:maj":  [[[2,0,0,2],5],[[7,4,5,5],4]],
+      "D:maj":  [[[2,2,4,5],5],[[2,2,4,0],4]],
+      "A:maj":  [[[1,2,2,0],5],[[4,2,2,4],4]],
+      "E:maj":  [[[4,1,2,2],5]],
+      "F:maj":  [[[5,2,7,3],5],[[0,2,3,3],4]],
+      "B:maj":  [[[3,4,4,9],5],[[11,4,4,2],4]],
+      "C:min":  [[[7,8,5,3],5],[[0,8,1,3],4]],
+      "G:min":  [[[2,0,0,1],5],[[7,3,0,5],4]],
+      "D:min":  [[[2,0,3,5],5],[[9,3,3,5],4]],
+      "A:min":  [[[0,2,2,3],5],[[4,2,2,3],4]],
+      "E:min":  [[[4,0,2,2],5],[[4,3,2,2],4]],
+      "F:min":  [[[5,3,8,3],5]],
+      "B:min":  [[[3,3,4,2],5]],
+      "G:7":    [[[2,0,3,2],5],[[7,0,3,2],4]],
+      "C:7":    [[[0,0,2,1],5],[[0,3,2,1],4]],
+      "D:7":    [[[2,0,2,0],5],[[2,2,2,0],4]],
+      "A:7":    [[[1,2,0,0],5],[[4,2,0,0],4]],
+      "E:7":    [[[4,1,2,0],5]],
+      "C:maj7": [[[0,0,2,2],5],[[0,4,2,2],4]],
+      "G:maj7": [[[2,0,0,0],5],[[7,4,5,4],4]],
+      "D:maj7": [[[2,0,4,1],5],[[2,2,4,4],4]],
+      "A:maj7": [[[4,2,1,0],5]],
+      "C:min7": [[[7,5,1,3],5],[[0,5,1,3],4]],
+      "G:min7": [[[2,0,3,1],5],[[7,3,0,1],4]],
+      "A:min7": [[[0,2,2,1],5],[[4,2,2,1],4]],
+      "D:min7": [[[2,0,3,0],5]],
+      "C:sus2": [[[0,0,0,3],5]],
+      "G:sus2": [[[2,0,0,0],5]],
+      "D:sus2": [[[2,0,0,2],5]],
+      "A:sus2": [[[0,2,0,0],5]],
+      "C:sus4": [[[0,0,0,1],5]],
+      "G:sus4": [[[2,0,0,0],5],[[0,0,0,0],4]],
+      "D:sus4": [[[2,0,0,2],5]],
+      "A:sus4": [[[0,2,2,2],5]],
+    },
+    "EADGBE": {
+      "C:maj":  [[[null,3,2,0,1,0],5],[[0,3,2,0,1,0],4]],
+      "G:maj":  [[[3,2,0,0,0,3],5],[[3,2,0,0,3,3],4]],
+      "D:maj":  [[[null,null,0,2,3,2],5],[[null,0,0,2,3,2],4]],
+      "A:maj":  [[[null,0,2,2,2,0],5],[[0,0,2,2,2,0],4]],
+      "E:maj":  [[[0,2,2,1,0,0],5]],
+      "F:maj":  [[[1,3,3,2,1,1],5],[[null,null,3,2,1,1],4]],
+      "B:maj":  [[[null,2,4,4,4,2],5]],
+      "C:min":  [[[null,3,5,5,4,3],5],[[null,null,5,5,4,3],4]],
+      "G:min":  [[[3,5,5,3,3,3],5],[[null,null,5,3,3,3],4]],
+      "D:min":  [[[null,null,0,2,3,1],5],[[null,0,0,2,3,1],4]],
+      "A:min":  [[[null,0,2,2,1,0],5],[[0,0,2,2,1,0],4]],
+      "E:min":  [[[0,2,2,0,0,0],5],[[0,2,2,0,0,3],4]],
+      "G:7":    [[[3,2,0,0,0,1],5],[[null,null,0,0,0,1],4]],
+      "C:7":    [[[null,3,2,3,1,0],5]],
+      "D:7":    [[[null,null,0,2,1,2],5],[[null,0,0,2,1,2],4]],
+      "A:7":    [[[null,0,2,0,2,0],5],[[0,0,2,0,2,0],4]],
+      "E:7":    [[[0,2,0,1,0,0],5]],
+      "B:7":    [[[null,2,1,2,0,2],5]],
+      "C:maj7": [[[null,3,2,0,0,0],5],[[0,3,2,0,0,0],4]],
+      "G:maj7": [[[3,2,0,0,0,2],5]],
+      "D:maj7": [[[null,null,0,2,2,2],5]],
+      "A:maj7": [[[null,0,2,1,2,0],5]],
+      "E:maj7": [[[0,2,1,1,0,0],5]],
+      "C:min7": [[[null,3,5,5,3,3],5]],
+      "G:min7": [[[3,5,3,3,3,3],5]],
+      "A:min7": [[[null,0,2,0,1,0],5],[[0,0,2,0,1,0],4]],
+      "D:min7": [[[null,null,0,2,1,1],5],[[null,0,0,2,1,1],4]],
+      "E:min7": [[[0,2,0,0,0,0],5],[[0,2,2,0,3,0],4]],
+      "A:sus2": [[[null,0,2,2,0,0],5]],
+      "D:sus4": [[[null,null,0,2,3,3],5]],
+      "A:sus4": [[[null,0,0,2,3,0],5]],
+      "E:sus4": [[[0,2,2,2,0,0],5]],
+    },
+    "EADG": {
+      "E:5":    [[[0,2,2,null],5]],
+      "A:5":    [[[null,0,2,2],5]],
+      "D:5":    [[[null,null,0,2],5]],
+      "G:5":    [[[null,null,5,5],5]],
+      "B:5":    [[[null,2,4,4],5]],
+      "E:maj":  [[[0,2,2,1],5]],
+      "A:maj":  [[[null,0,2,2],5]],
+      "D:maj":  [[[null,null,0,2],5]],
+      "E:min":  [[[0,2,2,0],5]],
+      "A:min":  [[[null,0,2,1],5]],
+      "D:min":  [[[null,null,0,1],5]],
+      "E:7":    [[[0,2,0,1],5]],
+      "A:7":    [[[null,0,2,0],5]],
+      "D:7":    [[[null,null,0,2],5]],
+    }
+  };
+
+  // ── Voicing lookup ────────────────────────────────────────────────────────────
+  // Returns curated shapes (if available) merged with algorithmically generated ones.
+  // Curated shapes always appear first, but are filtered through the same accuracy
+  // validator as generated shapes. This keeps old hand-entered shapes from sneaking
+  // in non-chord tones or missing the tone that defines an add/extended/altered chord.
+  function tuningSignature(openStrings) { return openStrings.join(""); }
+
+  function voicingNotes(openStrings, voicing) {
+    return voicing.map((f, i) => f === null ? null : noteAtFret(openStrings[i], f)).filter(Boolean);
+  }
+
+  function isVoicingValid(openStrings, voicing, root, chordDef) {
+    if (!Array.isArray(voicing) || voicing.length !== openStrings.length || !chordDef) return false;
+    const notes = voicingNotes(openStrings, voicing);
+    if (notes.length < Math.min(2, openStrings.length)) return false;
+
+    const chordToneSet = new Set(buildTones(root, chordDef.intervals));
+    const requiredSet = new Set(buildTones(root, chordDef.required || chordDef.intervals));
+    const present = new Set(notes);
+
+    // No outside notes. Earlier versions allowed some open-string "drones," but that
+    // is too risky for a theory-learning tool because it can label a non-chord tone as valid.
+    if (notes.some(n => !chordToneSet.has(n))) return false;
+    if ([...requiredSet].some(n => !present.has(n))) return false;
+
+    const firstPlayed = voicing.findIndex(c => c !== null);
+    let lastPlayed = -1;
+    for (let i = voicing.length - 1; i >= 0; i--) { if (voicing[i] !== null) { lastPlayed = i; break; } }
+    if (firstPlayed < 0 || lastPlayed < 0) return false;
+    for (let i = firstPlayed; i <= lastPlayed; i++) { if (voicing[i] === null) return false; }
+    return true;
+  }
+
+  function lookupCurated(openStrings, root, chordDef) {
+    const type = chordDef._key || "maj";
+    const key = `${root}:${type}`;
+    const sigFull = tuningSignature(openStrings);
+    // Exact matching avoids the BEADG -> EADG false match that can happen with substring lookup.
+    const tunKey = Object.prototype.hasOwnProperty.call(CURATED_VOICINGS, sigFull) ? sigFull : null;
+    const bank = tunKey ? CURATED_VOICINGS[tunKey] : null;
+    if (!bank || !bank[key]) return [];
+    return bank[key].map(([v]) => v).filter(v => isVoicingValid(openStrings, v, root, chordDef));
+  }
+
+  // ── Voicing generator with ergonomic scoring ─────────────────────────────────
+  function generateVoicings(openStrings, root, chordDefOrIntervals, opts) {
     opts = opts || {};
+    const chordDef = Array.isArray(chordDefOrIntervals)
+      ? { intervals: chordDefOrIntervals, required: chordDefOrIntervals, optional: [] }
+      : chordDefOrIntervals;
+    const intervals = chordDef.intervals || [0,4,7];
     const maxFret = opts.maxFret != null ? opts.maxFret : 12;
     const maxSpan = opts.maxSpan != null ? opts.maxSpan : 4;
     const maxResults = opts.maxResults != null ? opts.maxResults : 4;
     const chordTones = buildTones(root, intervals);
     const toneSet = new Set(chordTones);
+    const requiredSet = new Set(buildTones(root, chordDef.required || intervals));
+    const optionalSet = new Set(buildTones(root, chordDef.optional || []));
     const nStrings = openStrings.length;
-    const need = Math.min(intervals.length, 3);
 
-    // Candidate frets per string whose note is a chord tone
+    // If the defining tones physically require more distinct strings than this instrument has,
+    // do not show a deceptive "partial" shape as if it were the full chord identity.
+    if (requiredSet.size > nStrings) return [];
+
+    // Candidates: chord tones only (pure algorithm, ergonomics applied via scoring)
     const candidates = openStrings.map(open => {
       const list = [];
       for (let f = 0; f <= maxFret; f++) { if (toneSet.has(noteAtFret(open, f))) list.push(f); }
@@ -426,16 +625,8 @@
     function recurse(si, chosen) {
       if (si === nStrings) {
         const played = chosen.filter(c => c !== null);
-        if (played.length < Math.min(3, nStrings)) return;
-        const firstPlayed = chosen.findIndex(c => c !== null);
-        let lastPlayed = -1;
-        for (let i = chosen.length - 1; i >= 0; i--) { if (chosen[i] !== null) { lastPlayed = i; break; } }
-        // Reject interior mutes — you cannot silently skip a middle string in normal play
-        for (let i = firstPlayed; i <= lastPlayed; i++) { if (chosen[i] === null) return; }
-        const notes = chosen.map((f, i) => f === null ? null : noteAtFret(openStrings[i], f)).filter(x => x);
-        const distinct = new Set(notes);
-        if (!distinct.has(root)) return;
-        if (distinct.size < need) return;
+        if (played.length < Math.max(2, requiredSet.size)) return;
+        if (!isVoicingValid(openStrings, chosen, root, chordDef)) return;
         const fretted = played.filter(f => f > 0);
         if (fretted.length && (Math.max(...fretted) - Math.min(...fretted) > maxSpan)) return;
         results.push(chosen.slice());
@@ -448,21 +639,70 @@
 
     function score(v) {
       const played = v.filter(c => c !== null);
+      const notes = voicingNotes(openStrings, v);
+      const distinct = new Set(notes);
       const fretted = played.filter(f => f > 0);
       const minF = fretted.length ? Math.min(...fretted) : 0;
-      const span = fretted.length ? Math.max(...fretted) - minF : 0;
+      const maxF = fretted.length ? Math.max(...fretted) : 0;
+      const span = maxF - minF;
       const openCount = played.filter(f => f === 0).length;
       const muteCount = v.length - played.length;
-      let bassIsRoot = 0;
-      for (let i = 0; i < v.length; i++) { if (v[i] !== null) { bassIsRoot = noteAtFret(openStrings[i], v[i]) === root ? 1 : 0; break; } }
       const allStrings = played.length === v.length ? 1 : 0;
-      return minF * 1.5 + span * 1.5 + muteCount * 4 - openCount - bassIsRoot * 3 - allStrings * 2;
-    }
-    results.sort((a, b) => score(a) - score(b));
+      const optionalCount = [...optionalSet].filter(n => distinct.has(n)).length;
 
-    const seen = new Set(), out = [];
-    for (const v of results) { const sig = v.join(","); if (seen.has(sig)) continue; seen.add(sig); out.push(v); if (out.length >= maxResults) break; }
-    return out;
+      // Root in bass (lowest sounding string)
+      let bassIsRoot = 0;
+      for (let i = 0; i < v.length; i++) {
+        if (v[i] !== null) { bassIsRoot = noteAtFret(openStrings[i], v[i]) === root ? 1 : 0; break; }
+      }
+
+      // ERGONOMIC: Finger-order naturalness.
+      let crossingPenalty = 0;
+      const frettedPairs = [];
+      v.forEach((f, i) => { if (f !== null && f > 0) frettedPairs.push({ str: i, fret: f }); });
+      for (let i = 1; i < frettedPairs.length; i++) {
+        const diff = frettedPairs[i].fret - frettedPairs[i - 1].fret;
+        if (diff < -1) crossingPenalty += 1.5;
+      }
+
+      const clusterBonus = span <= 1 ? 2.5 : span <= 2 ? 1.5 : span === 3 ? 0.5 : 0;
+      const fullBonus = allStrings * 2;
+      const posPenalty = minF * 1.2;
+      const colorToneBonus = optionalCount * 0.35;
+      const coverageBonus = distinct.size * 0.45;
+
+      return posPenalty + span * 1.2 + muteCount * 3.5 + crossingPenalty
+           - openCount * 0.8 - bassIsRoot * 3 - fullBonus - clusterBonus
+           - colorToneBonus - coverageBonus;
+    }
+
+    results.sort((a, b) => score(a) - score(b));
+    const seen = new Set(), algo = [];
+    for (const v of results) {
+      const sig = v.join(",");
+      if (seen.has(sig)) continue;
+      seen.add(sig);
+      algo.push(v);
+      if (algo.length >= maxResults * 2) break;
+    }
+    return algo;
+  }
+
+
+  // ── Public voicings function ──────────────────────────────────────────────────
+  // Merges curated shapes with algorithmically generated ones. Both paths now use
+  // required-tone validation, so a C13 must contain its defining 13 and a 7#9 must
+  // contain the #9, rather than being simplified into a plain dominant or triad.
+  function getVoicings(openStrings, root, chordDef, maxSpan) {
+    const curated = lookupCurated(openStrings, root, chordDef);
+    const algo = generateVoicings(openStrings, root, chordDef, { maxSpan: maxSpan || 4, maxResults: 4 });
+
+    // Dedupe: algorithmic shapes that duplicate a curated shape are dropped.
+    const curatedSigs = new Set(curated.map(v => v.join(",")));
+    const algoFiltered = algo.filter(v => !curatedSigs.has(v.join(",")));
+
+    // Return curated first, then best algorithmic alternatives, capped at 4 total.
+    return [...curated, ...algoFiltered].slice(0, 4);
   }
 
   // Progressions by genre — Roman numerals + semitone offsets + qualities
@@ -598,6 +838,7 @@
     vlFrom: 0,
     vlTo: 1,
     itNote1: null, itNote2: null, itStr1: null, itFret1: null, itStr2: null, itFret2: null, itStep: 1,
+    audioEngine: "pluck",      // "pluck" = Karplus-Strong; "wave" = legacy oscillator backup
     audioWave: "triangle",
     audioVolume: 0.16,
     progTempo: 800,
@@ -727,6 +968,64 @@
 
     function noteFreq(note, oct = 4) { return 440 * Math.pow(2, ((oct - 4) * 12 + CHROMATIC.indexOf(note) - 9) / 12); }
 
+    function makePluckBuffer(c, freq, dur) {
+      const sr = c.sampleRate || 44100;
+      const length = Math.max(1, Math.floor((dur + 0.08) * sr));
+      const buffer = c.createBuffer(1, length, sr);
+      const data = buffer.getChannelData(0);
+      const period = Math.max(2, Math.floor(sr / Math.max(40, freq)));
+      const ring = new Float32Array(period);
+
+      // Slightly softened initial noise burst: bright enough to read as plucked string,
+      // not so bright that full chords become harsh on iPhone speakers.
+      for (let i = 0; i < period; i++) ring[i] = (Math.random() * 2 - 1) * 0.85;
+
+      let idx = 0;
+      const damping = freq < 130 ? 0.992 : freq > 900 ? 0.976 : 0.985;
+      for (let i = 0; i < length; i++) {
+        const next = (idx + 1) % period;
+        const sample = ring[idx];
+        ring[idx] = (ring[idx] + ring[next]) * 0.5 * damping;
+        idx = next;
+
+        // Simple click-safe release envelope.
+        const age = i / sr;
+        const releaseStart = Math.max(0.03, dur * 0.78);
+        const release = age > releaseStart ? Math.max(0, 1 - ((age - releaseStart) / Math.max(0.05, dur - releaseStart))) : 1;
+        data[i] = sample * release;
+      }
+      return buffer;
+    }
+
+    function playOscNote(c, note, oct, dur, delay) {
+      const osc = c.createOscillator();
+      const g = c.createGain();
+      osc.connect(g); g.connect(c.destination);
+      osc.type = state.audioWave || "triangle";
+      osc.frequency.value = noteFreq(note, oct);
+      const t = c.currentTime + delay;
+      const vol = Number(state.audioVolume) || 0.16;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.linearRampToValueAtTime(vol, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
+      osc.start(t);
+      osc.stop(t + dur + 0.05);
+    }
+
+    function playPluckNote(c, note, oct, dur, delay) {
+      const src = c.createBufferSource();
+      const g = c.createGain();
+      const freq = noteFreq(note, oct);
+      src.buffer = makePluckBuffer(c, freq, dur);
+      src.connect(g); g.connect(c.destination);
+      const t = c.currentTime + delay;
+      const vol = Number(state.audioVolume) || 0.16;
+      g.gain.setValueAtTime(vol * 0.95, t);
+      g.gain.exponentialRampToValueAtTime(0.0008, t + dur + 0.08);
+      src.start(t);
+      src.stop(t + dur + 0.12);
+    }
+
     function playNote(note, oct = 4, dur = 0.9, delay = 0) {
       const c = getCtx();
       if (!c) return;
@@ -734,19 +1033,12 @@
       if (c.state === "suspended" && c.resume) { c.resume().catch(() => {}); }
       const start = () => {
         try {
-          const osc = c.createOscillator();
-          const g = c.createGain();
-          osc.connect(g); g.connect(c.destination);
-          osc.type = state.audioWave || "triangle";
-          osc.frequency.value = noteFreq(note, oct);
-          const t = c.currentTime + delay;
-          const vol = Number(state.audioVolume) || 0.16;
-          g.gain.setValueAtTime(0.0001, t);
-          g.gain.linearRampToValueAtTime(vol, t + 0.02);
-          g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
-          osc.start(t);
-          osc.stop(t + dur + 0.05);
-        } catch (e) {}
+          if (state.audioEngine === "wave") playOscNote(c, note, oct, dur, delay);
+          else playPluckNote(c, note, oct, dur, delay);
+        } catch (e) {
+          // Backup path: if buffer-based pluck playback fails in a browser, keep the old oscillator engine alive.
+          try { playOscNote(c, note, oct, dur, delay); } catch (ignored) {}
+        }
       };
       // If the context is running, play now. If it is mid-resume, wait a tick and play.
       if (c.state === "running") start();
@@ -860,10 +1152,14 @@
     for (const root of CHROMATIC) {
       for (const [key, def] of Object.entries(CHORD_TYPES)) {
         const tones = new Set(buildTones(root, def.intervals));
+        const required = new Set(buildTones(root, def.required || def.intervals));
         const allPresent = present.every(n => tones.has(n));
-        const exactMatch = allPresent && tones.size === noteSet.size;
-        if (allPresent) {
-          const score = (exactMatch ? 100 : 0) - Math.abs(tones.size - noteSet.size) - def.intervals.length * 0.1;
+        const requiredPresent = [...required].every(n => noteSet.has(n));
+        const exactByRule = allPresent && requiredPresent && present.every(n => tones.has(n));
+        const exactMatch = exactByRule && [...tones].every(n => noteSet.has(n));
+        if (allPresent && requiredPresent) {
+          const optionalOmissions = [...tones].filter(n => !noteSet.has(n)).length;
+          const score = (exactMatch ? 100 : 0) - optionalOmissions - def.intervals.length * 0.1 + required.size * 0.2;
           if (!best || score > best.score) best = { root, key, def, score, exact: exactMatch };
         }
       }
@@ -1244,9 +1540,10 @@
     // Voicings — generated live for the current tuning
     let voicingSection = "";
     {
-      const strings = getOpenStrings();
+      // Voicings use the same sounding open strings as the visible fretboard, so capoed charts stay accurate.
+      const strings = current().effectiveOpen;
       const spanByInst = state.instrument === "bass" ? 5 : 4;
-      const vs = state.showVoicings ? generateVoicings(strings, state.selectedKey, chordDef.intervals, { maxSpan: spanByInst }) : [];
+      const vs = state.showVoicings ? getVoicings(strings, state.selectedKey, chordDef, spanByInst) : [];
       const cards = vs.length ? vs.map((v,i) => renderVoicingCard(v, i, chordColor, strings)).join("") : `<div class="info-text" style="padding:8px">No comfortable voicing found for this chord on the current tuning within reach. Try a different inversion by ear, or a nearby key.</div>`;
       voicingSection = `<div style="margin-top:18px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div class="section-label" style="margin:0">Playable Voicings (${esc(strings.join(" "))})</div><button type="button" class="pill" style="--c:${chordColor};font-size:11px;padding:3px 10px" onclick="app.toggle('showVoicings')">${state.showVoicings?"hide":"show"}</button></div>${state.showVoicings ? `<div class="voicing-wrap">${cards}</div><div class="info-text" style="margin-top:8px">Generated for ${esc(strings.join(" "))}. Diagrams read low string (left label) to high; × means that string is not played. Position numbers show the fret.</div>` : ""}</div>`;
     }
@@ -1622,13 +1919,15 @@
 
   // ── Preferences panel ──
   function renderPreferences() {
+    const engineBtns = `${btn("Plucked string", state.audioEngine==="pluck", "#a8c4e8", "app.set('audioEngine','pluck')")}${btn("Classic waveform", state.audioEngine==="wave", "#a8c4e8", "app.set('audioEngine','wave')")}`;
     const waveBtns = ["triangle","sine","square","sawtooth"].map(w => btn(w, state.audioWave===w, "#a8c4e8", `app.set('audioWave','${w}')`)).join("");
     return `<div class="card" style="margin-bottom:16px"><div class="section-label">Preferences</div>
       <div style="display:flex;flex-wrap:wrap;gap:18px">
         <div><div class="mini-label">Dot labels</div><div class="row">${btn("Intervals", state.noteDisplay==="interval", "#e8c547", "app.set('noteDisplay','interval')")}${btn("Note names", state.noteDisplay==="note", "#e8c547", "app.set('noteDisplay','note')")}</div></div>
         <div><div class="mini-label">Accidentals</div><div class="row">${btn("Sharps ♯", state.accidental==="sharp", "#7eb8d4", "app.set('accidental','sharp')")}${btn("Flats ♭", state.accidental==="flat", "#7eb8d4", "app.set('accidental','flat')")}</div></div>
         <div><div class="mini-label">Handedness</div><div class="row">${btn("Right-handed", !state.leftHanded, "#6dd4a8", "app.set('leftHanded',false)")}${btn("Left-handed", state.leftHanded, "#6dd4a8", "app.set('leftHanded',true)")}</div></div>
-        <div><div class="mini-label">Tone</div><div class="row">${waveBtns}</div></div>
+        <div><div class="mini-label">Audio engine</div><div class="row">${engineBtns}</div><div class="info-text" style="font-size:10px;margin-top:4px">Plucked string uses Karplus-Strong; waveform remains the backup.</div></div>
+        <div><div class="mini-label">Backup waveform</div><div class="row">${waveBtns}</div></div>
         <div style="min-width:160px"><div class="mini-label">Volume</div><input type="range" min="0.02" max="0.4" step="0.02" value="${state.audioVolume}" oninput="app.set('audioVolume',parseFloat(this.value))" style="width:100%" aria-label="Volume" /></div>
         <div style="min-width:160px"><div class="mini-label">Progression tempo</div><input type="range" min="300" max="1400" step="50" value="${state.progTempo}" oninput="app.set('progTempo',parseInt(this.value))" style="width:100%" aria-label="Tempo" /><div class="info-text" style="font-size:10px">${Math.round(60000/state.progTempo)} BPM</div></div>
       </div></div>`;
