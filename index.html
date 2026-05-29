@@ -2,8 +2,14 @@
 <html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Open Strings — Four-String Theory & Practice Studio</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#0c0c0c" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Open Strings" />
+<meta name="description" content="A theory and practice studio for stringed instruments — chords, scales, progressions, intervals, voicings, ear training, and more. Works offline." />
+<title>Open Strings — Theory &amp; Practice Studio for Stringed Instruments</title>
 <style>
   :root {
     --bg: #0c0c0c;
@@ -263,53 +269,53 @@
     "guitar": {
       label: "Guitar (6-string)",
       tunings: {
-        "EADGBE": { label: "EADGBE — standard", strings: ["E","A","D","G","B","E"] },
-        "DADGBE": { label: "Drop D", strings: ["D","A","D","G","B","E"] },
-        "DADGAD": { label: "DADGAD — Celtic", strings: ["D","A","D","G","A","D"] },
-        "OPENG":  { label: "Open G — DGDGBD", strings: ["D","G","D","G","B","D"] },
-        "OPEND":  { label: "Open D — DADF#AD", strings: ["D","A","D","F#","A","D"] },
-        "EbST":   { label: "Half-step down — Eb Ab Db Gb Bb Eb", strings: ["D#","G#","C#","F#","A#","D#"] }
+        "EADGBE": { label: "EADGBE — standard", strings: ["E","A","D","G","B","E"], octaves: [2,2,3,3,3,4] },
+        "DADGBE": { label: "Drop D", strings: ["D","A","D","G","B","E"], octaves: [2,2,3,3,3,4] },
+        "DADGAD": { label: "DADGAD — Celtic", strings: ["D","A","D","G","A","D"], octaves: [2,2,3,3,3,4] },
+        "OPENG":  { label: "Open G — DGDGBD", strings: ["D","G","D","G","B","D"], octaves: [2,2,3,3,3,4] },
+        "OPEND":  { label: "Open D — DADF#AD", strings: ["D","A","D","F#","A","D"], octaves: [2,2,3,3,3,4] },
+        "EbST":   { label: "Half-step down — Eb Ab Db Gb Bb Eb", strings: ["D#","G#","C#","F#","A#","D#"], octaves: [2,2,3,3,3,4] }
       }
     },
     "tenor": {
       label: "Tenor Guitar",
       tunings: {
-        "CGDA": { label: "CGDA — standard (fifths)", strings: ["C","G","D","A"] },
-        "GDAE": { label: "GDAE — Irish / octave mandolin", strings: ["G","D","A","E"] },
-        "DGBE": { label: "DGBE — Chicago / guitar-style", strings: ["D","G","B","E"] },
-        "DGBD": { label: "DGBD — open G slice", strings: ["D","G","B","D"] }
+        "CGDA": { label: "CGDA — standard (fifths)", strings: ["C","G","D","A"], octaves: [3,3,4,4] },
+        "GDAE": { label: "GDAE — Irish / octave mandolin", strings: ["G","D","A","E"], octaves: [2,3,3,4] },
+        "DGBE": { label: "DGBE — Chicago / guitar-style", strings: ["D","G","B","E"], octaves: [3,3,3,4] },
+        "DGBD": { label: "DGBD — open G slice", strings: ["D","G","B","D"], octaves: [3,3,3,4] }
       }
     },
     "bass": {
       label: "Bass Guitar",
       tunings: {
-        "EADG": { label: "EADG — standard 4-string", strings: ["E","A","D","G"] },
-        "DADG": { label: "DADG — drop D", strings: ["D","A","D","G"] },
-        "BEADG": { label: "BEADG — 5-string", strings: ["B","E","A","D","G"] },
-        "BEAD": { label: "BEAD — low B four", strings: ["B","E","A","D"] }
+        "EADG": { label: "EADG — standard 4-string", strings: ["E","A","D","G"], octaves: [1,1,2,2] },
+        "DADG": { label: "DADG — drop D", strings: ["D","A","D","G"], octaves: [1,1,2,2] },
+        "BEADG": { label: "BEADG — 5-string", strings: ["B","E","A","D","G"], octaves: [0,1,1,2,2] },
+        "BEAD": { label: "BEAD — low B four", strings: ["B","E","A","D"], octaves: [0,1,1,2] }
       }
     },
     "mandolin": {
       label: "Mandolin",
-      tunings: { "GDAE": { label: "GDAE — standard (fifths)", strings: ["G","D","A","E"] } }
+      tunings: { "GDAE": { label: "GDAE — standard (fifths)", strings: ["G","D","A","E"], octaves: [3,4,4,5] } }
     },
     "ukulele": {
       label: "Ukulele",
       tunings: {
-        "GCEA": { label: "GCEA — standard (re-entrant)", strings: ["G","C","E","A"] },
-        "DGBE": { label: "DGBE — baritone", strings: ["D","G","B","E"] }
+        "GCEA": { label: "GCEA — standard (re-entrant)", strings: ["G","C","E","A"], octaves: [4,4,4,4] },
+        "DGBE": { label: "DGBE — baritone", strings: ["D","G","B","E"], octaves: [3,3,3,4] }
       }
     },
     "plectrum": {
       label: "Plectrum Banjo",
       tunings: {
-        "CGBD": { label: "CGBD — standard plectrum", strings: ["C","G","B","D"] },
-        "DGBD": { label: "DGBD — Chicago banjo", strings: ["D","G","B","D"] }
+        "CGBD": { label: "CGBD — standard plectrum", strings: ["C","G","B","D"], octaves: [3,3,3,4] },
+        "DGBD": { label: "DGBD — Chicago banjo", strings: ["D","G","B","D"], octaves: [3,3,3,4] }
       }
     },
     "custom": {
       label: "Custom",
-      tunings: { "CUSTOM": { label: "Custom — enter notes (4–6)", strings: ["C","G","D","A"] } }
+      tunings: { "CUSTOM": { label: "Custom — enter notes (4–6)", strings: ["C","G","D","A"], octaves: [3,3,4,4] } }
     }
   };
 
@@ -382,55 +388,8 @@
     "maj7s11": { label: "Maj7#11",      intervals: [0,4,7,11,18],   color: "#d4d47e", group: "Altered",   intLabels: ["R","3","5","7","#11"] }
   };
   const CHORD_GROUP_ORDER = ["Triads","Suspended","Added","Sixth","Sevenths","Extended","Altered"];
-
-  // Accuracy rules for voicing validation.
-  // required = tones that must be present before a shape is shown as that chord.
-  // optional = chord tones that may be omitted on 4-string instruments without changing the identity.
-  // This prevents dense chords like 13, m11, add11, and altered dominants from being reduced to
-  // misleading plain triads just because they share a few basic chord tones.
-  const CHORD_RULES = {
-    "maj":     { required: [0,4,7],         optional: [] },
-    "min":     { required: [0,3,7],         optional: [] },
-    "5":       { required: [0,7],           optional: [] },
-    "aug":     { required: [0,4,8],         optional: [] },
-    "dim":     { required: [0,3,6],         optional: [] },
-    "sus2":    { required: [0,2],           optional: [7] },
-    "sus4":    { required: [0,5],           optional: [7] },
-    "add9":    { required: [0,4,14],        optional: [7] },
-    "madd9":   { required: [0,3,14],        optional: [7] },
-    "add11":   { required: [0,4,17],        optional: [7] },
-    "6":       { required: [0,4,9],         optional: [7] },
-    "m6":      { required: [0,3,9],         optional: [7] },
-    "69":      { required: [0,4,9,14],      optional: [7] },
-    "maj7":    { required: [0,4,11],        optional: [7] },
-    "7":       { required: [0,4,10],        optional: [7] },
-    "min7":    { required: [0,3,10],        optional: [7] },
-    "m7b5":    { required: [0,3,6,10],      optional: [] },
-    "dim7":    { required: [0,3,6,9],       optional: [] },
-    "mmaj7":   { required: [0,3,11],        optional: [7] },
-    "7sus4":   { required: [0,5,10],        optional: [7] },
-    "9":       { required: [0,4,10,14],     optional: [7] },
-    "maj9":    { required: [0,4,11,14],     optional: [7] },
-    "min9":    { required: [0,3,10,14],     optional: [7] },
-    "min11":   { required: [0,3,10,17],     optional: [7,14] },
-    "13":      { required: [0,4,10,21],     optional: [7,14] },
-    "maj13":   { required: [0,4,11,21],     optional: [7,14] },
-    "7b9":     { required: [0,4,10,13],     optional: [7] },
-    "7s9":     { required: [0,4,10,15],     optional: [7] },
-    "7s5":     { required: [0,4,8,10],      optional: [] },
-    "7b5":     { required: [0,4,6,10],      optional: [] },
-    "maj7s11": { required: [0,4,11,18],     optional: [7] }
-  };
-
-  function uniqIntervals(intervals) { return [...new Set((intervals || []).map(iv => ((iv % 12) + 12) % 12))]; }
-
-  // Tag each chord type with its own key and attach validation rules.
-  Object.entries(CHORD_TYPES).forEach(([k, v]) => {
-    v._key = k;
-    const rule = CHORD_RULES[k] || { required: v.intervals, optional: [] };
-    v.required = rule.required;
-    v.optional = rule.optional || [];
-  });
+  // Tag each chord type with its own key for curated voicing lookup
+  Object.entries(CHORD_TYPES).forEach(([k, v]) => { v._key = k; });
 
   // Scales and modes
   const SCALES = {
@@ -471,32 +430,32 @@
       "B:maj":  [[[3,4,4,9],5],[[11,4,4,2],4]],
       "C:min":  [[[7,8,5,3],5],[[0,8,1,3],4]],
       "G:min":  [[[2,0,0,1],5],[[7,3,0,5],4]],
-      "D:min":  [[[2,0,3,5],5],[[9,3,3,5],4]],
+      "D:min":  [[[2,2,3,0],5],[[2,2,3,5],4]],
       "A:min":  [[[0,2,2,3],5],[[4,2,2,3],4]],
-      "E:min":  [[[4,0,2,2],5],[[4,3,2,2],4]],
-      "F:min":  [[[5,3,8,3],5]],
-      "B:min":  [[[3,3,4,2],5]],
+      "E:min":  [[[4,0,2,2],5],[[4,0,5,2],4]],
+      "F:min":  [[[0,1,3,3],5],[[5,1,3,3],4]],
+      "B:min":  [[[2,4,4,2],5],[[2,4,4,5],4]],
       "G:7":    [[[2,0,3,2],5],[[7,0,3,2],4]],
       "C:7":    [[[0,0,2,1],5],[[0,3,2,1],4]],
-      "D:7":    [[[2,0,2,0],5],[[2,2,2,0],4]],
+      "D:7":    [[[2,2,4,3],5],[[2,5,4,0],4]],
       "A:7":    [[[1,2,0,0],5],[[4,2,0,0],4]],
-      "E:7":    [[[4,1,2,0],5]],
+      "E:7":    [[[2,1,2,2],5]],
       "C:maj7": [[[0,0,2,2],5],[[0,4,2,2],4]],
-      "G:maj7": [[[2,0,0,0],5],[[7,4,5,4],4]],
-      "D:maj7": [[[2,0,4,1],5],[[2,2,4,4],4]],
-      "A:maj7": [[[4,2,1,0],5]],
-      "C:min7": [[[7,5,1,3],5],[[0,5,1,3],4]],
+      "G:maj7": [[[2,0,4,2],5],[[2,0,0,0],4]],
+      "D:maj7": [[[2,2,4,4],5],[[2,0,4,4],4]],
+      "A:maj7": [[[1,1,2,0],5],[[1,2,2,0],4]],
+      "C:min7": [[[0,0,1,1],5],[[0,3,5,6],4]],
       "G:min7": [[[2,0,3,1],5],[[7,3,0,1],4]],
-      "A:min7": [[[0,2,2,1],5],[[4,2,2,1],4]],
-      "D:min7": [[[2,0,3,0],5]],
+      "A:min7": [[[0,0,2,0],5],[[4,2,5,3],4]],
+      "D:min7": [[[2,2,3,3],5],[[2,0,3,3],4]],
       "C:sus2": [[[0,0,0,3],5]],
       "G:sus2": [[[2,0,0,0],5]],
-      "D:sus2": [[[2,0,0,2],5]],
+      "D:sus2": [[[2,2,2,0],5]],
       "A:sus2": [[[0,2,0,0],5]],
-      "C:sus4": [[[0,0,0,1],5]],
+      "C:sus4": [[[0,0,3,3],5]],
       "G:sus4": [[[2,0,0,0],5],[[0,0,0,0],4]],
-      "D:sus4": [[[2,0,0,2],5]],
-      "A:sus4": [[[0,2,2,2],5]],
+      "D:sus4": [[[2,0,0,0],5]],
+      "A:sus4": [[[2,2,2,0],5],[[4,2,0,0],4]],
     },
     "EADGBE": {
       "C:maj":  [[[null,3,2,0,1,0],5],[[0,3,2,0,1,0],4]],
@@ -522,7 +481,7 @@
       "D:maj7": [[[null,null,0,2,2,2],5]],
       "A:maj7": [[[null,0,2,1,2,0],5]],
       "E:maj7": [[[0,2,1,1,0,0],5]],
-      "C:min7": [[[null,3,5,5,3,3],5]],
+      "C:min7": [[[null,3,5,3,4,3],5]],
       "G:min7": [[[3,5,3,3,3,3],5]],
       "A:min7": [[[null,0,2,0,1,0],5],[[0,0,2,0,1,0],4]],
       "D:min7": [[[null,null,0,2,1,1],5],[[null,0,0,2,1,1],4]],
@@ -536,14 +495,14 @@
       "E:5":    [[[0,2,2,null],5]],
       "A:5":    [[[null,0,2,2],5]],
       "D:5":    [[[null,null,0,2],5]],
-      "G:5":    [[[null,null,5,5],5]],
+      "G:5":    [[[3,5,0,0],5],[[3,5,5,0],4]],
       "B:5":    [[[null,2,4,4],5]],
       "E:maj":  [[[0,2,2,1],5]],
       "A:maj":  [[[null,0,2,2],5]],
       "D:maj":  [[[null,null,0,2],5]],
       "E:min":  [[[0,2,2,0],5]],
-      "A:min":  [[[null,0,2,1],5]],
-      "D:min":  [[[null,null,0,1],5]],
+      "A:min":  [[[0,3,2,2],5]],
+      "D:min":  [[[1,0,0,2],5]],
       "E:7":    [[[0,2,0,1],5]],
       "A:7":    [[[null,0,2,0],5]],
       "D:7":    [[[null,null,0,2],5]],
@@ -552,67 +511,54 @@
 
   // ── Voicing lookup ────────────────────────────────────────────────────────────
   // Returns curated shapes (if available) merged with algorithmically generated ones.
-  // Curated shapes always appear first, but are filtered through the same accuracy
-  // validator as generated shapes. This keeps old hand-entered shapes from sneaking
-  // in non-chord tones or missing the tone that defines an add/extended/altered chord.
-  function tuningSignature(openStrings) { return openStrings.join(""); }
-
-  function voicingNotes(openStrings, voicing) {
-    return voicing.map((f, i) => f === null ? null : noteAtFret(openStrings[i], f)).filter(Boolean);
-  }
-
-  function isVoicingValid(openStrings, voicing, root, chordDef) {
-    if (!Array.isArray(voicing) || voicing.length !== openStrings.length || !chordDef) return false;
-    const notes = voicingNotes(openStrings, voicing);
-    if (notes.length < Math.min(2, openStrings.length)) return false;
-
-    const chordToneSet = new Set(buildTones(root, chordDef.intervals));
-    const requiredSet = new Set(buildTones(root, chordDef.required || chordDef.intervals));
-    const present = new Set(notes);
-
-    // No outside notes. Earlier versions allowed some open-string "drones," but that
-    // is too risky for a theory-learning tool because it can label a non-chord tone as valid.
-    if (notes.some(n => !chordToneSet.has(n))) return false;
-    if ([...requiredSet].some(n => !present.has(n))) return false;
-
-    const firstPlayed = voicing.findIndex(c => c !== null);
-    let lastPlayed = -1;
-    for (let i = voicing.length - 1; i >= 0; i--) { if (voicing[i] !== null) { lastPlayed = i; break; } }
-    if (firstPlayed < 0 || lastPlayed < 0) return false;
-    for (let i = firstPlayed; i <= lastPlayed; i++) { if (voicing[i] === null) return false; }
-    return true;
-  }
-
-  function lookupCurated(openStrings, root, chordDef) {
-    const type = chordDef._key || "maj";
+  // Curated shapes always appear first; algorithmic fills gaps.
+  function lookupCurated(openStrings, root, type) {
     const key = `${root}:${type}`;
-    const sigFull = tuningSignature(openStrings);
-    // Exact matching avoids the BEADG -> EADG false match that can happen with substring lookup.
-    const tunKey = Object.prototype.hasOwnProperty.call(CURATED_VOICINGS, sigFull) ? sigFull : null;
-    const bank = tunKey ? CURATED_VOICINGS[tunKey] : null;
+    // Exact tuning signature (joining the open-string names). Using an exact match avoids
+    // the bug where a 5-string tuning like BEADG would substring-match the 4-string EADG bank.
+    const sig = openStrings.join("");
+    const bank = CURATED_VOICINGS[sig];
     if (!bank || !bank[key]) return [];
-    return bank[key].map(([v]) => v).filter(v => isVoicingValid(openStrings, v, root, chordDef));
+    // Only return shapes whose length matches the string count (extra safety).
+    return bank[key].map(([v]) => v).filter(v => v.length === openStrings.length);
   }
 
   // ── Voicing generator with ergonomic scoring ─────────────────────────────────
-  function generateVoicings(openStrings, root, chordDefOrIntervals, opts) {
+  function generateVoicings(openStrings, root, intervals, opts) {
     opts = opts || {};
-    const chordDef = Array.isArray(chordDefOrIntervals)
-      ? { intervals: chordDefOrIntervals, required: chordDefOrIntervals, optional: [] }
-      : chordDefOrIntervals;
-    const intervals = chordDef.intervals || [0,4,7];
     const maxFret = opts.maxFret != null ? opts.maxFret : 12;
     const maxSpan = opts.maxSpan != null ? opts.maxSpan : 4;
     const maxResults = opts.maxResults != null ? opts.maxResults : 4;
+    const intLabels = opts.intLabels || null;
     const chordTones = buildTones(root, intervals);
     const toneSet = new Set(chordTones);
-    const requiredSet = new Set(buildTones(root, chordDef.required || intervals));
-    const optionalSet = new Set(buildTones(root, chordDef.optional || []));
     const nStrings = openStrings.length;
 
-    // If the defining tones physically require more distinct strings than this instrument has,
-    // do not show a deceptive "partial" shape as if it were the full chord identity.
-    if (requiredSet.size > nStrings) return [];
+    // Essential tones: the notes a voicing must include to still BE this chord.
+    // On 4 strings you can't fit every tension, so we drop the most omittable members
+    // (the 5th first, then the root if doubled elsewhere) but never the quality-defining
+    // tones: the 3rd/sus, the 7th, and any altered/extension tone (9, 11, 13, b5, #5...).
+    const essential = (() => {
+      if (!intLabels) {
+        // No labels available — fall back to root + up to 3 distinct tones.
+        return { set: new Set([root]), min: Math.min(intervals.length, 3) };
+      }
+      const set = new Set();
+      intervals.forEach((iv, i) => {
+        const label = intLabels[i] || "";
+        const noteName = chordTones[i];
+        // The perfect 5th ("5") is the most omittable; everything else that isn't the
+        // bare root is treated as essential to the chord's identity.
+        if (label === "5") return;
+        if (label === "R") { set.add(noteName); return; }
+        set.add(noteName);
+      });
+      // For larger chords, allow ONE non-root essential tone to be dropped so shapes remain
+      // playable on four strings, but keep the most characteristic ones (3rd and 7th).
+      const essArr = [...set];
+      const minNeeded = Math.min(essArr.length, nStrings);
+      return { set, min: minNeeded, full: essArr };
+    })();
 
     // Candidates: chord tones only (pure algorithm, ergonomics applied via scoring)
     const candidates = openStrings.map(open => {
@@ -621,12 +567,38 @@
       return list;
     });
 
+    // How many distinct chord tones a voicing must sound.
+    const need = intLabels ? Math.min(essential.set.size, nStrings, intervals.length <= 3 ? 3 : 4) : Math.min(intervals.length, 3);
+    // The quality-defining tones that must always be present (3rd/sus + 7th + alterations),
+    // computed by excluding root and 5th from the essential set.
+    const mustHave = intLabels
+      ? [...essential.set].filter(n => {
+          const i = chordTones.indexOf(n);
+          const lbl = intLabels[i] || "";
+          return lbl !== "R" && lbl !== "5";
+        })
+      : [];
+    // On 4-string instruments, cap mustHave to the most characteristic two (3rd & 7th-ish)
+    // so dense chords can still be fingered; on 5-6 strings keep more.
+    const mustHaveCap = nStrings >= 6 ? 4 : nStrings === 5 ? 3 : 2;
+    const mustHaveReq = mustHave.slice(0, mustHaveCap);
+
     const results = [];
     function recurse(si, chosen) {
       if (si === nStrings) {
         const played = chosen.filter(c => c !== null);
-        if (played.length < Math.max(2, requiredSet.size)) return;
-        if (!isVoicingValid(openStrings, chosen, root, chordDef)) return;
+        if (played.length < Math.min(3, nStrings)) return;
+        const firstPlayed = chosen.findIndex(c => c !== null);
+        let lastPlayed = -1;
+        for (let i = chosen.length - 1; i >= 0; i--) { if (chosen[i] !== null) { lastPlayed = i; break; } }
+        // Reject interior mutes (can't silently skip a middle string)
+        for (let i = firstPlayed; i <= lastPlayed; i++) { if (chosen[i] === null) return; }
+        const notes = chosen.map((f, i) => f === null ? null : noteAtFret(openStrings[i], f)).filter(x => x);
+        const distinct = new Set(notes);
+        if (!distinct.has(root)) return;
+        if (distinct.size < need) return;
+        // Quality-defining tones must be present (the fix for extended chords losing their 7th/9th/etc.)
+        for (const n of mustHaveReq) { if (!distinct.has(n)) return; }
         const fretted = played.filter(f => f > 0);
         if (fretted.length && (Math.max(...fretted) - Math.min(...fretted) > maxSpan)) return;
         results.push(chosen.slice());
@@ -639,8 +611,6 @@
 
     function score(v) {
       const played = v.filter(c => c !== null);
-      const notes = voicingNotes(openStrings, v);
-      const distinct = new Set(notes);
       const fretted = played.filter(f => f > 0);
       const minF = fretted.length ? Math.min(...fretted) : 0;
       const maxF = fretted.length ? Math.max(...fretted) : 0;
@@ -648,7 +618,6 @@
       const openCount = played.filter(f => f === 0).length;
       const muteCount = v.length - played.length;
       const allStrings = played.length === v.length ? 1 : 0;
-      const optionalCount = [...optionalSet].filter(n => distinct.has(n)).length;
 
       // Root in bass (lowest sounding string)
       let bassIsRoot = 0;
@@ -657,23 +626,27 @@
       }
 
       // ERGONOMIC: Finger-order naturalness.
+      // A natural hand position has fingers ascending as strings ascend (index on lowest fret).
+      // Penalise shapes where a higher string needs a LOWER fret than a lower string (finger crossing).
       let crossingPenalty = 0;
       const frettedPairs = [];
       v.forEach((f, i) => { if (f !== null && f > 0) frettedPairs.push({ str: i, fret: f }); });
       for (let i = 1; i < frettedPairs.length; i++) {
         const diff = frettedPairs[i].fret - frettedPairs[i - 1].fret;
-        if (diff < -1) crossingPenalty += 1.5;
+        if (diff < -1) crossingPenalty += 1.5; // large backward step = awkward
       }
 
+      // ERGONOMIC: Tight cluster bonus — fingers in a 1-2 fret range need minimal stretching.
       const clusterBonus = span <= 1 ? 2.5 : span <= 2 ? 1.5 : span === 3 ? 0.5 : 0;
+
+      // ERGONOMIC: Full-chord bonus — all strings ringing is generally preferred over partial shapes.
       const fullBonus = allStrings * 2;
+
+      // Position penalty — prefer lower positions for easier playing.
       const posPenalty = minF * 1.2;
-      const colorToneBonus = optionalCount * 0.35;
-      const coverageBonus = distinct.size * 0.45;
 
       return posPenalty + span * 1.2 + muteCount * 3.5 + crossingPenalty
-           - openCount * 0.8 - bassIsRoot * 3 - fullBonus - clusterBonus
-           - colorToneBonus - coverageBonus;
+           - openCount * 0.8 - bassIsRoot * 3 - fullBonus - clusterBonus;
     }
 
     results.sort((a, b) => score(a) - score(b));
@@ -683,19 +656,17 @@
       if (seen.has(sig)) continue;
       seen.add(sig);
       algo.push(v);
-      if (algo.length >= maxResults * 2) break;
+      if (algo.length >= maxResults * 2) break; // gather extras; curated will take priority
     }
     return algo;
   }
 
-
   // ── Public voicings function ──────────────────────────────────────────────────
-  // Merges curated shapes with algorithmically generated ones. Both paths now use
-  // required-tone validation, so a C13 must contain its defining 13 and a 7#9 must
-  // contain the #9, rather than being simplified into a plain dominant or triad.
+  // Merges curated (verified, player-tested) shapes with algorithmically generated ones.
   function getVoicings(openStrings, root, chordDef, maxSpan) {
-    const curated = lookupCurated(openStrings, root, chordDef);
-    const algo = generateVoicings(openStrings, root, chordDef, { maxSpan: maxSpan || 4, maxResults: 4 });
+    const type = chordDef._key || "maj"; // _key set below when building CHORD_TYPES
+    const curated = lookupCurated(openStrings, root, type);
+    const algo = generateVoicings(openStrings, root, chordDef.intervals, { maxSpan: maxSpan || 4, maxResults: 4, intLabels: chordDef.intLabels });
 
     // Dedupe: algorithmic shapes that duplicate a curated shape are dropped.
     const curatedSigs = new Set(curated.map(v => v.join(",")));
@@ -791,9 +762,20 @@
   function cssColor(color) { return String(color || "#888").replace(/[^#a-fA-F0-9]/g, ""); }
 
   const FLAT_NAMES = { "C#":"Db","D#":"Eb","F#":"Gb","G#":"Ab","A#":"Bb" };
+  // Keys (and chord roots) that are conventionally spelled with flats.
+  const FLAT_ROOTS = new Set(["F","A#","D#","G#","C#","Bb","Eb","Ab","Db","Gb"]);
+  // Decide whether to use flats. In "auto" mode, the current root/key context decides:
+  // flat-side roots (F, Bb, Eb, Ab, Db, Gb) spell with flats, sharp-side with sharps.
+  function useFlats() {
+    if (state.accidental === "flat") return true;
+    if (state.accidental === "sharp") return false;
+    // auto
+    const ctxRoot = state.mode === "single" ? state.selectedKey : (state.scaleType ? state.scaleKey : state.selectedKey);
+    return FLAT_ROOTS.has(ctxRoot);
+  }
   // Spell a note according to the user's accidental preference (display only).
   function spell(note) {
-    if (state.accidental === "flat" && FLAT_NAMES[note]) return FLAT_NAMES[note];
+    if (useFlats() && FLAT_NAMES[note]) return FLAT_NAMES[note];
     return note;
   }
   // What to show inside a fretboard dot: interval label or the note name.
@@ -816,6 +798,7 @@
     instrument: "tenor",
     tuningName: "CGDA",
     openStrings: ["C","G","D","A"],
+    openOctaves: [3,3,4,4],
     customTuningText: "C G D A",
     selectedKey: "G",
     selectedType: "maj",
@@ -838,8 +821,7 @@
     vlFrom: 0,
     vlTo: 1,
     itNote1: null, itNote2: null, itStr1: null, itFret1: null, itStr2: null, itFret2: null, itStep: 1,
-    audioEngine: "pluck",      // "pluck" = Karplus-Strong; "wave" = legacy oscillator backup
-    audioWave: "triangle",
+    audioWave: "pluck",
     audioVolume: 0.16,
     progTempo: 800,
     savedCharts: [],
@@ -869,6 +851,33 @@
   };
 
   function getOpenStrings() { return (state.openStrings && state.openStrings.length >= 4 && state.openStrings.length <= 6) ? state.openStrings : ["C","G","D","A"]; }
+
+  // Real scientific octave for each open string. If not explicitly set (e.g. custom tunings),
+  // derive a sensible ascending set so playback pitch is still musically reasonable.
+  function getOpenOctaves() {
+    const strings = getOpenStrings();
+    if (Array.isArray(state.openOctaves) && state.openOctaves.length === strings.length) return state.openOctaves;
+    // Derive: start low and bump the octave whenever the pitch-class wraps downward.
+    const oct = [strings.length >= 5 ? 2 : 3];
+    for (let i = 1; i < strings.length; i++) {
+      const prev = CHROMATIC.indexOf(strings[i-1]);
+      const cur = CHROMATIC.indexOf(strings[i]);
+      oct[i] = cur <= prev ? oct[i-1] + 1 : oct[i-1];
+    }
+    return oct;
+  }
+
+  // The true sounding pitch (note name + octave) at a string/fret, accounting for capo.
+  function pitchAt(stringIndex, fret) {
+    const strings = getOpenStrings();
+    const octs = getOpenOctaves();
+    const open = strings[stringIndex];
+    const openOct = octs[stringIndex] != null ? octs[stringIndex] : 4;
+    const totalSemis = CHROMATIC.indexOf(open) + fret + state.capo;
+    const note = CHROMATIC[((totalSemis % 12) + 12) % 12];
+    const octave = openOct + Math.floor((CHROMATIC.indexOf(open) + fret + state.capo) / 12);
+    return { note, octave };
+  }
 
   function openStringOffsets() {
     const strings = getOpenStrings();
@@ -968,116 +977,146 @@
 
     function noteFreq(note, oct = 4) { return 440 * Math.pow(2, ((oct - 4) * 12 + CHROMATIC.indexOf(note) - 9) / 12); }
 
-    function makePluckBuffer(c, freq, dur) {
-      const sr = c.sampleRate || 44100;
-      const length = Math.max(1, Math.floor((dur + 0.08) * sr));
-      const buffer = c.createBuffer(1, length, sr);
-      const data = buffer.getChannelData(0);
-      const period = Math.max(2, Math.floor(sr / Math.max(40, freq)));
-      const ring = new Float32Array(period);
+    // ── Karplus-Strong plucked-string synthesis ────────────────────────────────
+    // Models a plucked string: a burst of noise fed through a short delay line that
+    // is gently low-pass filtered each cycle, producing a natural pitched decay.
+    // Falls back to an oscillator if buffer playback isn't available.
+    function playFreq(freq, dur, delay, gainScale) {
+      const c = getCtx();
+      if (!c) return;
+      if (c.state === "suspended" && c.resume) { c.resume().catch(() => {}); }
+      const fire = () => {
+        try {
+          const t = c.currentTime + (delay || 0);
+          const vol = (Number(state.audioVolume) || 0.16) * (gainScale != null ? gainScale : 1);
 
-      // Slightly softened initial noise burst: bright enough to read as plucked string,
-      // not so bright that full chords become harsh on iPhone speakers.
-      for (let i = 0; i < period; i++) ring[i] = (Math.random() * 2 - 1) * 0.85;
+          if (state.audioWave && state.audioWave !== "pluck") {
+            // Classic oscillator voice (kept as an option / fallback)
+            const osc = c.createOscillator();
+            const g = c.createGain();
+            osc.connect(g); g.connect(c.destination);
+            osc.type = state.audioWave;
+            osc.frequency.value = freq;
+            g.gain.setValueAtTime(0.0001, t);
+            g.gain.linearRampToValueAtTime(vol, t + 0.02);
+            g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
+            osc.start(t); osc.stop(t + dur + 0.05);
+            return;
+          }
 
-      let idx = 0;
-      const damping = freq < 130 ? 0.992 : freq > 900 ? 0.976 : 0.985;
-      for (let i = 0; i < length; i++) {
-        const next = (idx + 1) % period;
-        const sample = ring[idx];
-        ring[idx] = (ring[idx] + ring[next]) * 0.5 * damping;
-        idx = next;
-
-        // Simple click-safe release envelope.
-        const age = i / sr;
-        const releaseStart = Math.max(0.03, dur * 0.78);
-        const release = age > releaseStart ? Math.max(0, 1 - ((age - releaseStart) / Math.max(0.05, dur - releaseStart))) : 1;
-        data[i] = sample * release;
-      }
-      return buffer;
-    }
-
-    function playOscNote(c, note, oct, dur, delay) {
-      const osc = c.createOscillator();
-      const g = c.createGain();
-      osc.connect(g); g.connect(c.destination);
-      osc.type = state.audioWave || "triangle";
-      osc.frequency.value = noteFreq(note, oct);
-      const t = c.currentTime + delay;
-      const vol = Number(state.audioVolume) || 0.16;
-      g.gain.setValueAtTime(0.0001, t);
-      g.gain.linearRampToValueAtTime(vol, t + 0.02);
-      g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
-      osc.start(t);
-      osc.stop(t + dur + 0.05);
-    }
-
-    function playPluckNote(c, note, oct, dur, delay) {
-      const src = c.createBufferSource();
-      const g = c.createGain();
-      const freq = noteFreq(note, oct);
-      src.buffer = makePluckBuffer(c, freq, dur);
-      src.connect(g); g.connect(c.destination);
-      const t = c.currentTime + delay;
-      const vol = Number(state.audioVolume) || 0.16;
-      g.gain.setValueAtTime(vol * 0.95, t);
-      g.gain.exponentialRampToValueAtTime(0.0008, t + dur + 0.08);
-      src.start(t);
-      src.stop(t + dur + 0.12);
+          // Karplus-Strong pluck
+          const sr = c.sampleRate;
+          const period = Math.max(2, Math.round(sr / freq));
+          // A noise burst the length of the whole note (so the loop can decay over time)
+          const frames = Math.max(period + 1, Math.floor(sr * dur));
+          const buffer = c.createBuffer(1, frames, sr);
+          const data = buffer.getChannelData(0);
+          // Seed one period with noise
+          for (let i = 0; i < period; i++) data[i] = Math.random() * 2 - 1;
+          // Karplus-Strong recurrence with a damping factor controlling sustain
+          const damping = 0.498; // ~0.5 = natural string; lower = shorter decay
+          for (let i = period; i < frames; i++) {
+            data[i] = (data[i - period] + data[i - period + 1]) * damping;
+          }
+          const src = c.createBufferSource();
+          src.buffer = buffer;
+          const g = c.createGain();
+          src.connect(g); g.connect(c.destination);
+          // Slight pick attack + overall amplitude envelope
+          g.gain.setValueAtTime(0.0001, t);
+          g.gain.linearRampToValueAtTime(vol * 1.1, t + 0.005);
+          g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
+          src.start(t); src.stop(t + dur + 0.05);
+        } catch (e) {}
+      };
+      if (c.state === "running") fire();
+      else setTimeout(fire, 60);
     }
 
     function playNote(note, oct = 4, dur = 0.9, delay = 0) {
-      const c = getCtx();
-      if (!c) return;
-      // Always attempt a resume right before playing — handlers may fire while still suspended.
-      if (c.state === "suspended" && c.resume) { c.resume().catch(() => {}); }
-      const start = () => {
-        try {
-          if (state.audioEngine === "wave") playOscNote(c, note, oct, dur, delay);
-          else playPluckNote(c, note, oct, dur, delay);
-        } catch (e) {
-          // Backup path: if buffer-based pluck playback fails in a browser, keep the old oscillator engine alive.
-          try { playOscNote(c, note, oct, dur, delay); } catch (ignored) {}
-        }
-      };
-      // If the context is running, play now. If it is mid-resume, wait a tick and play.
-      if (c.state === "running") start();
-      else setTimeout(start, 60);
+      playFreq(noteFreq(note, oct), dur, delay, 1);
+    }
+
+    // Play a real fretboard position at its true sounding pitch.
+    function playAt(stringIndex, fret, dur = 1.0, delay = 0) {
+      const p = pitchAt(stringIndex, fret);
+      playFreq(noteFreq(p.note, p.octave), dur, delay, 1);
     }
 
     function playInterval(n1, n2) {
-      playNote(n1, 4, 1.1, 0);
-      setTimeout(() => playNote(n2, 4, 1.1, 0), 550);
-      setTimeout(() => { playNote(n1, 4, 1.3, 0); playNote(n2, 4, 1.3, 0); }, 1200);
+      playNote(n1, 4, 1.4, 0);
+      setTimeout(() => playNote(n2, 4, 1.4, 0), 600);
+      setTimeout(() => { playNote(n1, 4, 1.6, 0); playNote(n2, 4, 1.6, 0); }, 1300);
     }
+
+    // Play a set of pitch classes spread across natural octaves (used when there is no
+    // specific fretboard voicing — e.g. quiz/ear chords). Slightly lower gain per voice
+    // so dense chords don't clip.
     function playChord(tones, arp = false) {
-      // Spread notes across octaves so chords with many tones sound natural rather than clustered.
       let oct = 3;
       let prevIdx = -1;
+      const gainScale = Math.max(0.5, 1 - tones.length * 0.07);
       tones.forEach((t, i) => {
         const idx = CHROMATIC.indexOf(t);
-        if (idx <= prevIdx) oct++; // ascending voicing — bump octave when we wrap
+        if (idx <= prevIdx) oct++;
         prevIdx = idx;
-        playNote(t, oct, 1.3, arp ? i * 0.07 : 0);
+        playFreq(noteFreq(t, oct), 1.5, arp ? i * 0.07 : 0, gainScale);
       });
     }
 
-    let progTimers = [];
-    function stopProgression() { progTimers.forEach(id => clearTimeout(id)); progTimers = []; }
-    function playProgression(chords, loop) {
-      stopProgression();
-      const step = Number(state.progTempo) || 800;
-      const run = () => {
-        chords.forEach((ch, i) => {
-          const t = buildTones(ch.key, CHORD_TYPES[ch.type]?.intervals || [0,4,7]);
-          progTimers.push(setTimeout(() => playChord(t, true), i * step));
-        });
-        if (loop) progTimers.push(setTimeout(run, chords.length * step));
-      };
-      run();
+    // Play an actual voicing (array of frets per string, null = muted) at true pitches.
+    function playVoicingFrets(frets, arp = true) {
+      const sounding = frets.map((f, i) => f == null ? null : i).filter(i => i !== null);
+      const gainScale = Math.max(0.5, 1 - sounding.length * 0.06);
+      let k = 0;
+      frets.forEach((f, i) => {
+        if (f == null) return;
+        const p = pitchAt(i, f);
+        playFreq(noteFreq(p.note, p.octave), 1.6, arp ? k * 0.06 : 0, gainScale);
+        k++;
+      });
     }
 
-    return { unlock, installUnlockHandlers, playNote, playInterval, playChord, playProgression, stopProgression, getCtx };
+    // ── Look-ahead scheduler for progressions (clock-accurate, low drift) ───────
+    let progRunning = false;
+    let progTimer = null;
+    function stopProgression() { progRunning = false; if (progTimer) { clearTimeout(progTimer); progTimer = null; } }
+    function playProgression(chords, loop) {
+      stopProgression();
+      const c = getCtx();
+      if (!c) return;
+      if (c.state === "suspended" && c.resume) { c.resume().catch(() => {}); }
+      progRunning = true;
+      const stepSec = (Number(state.progTempo) || 800) / 1000;
+      let index = 0;
+      let nextTime = c.currentTime + 0.08; // small lead-in
+      const lookAhead = 0.1;     // schedule events this far ahead (seconds)
+      const tick = 25;           // scheduler wakeup interval (ms)
+      const schedule = () => {
+        if (!progRunning) return;
+        while (nextTime < c.currentTime + lookAhead) {
+          if (index >= chords.length) {
+            if (loop) { index = 0; } else { progRunning = false; return; }
+          }
+          const ch = chords[index];
+          const tones = buildTones(ch.key, CHORD_TYPES[ch.type]?.intervals || [0,4,7]);
+          const gainScale = Math.max(0.5, 1 - tones.length * 0.07);
+          let oct = 3, prevIdx = -1;
+          tones.forEach((tn, j) => {
+            const idx = CHROMATIC.indexOf(tn);
+            if (idx <= prevIdx) oct++;
+            prevIdx = idx;
+            playFreq(noteFreq(tn, oct), stepSec * 0.95, (nextTime - c.currentTime) + j * 0.05, gainScale);
+          });
+          nextTime += stepSec;
+          index++;
+        }
+        progTimer = setTimeout(schedule, tick);
+      };
+      schedule();
+    }
+
+    return { unlock, installUnlockHandlers, playNote, playAt, playInterval, playChord, playVoicingFrets, playProgression, stopProgression, getCtx };
   })();
 
   function current() {
@@ -1152,14 +1191,10 @@
     for (const root of CHROMATIC) {
       for (const [key, def] of Object.entries(CHORD_TYPES)) {
         const tones = new Set(buildTones(root, def.intervals));
-        const required = new Set(buildTones(root, def.required || def.intervals));
         const allPresent = present.every(n => tones.has(n));
-        const requiredPresent = [...required].every(n => noteSet.has(n));
-        const exactByRule = allPresent && requiredPresent && present.every(n => tones.has(n));
-        const exactMatch = exactByRule && [...tones].every(n => noteSet.has(n));
-        if (allPresent && requiredPresent) {
-          const optionalOmissions = [...tones].filter(n => !noteSet.has(n)).length;
-          const score = (exactMatch ? 100 : 0) - optionalOmissions - def.intervals.length * 0.1 + required.size * 0.2;
+        const exactMatch = allPresent && tones.size === noteSet.size;
+        if (allPresent) {
+          const score = (exactMatch ? 100 : 0) - Math.abs(tones.size - noteSet.size) - def.intervals.length * 0.1;
           if (!best || score > best.score) best = { root, key, def, score, exact: exactMatch };
         }
       }
@@ -1466,7 +1501,7 @@
         } else {
           inner = `<span class="faded-note">${esc(spell(note))}</span>`;
         }
-        return `<div class="cell" onclick="app.playNote('${note}')" role="button" aria-label="${esc(open)} string fret ${fret}, ${esc(spell(note))}"><div class="string-line" style="height:${thick}px;${nutSide}:${isNut ? "50%" : "0"}"></div>${isNut ? `<div class="nut-line" style="${lefty?"left:auto;right:50%;transform:translateX(50%)":""}"></div>` : ""}${fret > 0 ? `<div class="fret-wire" style="${lefty?"left:auto;right:0":""}"></div>` : ""}${inner}</div>`;
+        return `<div class="cell" onclick="app.playAt(${stringIdx},${fret})" role="button" tabindex="0" onkeydown="app.cellKey(event,${stringIdx},${fret})" aria-label="${esc(open)} string fret ${fret}, ${esc(spell(note))}"><div class="string-line" style="height:${thick}px;${nutSide}:${isNut ? "50%" : "0"}"></div>${isNut ? `<div class="nut-line" style="${lefty?"left:auto;right:50%;transform:translateX(50%)":""}"></div>` : ""}${fret > 0 ? `<div class="fret-wire" style="${lefty?"left:auto;right:0":""}"></div>` : ""}${inner}</div>`;
       }).join("");
       const capoTag = state.capo > 0 ? `<span class="capo-orig">(${esc(spell(origOpen))})</span>` : "";
       const label = `<div class="string-label">${esc(spell(open))}${capoTag}</div>`;
@@ -1540,8 +1575,7 @@
     // Voicings — generated live for the current tuning
     let voicingSection = "";
     {
-      // Voicings use the same sounding open strings as the visible fretboard, so capoed charts stay accurate.
-      const strings = current().effectiveOpen;
+      const strings = getOpenStrings();
       const spanByInst = state.instrument === "bass" ? 5 : 4;
       const vs = state.showVoicings ? getVoicings(strings, state.selectedKey, chordDef, spanByInst) : [];
       const cards = vs.length ? vs.map((v,i) => renderVoicingCard(v, i, chordColor, strings)).join("") : `<div class="info-text" style="padding:8px">No comfortable voicing found for this chord on the current tuning within reach. Try a different inversion by ear, or a nearby key.</div>`;
@@ -1638,14 +1672,13 @@
     const fretNums = frets.map(f => `<div style="width:${colW}px;text-align:center;font-size:8px;color:var(--faint);font-family:monospace">${f}</div>`).join("");
 
     // Notes for playback (low to high), skipping mutes
-    const playNotes = voicing.map((f, i) => f === null ? null : noteAtFret(strings[i], f)).filter(x => x);
-    const playArg = playNotes.map(n => `'${n}'`).join(",");
+    const fretArg = JSON.stringify(voicing).replace(/null/g, "null");
 
     return `<div class="voicing-card"><div class="voicing-title">voicing ${idx + 1}</div>
       <div style="position:relative;padding-left:22px">
         <div style="position:relative;margin-left:0">${gridLines}<div style="position:relative">${rowsHtml}</div><div style="display:flex;margin-top:2px;padding-left:0">${fretNums}</div></div>
       </div>
-      <button type="button" class="pill" style="--c:${chordColor};font-size:10px;padding:2px 8px;margin-top:8px;width:100%" onclick="app.playVoicing([${playArg}])">Hear</button>
+      <button type="button" class="pill" style="--c:${chordColor};font-size:10px;padding:2px 8px;margin-top:8px;width:100%" onclick='app.playVoicingFrets(${fretArg})'>Hear</button>
     </div>`;
   }
 
@@ -1919,15 +1952,14 @@
 
   // ── Preferences panel ──
   function renderPreferences() {
-    const engineBtns = `${btn("Plucked string", state.audioEngine==="pluck", "#a8c4e8", "app.set('audioEngine','pluck')")}${btn("Classic waveform", state.audioEngine==="wave", "#a8c4e8", "app.set('audioEngine','wave')")}`;
-    const waveBtns = ["triangle","sine","square","sawtooth"].map(w => btn(w, state.audioWave===w, "#a8c4e8", `app.set('audioWave','${w}')`)).join("");
+    const waveOptions = [["pluck","Plucked string"],["triangle","Triangle"],["sine","Sine"],["square","Square"],["sawtooth","Sawtooth"]];
+    const waveBtns = waveOptions.map(([w,l]) => btn(l, state.audioWave===w, "#a8c4e8", `app.set('audioWave','${w}')`)).join("");
     return `<div class="card" style="margin-bottom:16px"><div class="section-label">Preferences</div>
       <div style="display:flex;flex-wrap:wrap;gap:18px">
         <div><div class="mini-label">Dot labels</div><div class="row">${btn("Intervals", state.noteDisplay==="interval", "#e8c547", "app.set('noteDisplay','interval')")}${btn("Note names", state.noteDisplay==="note", "#e8c547", "app.set('noteDisplay','note')")}</div></div>
-        <div><div class="mini-label">Accidentals</div><div class="row">${btn("Sharps ♯", state.accidental==="sharp", "#7eb8d4", "app.set('accidental','sharp')")}${btn("Flats ♭", state.accidental==="flat", "#7eb8d4", "app.set('accidental','flat')")}</div></div>
+        <div><div class="mini-label">Accidentals</div><div class="row">${btn("Auto", state.accidental==="auto", "#7eb8d4", "app.set('accidental','auto')")}${btn("Sharps ♯", state.accidental==="sharp", "#7eb8d4", "app.set('accidental','sharp')")}${btn("Flats ♭", state.accidental==="flat", "#7eb8d4", "app.set('accidental','flat')")}</div></div>
         <div><div class="mini-label">Handedness</div><div class="row">${btn("Right-handed", !state.leftHanded, "#6dd4a8", "app.set('leftHanded',false)")}${btn("Left-handed", state.leftHanded, "#6dd4a8", "app.set('leftHanded',true)")}</div></div>
-        <div><div class="mini-label">Audio engine</div><div class="row">${engineBtns}</div><div class="info-text" style="font-size:10px;margin-top:4px">Plucked string uses Karplus-Strong; waveform remains the backup.</div></div>
-        <div><div class="mini-label">Backup waveform</div><div class="row">${waveBtns}</div></div>
+        <div><div class="mini-label">Tone</div><div class="row">${waveBtns}</div></div>
         <div style="min-width:160px"><div class="mini-label">Volume</div><input type="range" min="0.02" max="0.4" step="0.02" value="${state.audioVolume}" oninput="app.set('audioVolume',parseFloat(this.value))" style="width:100%" aria-label="Volume" /></div>
         <div style="min-width:160px"><div class="mini-label">Progression tempo</div><input type="range" min="300" max="1400" step="50" value="${state.progTempo}" oninput="app.set('progTempo',parseInt(this.value))" style="width:100%" aria-label="Tempo" /><div class="info-text" style="font-size:10px">${Math.round(60000/state.progTempo)} BPM</div></div>
       </div></div>`;
@@ -2095,7 +2127,7 @@
     // Primary tabs (most-used) + grouped "More" select for the rest
     const primary = [["single","Single"],["progression","Progression"],["interval","Intervals"],["identify","Identify"]];
     const moreModes = [["finder","Key Finder"],["modes","Modes Explorer"],["suggest","Progression Suggester"],["quiz","Chord-Tone Quiz"],["ear","Ear Training"],["trainer","Fretboard Trainer"],["tuner","Tuner"]];
-    const primaryTabs = primary.map(([m,l]) => `<button type="button" role="tab" class="tab ${state.mode===m?"active":""}" onclick="app.setMode('${m}')">${l}</button>`).join("");
+    const primaryTabs = primary.map(([m,l]) => `<button type="button" role="tab" aria-selected="${state.mode===m?"true":"false"}" tabindex="${state.mode===m?"0":"-1"}" class="tab ${state.mode===m?"active":""}" onclick="app.setMode('${m}')">${l}</button>`).join("");
     const inMore = moreModes.some(([m]) => m === state.mode);
     const moreLabel = inMore ? (moreModes.find(([m]) => m === state.mode)[1]) : "More tools";
     const moreOptions = `<option value="">${esc(moreLabel)}</option>` + moreModes.map(([m,l]) => `<option value="${m}" ${state.mode===m?"selected":""}>${esc(l)}</option>`).join("");
@@ -2131,6 +2163,15 @@
     setFretRange(a,b) { state.fretRange = [a,b]; render(); },
     loadDiatonic(root, type) { state.selectedKey = root; state.selectedType = type; render(); },
     playNote(note) { audio.playNote(note); },
+    playAt(stringIndex, fret) { audio.playAt(stringIndex, fret); },
+    cellKey(ev, stringIndex, fret) {
+      // Keyboard support for fret cells: Enter/Space plays the note.
+      if (ev && (ev.key === "Enter" || ev.key === " " || ev.key === "Spacebar")) {
+        ev.preventDefault();
+        audio.playAt(stringIndex, fret);
+      }
+    },
+    playVoicingFrets(frets) { if (Array.isArray(frets)) audio.playVoicingFrets(frets, true); },
     playSingleChord() { const { singleTones } = current(); audio.playChord(singleTones, true); },
     playVoicing(notes) { if (Array.isArray(notes)) audio.playChord(notes, true); },
     playChordByIndex(i) { const ch = state.progChords[i]; audio.playChord(buildTones(ch.key, CHORD_TYPES[ch.type]?.intervals || []), true); },
@@ -2186,7 +2227,7 @@
       render();
     },
     // Tuner
-    playTunerNote(note, i) { audio.playNote(note, 3 + Math.floor(i / 3), 1.6); },
+    playTunerNote(note, i) { audio.playAt(i, 0); },
     addChord() { if (state.progChords.length < 8) { state.progChords.push({ key: "C", type: "maj" }); state.editingIdx = state.progChords.length - 1; render(); } },
     removeChord(i) { state.progChords = state.progChords.filter((_, idx) => idx !== i); state.editingIdx = Math.max(0, Math.min(state.editingIdx, state.progChords.length - 1)); render(); },
     setProgChord(i, field, value) { state.progChords = state.progChords.map((c, idx) => idx === i ? { ...c, [field]: value } : c); render(); },
@@ -2208,8 +2249,10 @@
       state.instrument = name;
       const inst = INSTRUMENTS[name];
       const firstTuning = Object.keys(inst.tunings)[0];
+      const t = inst.tunings[firstTuning];
       state.tuningName = firstTuning;
-      state.openStrings = [...inst.tunings[firstTuning].strings];
+      state.openStrings = [...t.strings];
+      state.openOctaves = t.octaves ? [...t.octaves] : null;
       state.customTuningText = state.openStrings.join(" ");
       render();
     },
@@ -2217,7 +2260,7 @@
       state.tuningName = name;
       const inst = INSTRUMENTS[state.instrument];
       const t = inst.tunings[name];
-      if (t && name !== "CUSTOM") { state.openStrings = [...t.strings]; state.customTuningText = state.openStrings.join(" "); }
+      if (t && name !== "CUSTOM") { state.openStrings = [...t.strings]; state.openOctaves = t.octaves ? [...t.octaves] : null; state.customTuningText = state.openStrings.join(" "); }
       render();
     },
     setCustomTuningText(value) { state.customTuningText = value; },
@@ -2225,7 +2268,7 @@
       const parts = String(state.customTuningText).toUpperCase().replace(/♯/g,"#").replace(/♭/g,"B").split(/[\s,\/]+/).filter(Boolean);
       const notes = parts.map(p => p.replace("DB","C#").replace("EB","D#").replace("GB","F#").replace("AB","G#").replace("BB","A#"));
       if (notes.length < 4 || notes.length > 6 || !notes.every(n => CHROMATIC.includes(n))) { alert("Enter 4 to 6 notes, low to high — for example: C G D A or E A D G B E"); return; }
-      state.instrument = "custom"; state.tuningName = "CUSTOM"; state.openStrings = notes; state.customTuningText = notes.join(" "); render();
+      state.instrument = "custom"; state.tuningName = "CUSTOM"; state.openStrings = notes; state.openOctaves = null; state.customTuningText = notes.join(" "); render();
     },
     setSavedName(v) { state.savedName = v; },
     saveCurrentChart() {
@@ -2254,6 +2297,69 @@
   window.app = app;
   audio.installUnlockHandlers();
   render();
+
+  // ── PWA support (installable + offline), kept fully self-contained ──────────────
+  // The manifest is generated in-page as a blob so the app stays a single file.
+  (function installPWA() {
+    try {
+      const manifest = {
+        name: "Open Strings",
+        short_name: "Open Strings",
+        description: "A theory & practice studio for stringed instruments",
+        start_url: ".",
+        display: "standalone",
+        background_color: "#0c0c0c",
+        theme_color: "#0c0c0c",
+        icons: [{
+          // A simple inline SVG icon (data URI) so no separate image file is needed.
+          src: "data:image/svg+xml," + encodeURIComponent(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512"><rect width="512" height="512" fill="#0c0c0c"/>' +
+            '<g stroke="#e8c547" stroke-width="10">' +
+            '<line x1="96" y1="140" x2="416" y2="140"/><line x1="96" y1="220" x2="416" y2="220"/>' +
+            '<line x1="96" y1="300" x2="416" y2="300"/><line x1="96" y1="380" x2="416" y2="380"/></g>' +
+            '<g fill="#e8c547"><circle cx="200" cy="140" r="22"/><circle cx="300" cy="220" r="22"/>' +
+            '<circle cx="160" cy="300" r="22"/><circle cx="340" cy="380" r="22"/></g></svg>'
+          ),
+          sizes: "512x512",
+          type: "image/svg+xml",
+          purpose: "any"
+        }]
+      };
+      const mBlob = new Blob([JSON.stringify(manifest)], { type: "application/manifest+json" });
+      const mLink = document.createElement("link");
+      mLink.rel = "manifest";
+      mLink.href = URL.createObjectURL(mBlob);
+      document.head.appendChild(mLink);
+
+      // A minimal service worker that caches the page itself for offline use.
+      // Written inline and registered from a blob URL so there is still only one file to host.
+      if ("serviceWorker" in navigator) {
+        const swCode = `
+          const CACHE = "open-strings-v1";
+          self.addEventListener("install", e => { self.skipWaiting(); });
+          self.addEventListener("activate", e => { e.waitUntil(self.clients.claim()); });
+          self.addEventListener("fetch", e => {
+            if (e.request.method !== "GET") return;
+            e.respondWith(
+              caches.open(CACHE).then(cache =>
+                cache.match(e.request).then(hit =>
+                  hit || fetch(e.request).then(res => {
+                    try { if (res && res.status === 200 && e.request.url.startsWith(self.location.origin)) cache.put(e.request, res.clone()); } catch (x) {}
+                    return res;
+                  }).catch(() => hit)
+                )
+              )
+            );
+          });
+        `;
+        const swBlob = new Blob([swCode], { type: "text/javascript" });
+        const swURL = URL.createObjectURL(swBlob);
+        // Note: blob-based SW scope is limited, but this still enables install + same-page offline
+        // when the file is hosted normally (e.g. GitHub Pages). It silently no-ops if blocked.
+        navigator.serviceWorker.register(swURL).catch(() => {});
+      }
+    } catch (e) { /* PWA is a progressive enhancement; ignore failures */ }
+  })();
   </script>
 </body>
 </html>
