@@ -203,6 +203,31 @@
   .help-panel h3 { margin: 0 0 8px; font-size: 13px; color: var(--text-bright); font-weight: normal; letter-spacing: 0.05em; }
   .help-panel ul { margin: 0; padding-left: 18px; }
   .help-panel li { font-size: 12px; color: var(--muted); line-height: 1.7; }
+  .help-hero { background: linear-gradient(180deg, color-mix(in srgb, var(--gold) 10%, var(--surface)), var(--surface)); border: 1px solid var(--border); border-radius: 8px; padding: 20px 22px; margin-bottom: 14px; }
+  .help-hero h2 { margin: 0 0 6px; font-size: 20px; font-weight: normal; color: var(--text-bright); letter-spacing: 0.04em; }
+  .help-hero p { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.7; max-width: 70ch; }
+  .help-nav { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+  .help-section { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 18px 20px; margin-bottom: 14px; }
+  .help-section > h3 { margin: 0 0 4px; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); font-weight: normal; }
+  .help-section > .sub { font-size: 12px; color: var(--dim); margin-bottom: 14px; }
+  .help-steps { counter-reset: step; list-style: none; padding: 0; margin: 0; }
+  .help-steps li { position: relative; padding: 0 0 14px 42px; font-size: 13px; color: var(--text); line-height: 1.6; }
+  .help-steps li:before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: -2px; width: 28px; height: 28px; border-radius: 50%; background: color-mix(in srgb, var(--gold) 18%, transparent); color: var(--gold); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; border: 1px solid color-mix(in srgb, var(--gold) 40%, transparent); }
+  .help-steps li:last-child { padding-bottom: 0; }
+  .help-steps strong { color: var(--text-bright); }
+  .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; }
+  .feature-item { background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; padding: 13px 15px; }
+  .feature-item h4 { margin: 0 0 6px; font-size: 14px; color: var(--text-bright); font-weight: normal; display: flex; align-items: center; gap: 8px; }
+  .feature-item h4 .chip { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; padding: 2px 7px; border-radius: 3px; background: color-mix(in srgb, var(--c, var(--gold)) 16%, transparent); color: var(--c, var(--gold)); border: 1px solid color-mix(in srgb, var(--c, var(--gold)) 35%, transparent); }
+  .feature-item p { margin: 0 0 6px; font-size: 12px; color: var(--muted); line-height: 1.6; }
+  .feature-item .good { font-size: 11px; color: var(--dim); line-height: 1.5; }
+  .feature-item .good b { color: var(--muted); font-weight: normal; font-style: italic; }
+  .workflow { border-left: 3px solid color-mix(in srgb, var(--gold) 50%, transparent); padding: 4px 0 4px 14px; margin-bottom: 12px; }
+  .workflow .w-title { font-size: 13px; color: var(--text-bright); margin-bottom: 4px; }
+  .workflow .w-body { font-size: 12px; color: var(--muted); line-height: 1.6; }
+  .help-faq dt { font-size: 13px; color: var(--text-bright); margin-bottom: 3px; }
+  .help-faq dd { font-size: 12px; color: var(--muted); line-height: 1.6; margin: 0 0 12px; }
+  .kbd { font-family: ui-monospace, monospace; font-size: 11px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; color: var(--text); }
 
   .footer { margin-top: 28px; text-align: center; font-size: 11px; color: var(--faint); letter-spacing: 0.08em; line-height: 1.7; }
 
@@ -546,6 +571,7 @@
     theme: savedTheme,
     mode: "single",
     showHelp: false,
+    helpSection: "start",
     showPrefs: false,
     instrument: "tenor",
     tuningName: "CGDA",
@@ -1510,15 +1536,88 @@
 
   // ── Help panel ──
   function renderHelp() {
-    return `<div class="help-panel"><h3>How to use Open Strings</h3><ul>
-      <li><strong>Single</strong> — pick a root and chord type to see every chord tone across the neck. Tap dots to hear them; expand the diatonic panel to see all chords in a key.</li>
-      <li><strong>Progression</strong> — build or load a progression, view shared tones and voice leading, and loop playback with a metronome.</li>
-      <li><strong>Intervals</strong> — tap any two notes to measure the distance between them and learn where that shape repeats.</li>
-      <li><strong>Identify</strong> — tap notes on the neck and get the chord name back.</li>
-      <li><strong>Finder</strong> — enter a song's chords to discover its likely key. <strong>Modes</strong> — explore the modes of any scale. <strong>Suggest</strong> — get progressions by key and mood.</li>
-      <li><strong>Quiz</strong>, <strong>Ear</strong>, and <strong>Trainer</strong> — test chord-tone knowledge, train your ear, and learn the neck.</li>
-      <li>Set <strong>instrument, tuning, capo, scale</strong> up top; adjust <strong>preferences</strong> (note names, sharps/flats, left-handed, audio); then <strong>save, print, or share</strong>. Everything runs offline in one file.</li>
-    </ul></div>`;
+    const sections = [["start","Getting started"],["modes","What each tool does"],["workflows","Example workflows"],["controls","Controls & settings"],["faq","FAQ"]];
+    const nav = sections.map(([k,l]) => btn(l, state.helpSection===k, "#e8c547", `app.set('helpSection','${k}')`)).join("");
+
+    let body = "";
+    if (state.helpSection === "start") {
+      body = `<div class="help-hero"><h2>Welcome to Open Strings</h2><p>Open Strings is a visual music-theory and practice studio for fretted instruments — tenor guitar, guitar, bass, mandolin, ukulele, banjo, and any custom tuning. It shows you where notes live on the neck, how chords and scales are built, and how to connect them, with everything you see playable as sound. It runs entirely offline in your browser; nothing is uploaded.</p></div>
+      <div class="help-section"><h3>First five minutes</h3><div class="sub">A quick path to your first useful chart.</div>
+        <ol class="help-steps">
+          <li><strong>Pick your instrument and tuning</strong> at the top of the page. Everything — fretboard, chords, voicings, intervals — instantly recalculates for that tuning.</li>
+          <li>On the <strong>Single</strong> tab, choose a <strong>root note</strong> and a <strong>chord type</strong>. The fretboard lights up every place that chord's notes appear. The white dot is the root.</li>
+          <li><strong>Tap any dot</strong> to hear that note, or press <strong>Play</strong> to hear the whole chord. (Audio unlocks on your first tap — if it's ever silent, just tap the screen once.)</li>
+          <li>Open <strong>Playable Voicings</strong> to see real fingerings for that chord on your tuning, each with a <strong>Hear</strong> button.</li>
+          <li>Want it on paper? Use <strong>Print</strong>, <strong>PNG</strong>, or <strong>SVG</strong> to export exactly the chart you see, or <strong>Save</strong> it to recall later.</li>
+        </ol></div>
+      <div class="help-section"><h3>What it's great for</h3><div class="sub">Where Open Strings shines.</div>
+        <div class="feature-grid">
+          <div class="feature-item"><h4>Seeing the whole neck</h4><p>Instead of memorizing isolated chord shapes, see every place a chord or scale lives, and how those positions connect.</p></div>
+          <div class="feature-item"><h4>Unusual tunings</h4><p>Fifths-tuned tenor, DADGAD, open tunings, drop tunings — the theory is computed live, so it's correct anywhere, not just standard guitar.</p></div>
+          <div class="feature-item"><h4>Writing & arranging</h4><p>Build progressions, see shared tones and voice leading between chords, and find the smoothest melodic paths.</p></div>
+          <div class="feature-item"><h4>Learning by ear and sight</h4><p>Quiz, ear training, and a fretboard note trainer turn passive looking into active practice.</p></div>
+        </div></div>`;
+    } else if (state.helpSection === "modes") {
+      const f = (name, chip, color, desc, good) => `<div class="feature-item" style="--c:${color}"><h4>${esc(name)} <span class="chip">${esc(chip)}</span></h4><p>${desc}</p><div class="good"><b>Good for:</b> ${good}</div></div>`;
+      body = `<div class="help-section"><h3>Core tools</h3><div class="sub">The four main tabs.</div><div class="feature-grid">
+        ${f("Single","tab","#e8c547","Pick a root and chord type to map every chord tone across the neck. Expand the Diatonic panel to see all seven chords that belong to a key, or overlay a scale to see which notes are chord tones and which are passing tones.","learning a chord's shapes, seeing a key's chords, connecting chords to scales.")}
+        ${f("Progression","tab","#7eb8d4","Build a chord progression by hand or load one from the genre library. See all chords mapped together by color, highlight tones shared between chords, and open the Voice Leading view to see how each note moves from one chord to the next. Play it back, loop it, and adjust the tempo.","songwriting, understanding why a progression works, finding melody notes.")}
+        ${f("Intervals","tab","#6dd4a8","Tap any two notes and Open Strings names the interval between them, explains how it sounds and where it's used, and shows every other place that same interval shape appears on your tuning.","ear training, understanding chord construction, learning the fretboard geometry.")}
+        ${f("Identify","tab","#c47ed4","The reverse of Single: tap notes on the neck and it tells you what chord you've built. Tap a note again to remove it.","naming a shape you stumbled onto, checking your own voicings.")}
+      </div></div>
+      <div class="help-section"><h3>More tools</h3><div class="sub">Found in the “More tools” dropdown.</div><div class="feature-grid">
+        ${f("Key Finder","tool","#6dd4a8","Enter the chords from a song and it ranks the most likely keys, showing how many of your chords fit each one and listing that key's diatonic chords.","figuring out what key a song is in, transposing, understanding borrowed chords.")}
+        ${f("Modes Explorer","tool","#c47ed4","Pick a parent scale (major, melodic minor, harmonic minor) and a key to see all seven modes, their notes, and how each is just the parent scale started from a different degree.","understanding modes, finding the right scale over a chord.")}
+        ${f("Progression Suggester","tool","#6dd4a8","Choose a key and a mood — bright, melancholy, tense, gospel, dreamy — and get curated progressions you can hear instantly or load into Progression mode.","beating writer's block, finding a starting point for a song.")}
+        ${f("Chord-Tone Quiz","tool","#e8c547","Drills you on the notes inside chords — for example, “which note is the third of A7?”","building fast recall of chord construction.")}
+        ${f("Ear Training","tool","#e8823a","Plays a chord with a random root and asks you to identify its quality — major, minor, dominant, and so on.","learning to recognize chord colors by ear.")}
+        ${f("Fretboard Trainer","tool","#6dd4a8","Asks you to find every instance of a note across the neck, and times you. Especially useful when learning a new tuning.","memorizing the fretboard, learning a new instrument or tuning.")}
+        ${f("Tuner","tool","#a8c4e8","Plays a clean reference tone for each open string of your current tuning so you can tune by ear.","quick tuning without a separate app.")}
+      </div></div>`;
+    } else if (state.helpSection === "workflows") {
+      body = `<div class="help-section"><h3>Example workflows</h3><div class="sub">Practical ways people use Open Strings.</div>
+        <div class="workflow"><div class="w-title">Learn a song you like</div><div class="w-body">Use <strong>Key Finder</strong> to enter the song's chords and confirm its key. Switch to <strong>Single</strong> to learn each chord's shapes, then to <strong>Progression</strong> to load the sequence, hear it, and see how the chords connect.</div></div>
+        <div class="workflow"><div class="w-title">Write your own progression</div><div class="w-body">Start in <strong>Progression Suggester</strong> with a key and mood, load a suggestion you like, then refine it in <strong>Progression</strong> mode. Turn on <strong>Voice Leading</strong> and <strong>Shared tones</strong> to find melody notes that move smoothly between chords.</div></div>
+        <div class="workflow"><div class="w-title">Write a melody or solo</div><div class="w-body">In <strong>Single</strong>, overlay a scale and notice which scale notes are chord tones (solid dots) versus passing tones (rings). Land phrases on chord tones; pass through the rest. Use <strong>Intervals</strong> to understand the leaps you're hearing.</div></div>
+        <div class="workflow"><div class="w-title">Learn a new instrument or tuning</div><div class="w-body">Set your <strong>instrument and tuning</strong>, then use the <strong>Fretboard Trainer</strong> to memorize where notes fall. The <strong>Tuner</strong> gets you in tune; <strong>Single</strong> shows you the new chord shapes.</div></div>
+        <div class="workflow"><div class="w-title">Make a practice sheet</div><div class="w-body">Configure any chart — chord, scale overlay, fret range, capo — then <strong>Print</strong> or export a <strong>PNG/SVG</strong>. Set a fret range like 0–5 first to zoom in. Use <strong>Save</strong> to keep charts in the app, or <strong>Link</strong> to copy a shareable URL of the exact view.</div></div>
+      </div>`;
+    } else if (state.helpSection === "controls") {
+      body = `<div class="help-section"><h3>Top controls</h3><div class="sub">Settings that apply across the whole app.</div>
+        <ul style="margin:0;padding-left:18px">
+          <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Instrument & Tuning</strong> — switches the entire fretboard and all calculations. Choose a preset or enter a custom tuning of 4–6 notes.</li>
+          <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Capo</strong> — shifts the open-string pitches up; the labels show the sounding notes.</li>
+          <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Scale Overlay</strong> — shows a scale behind the chord tones. Solid dots are chord tones; rings are other scale notes.</li>
+          <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Fret range</strong> — zoom the neck to a window like 0–5, handy on phones and for focused practice.</li>
+        </ul></div>
+      <div class="help-section"><h3>Preferences</h3><div class="sub">Open the Preferences button in the toolbar.</div>
+        <ul style="margin:0;padding-left:18px">
+          <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Dot labels</strong> — show interval names (R, 3, 5) or actual note names on the dots.</li>
+          <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Accidentals</strong> — spell notes with sharps or flats.</li>
+          <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Handedness</strong> — mirror the neck for left-handed players.</li>
+          <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Tone, Volume, Tempo</strong> — shape the built-in sound and set progression playback speed.</li>
+        </ul></div>
+      <div class="help-section"><h3>Saving & sharing</h3><div class="sub">Getting charts out of the app.</div>
+        <ul style="margin:0;padding-left:18px">
+          <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Save</strong> stores a chart in your browser to reload later. <strong>Link</strong> copies a URL that reopens the exact view.</li>
+          <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Print / PNG / SVG</strong> export exactly the chart shown — not the whole screen. For printing, choose landscape and press <span class="kbd">Cmd/Ctrl</span> + <span class="kbd">P</span> if it doesn't appear automatically.</li>
+        </ul></div>`;
+    } else {
+      body = `<div class="help-section"><h3>Frequently asked</h3><dl class="help-faq">
+        <dt>There's no sound.</dt><dd>Browsers only allow audio after you interact with the page. Tap any note or button once and sound will start. Check your device isn't muted, and raise the Volume in Preferences.</dd>
+        <dt>Do I need an internet connection?</dt><dd>No. Everything runs in the page itself. Once it's loaded you can use it fully offline.</dd>
+        <dt>Is my data saved anywhere?</dt><dd>Saved charts and your theme live only in your own browser's local storage. Nothing is sent anywhere.</dd>
+        <dt>The voicings aren't the exact shapes I know.</dt><dd>Voicings are generated to be correct and playable for your tuning — every note shown belongs to the chord and the root is always included. For common open chords they match the familiar shapes; for dense chords they find a reachable subset rather than a single "official" grip.</dd>
+        <dt>Why do some chords have no voicing?</dt><dd>A few very dense chords can't be fully fingered on four strings within reach. The app shows the best reachable version, or a note if none fits.</dd>
+        <dt>Can I use it on my phone?</dt><dd>Yes. The neck scrolls sideways; use the Fret range buttons to zoom in. Add it to your home screen for an app-like experience.</dd>
+        <dt>How do I put a chart on paper?</dt><dd>Configure the view, then Print (choose landscape) or export a PNG/SVG. The export shows exactly what's on screen, including any scale overlay and fret range.</dd>
+      </dl></div>`;
+    }
+
+    return `<div class="help-panel" style="background:transparent;border:none;padding:0">
+      <div class="help-nav">${nav}</div>
+      ${body}
+    </div>`;
   }
 
   // ── Preferences panel ──
