@@ -205,9 +205,18 @@
   .suggest-strip { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 10px 0 12px; }
   .suggest-chip { display: inline-flex; align-items: center; gap: 7px; padding: 6px 9px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text-bright); font-size: 12px; }
   .suggest-chip .roman { color: var(--dim); font-style: italic; font-size: 10px; }
-  .suggest-chip button { min-width: 22px; min-height: 22px; border-radius: 50%; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; line-height: 1; }
+  .suggest-chip button { min-width: 24px; min-height: 24px; border-radius: 50%; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; line-height: 1; display: inline-flex; align-items: center; justify-content: center; }
   .suggest-chip button:hover { color: #e87a7a; border-color: #e87a7a; }
+  .suggest-chip.selected { border-color: var(--gold); background: color-mix(in srgb, var(--gold) 14%, var(--surface-2)); box-shadow: 0 0 0 2px color-mix(in srgb, var(--gold) 18%, transparent); }
   .suggest-chip.flash { border-color: var(--gold); box-shadow: 0 0 0 2px color-mix(in srgb, var(--gold) 28%, transparent); animation: suggestPulse 1.2s ease-out 1; }
+  .drag-handle { cursor: grab; touch-action: none; user-select: none; color: var(--dim); border: 1px dashed var(--border); background: color-mix(in srgb, var(--text-bright) 3%, transparent); border-radius: 6px; min-width: 28px; min-height: 28px; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; line-height: 1; }
+  .drag-handle:active, .drag-handle.grabbing { cursor: grabbing; color: var(--gold); border-color: var(--gold); }
+  .chord-move-btn { min-width: 28px; min-height: 28px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+  .chord-move-btn:hover { color: var(--gold); border-color: var(--gold); }
+  .progression-drop { transition: transform .12s, box-shadow .12s, border-color .12s; }
+  .progression-drop.drop-over { transform: translateY(-2px); box-shadow: 0 0 0 2px color-mix(in srgb, var(--gold) 28%, transparent); border-color: var(--gold); }
+  .chord-card .reorder-row { display:flex; align-items:center; justify-content:center; gap:5px; margin-top:8px; }
+  .reorder-tip { font-size: 11px; color: var(--muted); line-height: 1.55; margin-top: 8px; }
   @keyframes suggestPulse { 0% { transform: scale(1.03); } 100% { transform: scale(1); } }
   .suggest-hero { background: linear-gradient(180deg, color-mix(in srgb, var(--gold) 8%, var(--surface)), var(--surface)); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; margin-bottom: 12px; }
   .suggest-hero .row { margin-bottom: 8px; }
@@ -296,11 +305,47 @@
     .global, .summary { margin-bottom: 10px; }
     .cell { height: 38px; }
   }
+
+  /* UX overhaul: clearer navigation, setup, and progression workflow */
+  .app-toolbar { align-items: stretch; gap: 8px; }
+  .app-nav { flex: 0 1 340px; min-width: 220px; }
+  .nav-select.active-more, .util-btn.active-more { border-color: var(--gold); color: var(--gold); background: color-mix(in srgb, var(--gold) 10%, var(--surface)); }
+  .setup-status { max-width: 320px; overflow: hidden; text-overflow: ellipsis; }
+  .mode-intro { display:flex; align-items:center; justify-content:space-between; gap:12px; background: linear-gradient(180deg, color-mix(in srgb, var(--gold) 8%, var(--surface)), var(--surface)); border:1px solid var(--border); border-radius:8px; padding:14px 16px; margin-bottom:14px; }
+  .setup-panel { background: var(--surface); border: 1px solid color-mix(in srgb, var(--accent-blue) 35%, var(--border)); border-radius: 8px; padding: 14px 16px; margin-bottom: 16px; box-shadow: 0 6px 18px var(--shadow); }
+  .setup-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:12px; }
+  .setup-grid { display:grid; grid-template-columns: minmax(150px, 1fr) minmax(150px, 1fr) minmax(240px, 2fr); gap:12px; align-items:start; }
+  .setup-custom { grid-column: 1 / -1; }
+  .field label { display:block; font-size:9px; color:var(--dim); letter-spacing:.14em; text-transform:uppercase; margin-bottom:5px; }
+  .field select, .field input { width:100%; min-height:38px; border-radius:6px; border:1px solid var(--border); background:var(--surface-2); color:var(--text); padding:8px 10px; }
+  .studio-current { position: sticky; top: 8px; bottom: auto; margin: 14px 0 16px; }
+  .suggest-chip button, .workbar-chip button { border:none; background:rgba(255,255,255,.04); color:inherit; border-radius:4px; padding:1px 6px; cursor:pointer; }
+  .suggest-chip button:hover, .workbar-chip button:hover { background:color-mix(in srgb, var(--gold) 18%, transparent); color:var(--gold); }
+  .progression-workbar { position: sticky; top: 8px; z-index: 45; background: linear-gradient(180deg, color-mix(in srgb, var(--gold) 10%, var(--surface)), var(--surface)); border:1px solid color-mix(in srgb, var(--gold) 30%, var(--border)); border-radius:10px; padding:12px 14px; margin-bottom:12px; box-shadow:0 8px 26px var(--shadow); }
+  .workbar-head { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap; }
+  .workbar-actions { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+  .workbar-strip { display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; }
+  .workbar-chip { --c: var(--gold); display:inline-flex; align-items:center; gap:6px; border:1px solid color-mix(in srgb, var(--c) 35%, var(--border)); color:var(--c); background:color-mix(in srgb, var(--c) 10%, transparent); border-radius:999px; padding:6px 8px; font-size:12px; cursor:pointer; }
+  .workbar-chip.active { background:color-mix(in srgb, var(--c) 20%, transparent); box-shadow:0 0 0 2px color-mix(in srgb, var(--c) 24%, transparent) inset; }
+  .workbar-chip .idx { opacity:.7; font-family:ui-monospace, monospace; font-size:10px; }
+  .studio-tabs { display:flex; flex-wrap:wrap; gap:6px; margin:0 0 14px; }
+  .summary-inline { font-size:18px; color:var(--text-bright); line-height:1.4; }
+  .util-btn.danger { border-color: color-mix(in srgb, #e87a7a 40%, var(--border)); color:#e87a7a; }
+  @media (max-width: 720px) {
+    .app-nav { flex: 1 1 100%; }
+    .nav-select, .setup-status { flex: 1 1 150px; }
+    .setup-grid { grid-template-columns: 1fr; }
+    .progression-workbar, .studio-current { position: static; }
+    .workbar-actions { width:100%; }
+    .workbar-actions .util-btn, .workbar-actions .accent-btn { flex: 1 1 auto; }
+  }
+
 </style>
 </head>
 <body>
 <div id="app" role="main"></div>
 <script>
+
   "use strict";
 
   const CHROMATIC = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -891,7 +936,7 @@
 
   const state = {
     theme: savedTheme,
-    mode: "single",
+    mode: "suggest",
     showHelp: false,
     helpSection: "start",
     showPrefs: false,
@@ -964,8 +1009,12 @@
     suggestIdeaOffset: 0,        // rotates the featured idea row
     suggestFilter: "all",       // all, simple, classic, darker, loopable, chorus
     suggestTab: "color",        // color, landings, notes
+    showSetup: false,            // compact global setup panel
+    progTab: "fretboard",       // progression study tabs: fretboard, edit, voice, notes, charts, library
     suggestUndo: null,           // last Suggester edit that can be undone
     suggestFlashIdx: null,       // chord index to visually highlight in the current dock
+    suggestInsertIdx: null,      // selected chord index; new Suggester chords insert after it
+    dragFromIdx: null,           // temporary reorder source index
     theoryDepth: "useful",       // "simple", "useful", or "theory" for songwriter explanations
     // Metronome
     metroBpm: 100,
@@ -1890,6 +1939,33 @@
     </div>`;
   }
 
+  function renderSetupPanel() {
+    const inst = INSTRUMENTS[state.instrument];
+    const instOptions = Object.entries(INSTRUMENTS).map(([k,v]) => `<option value="${k}" ${state.instrument===k?"selected":""}>${esc(v.label)}</option>`).join("");
+    const tuningOptions = Object.entries(inst.tunings).map(([k,v]) => `<option value="${k}" ${state.tuningName===k?"selected":""}>${esc(v.label)}</option>`).join("");
+    const customField = state.instrument === "custom" ? `<div class="field setup-custom"><label>Custom notes (4–6, low → high)</label><div style="display:flex;gap:6px"><input type="text" id="customTuning" value="${esc(state.customTuningText)}" oninput="app.setCustomTuningText(this.value)" style="flex:1" aria-label="Custom tuning notes" /><button type="button" class="util-btn" onclick="app.applyCustomTuning()">Set</button></div></div>` : "";
+    const capoButtons = Array.from({length:8}, (_,i) => btn(i===0?"None":`Fret ${i}`, state.capo===i, "#a8c4e8", `app.set('capo',${i})`)).join("");
+    return `<div class="setup-panel">
+      <div class="setup-head"><div><div class="section-label">Setup</div><div class="info-text">These settings apply everywhere: charts, tuner tones, fretboards, voicings, and practice tools.</div></div><button type="button" class="util-btn" onclick="app.toggle('showSetup')">Close</button></div>
+      <div class="setup-grid">
+        <div class="field"><label>Instrument</label><select onchange="app.setInstrument(this.value)" aria-label="Instrument">${instOptions}</select></div>
+        <div class="field"><label>Tuning</label><select onchange="app.setTuning(this.value)" aria-label="Tuning">${tuningOptions}</select></div>
+        <div class="field grow"><label>Capo</label><div class="row">${capoButtons}</div>${state.capo>0?`<div class="info-text" style="margin-top:8px">Sounding tuning: ${esc(getOpenStrings().map(s=>noteAtFret(s,state.capo)).join(" "))}</div>`:""}</div>
+        ${customField}
+      </div>
+    </div>`;
+  }
+
+  function renderScaleOverlayCard() {
+    const scaleTypeButtons = `<button type="button" class="pill ${state.scaleType===null?"active":""}" style="--c:#888" onclick="app.set('scaleType',null)">Off</button>` +
+      Object.entries(SCALES).map(([k,v]) => btn(v.label, state.scaleType===k, v.color, `app.set('scaleType','${k}')`)).join("");
+    const compact = state.scaleType ? `${esc(state.scaleKey)} ${esc(SCALES[state.scaleType].label)} — <span style="color:var(--muted)">${esc(buildTones(state.scaleKey, SCALES[state.scaleType].intervals).join(" "))}</span> <button type="button" class="pill" style="--c:#888;font-size:10px;padding:2px 7px;margin-left:6px" onclick="app.set('scaleType',null)">clear</button>` : `No scale active — tap configure to show passing tones around the chord.`;
+    return `<div class="card" style="margin-bottom:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:10px"><div class="section-label" style="margin:0">Scale Overlay</div><button type="button" class="pill" style="--c:#6dd4a8;font-size:11px;padding:3px 9px" onclick="app.toggle('showScalePanel')">${state.showScalePanel?"hide":"configure"}</button></div>
+      ${state.showScalePanel ? `<div class="mini-label">Root</div><div class="row" style="margin-bottom:8px">${keyButtons(state.scaleKey, state.scaleType?SCALES[state.scaleType].color:"#6dd4a8", "app.setScaleKey")}</div><div class="mini-label">Type</div><div class="row">${scaleTypeButtons}</div>` : `<div class="info-text">${compact}</div>`}
+    </div>`;
+  }
+
   // ── Single chord mode ──
   function renderSingle() {
     const { chordDef, singleTones } = current();
@@ -1919,9 +1995,11 @@
     }
 
     const legend = renderLegend(chordColor);
-    return `<div class="card" style="margin-bottom:14px"><div class="section-label">Root</div><div class="row">${keyRow}</div></div>
+    return `<div class="mode-intro"><div><div class="section-label">Chord Tones</div><div class="info-text">Choose a chord and see every tone on your current instrument setup.</div></div></div>
+      <div class="card" style="margin-bottom:14px"><div class="section-label">Root</div><div class="row">${keyRow}</div></div>
       <div class="card" style="margin-bottom:14px"><div class="section-label">Chord Type</div>${typeGroups}</div>
       ${diatonicPanel}
+      ${renderScaleOverlayCard()}
       <div class="summary" style="--c:${chordColor}"><div class="summary-head"><span class="name">${esc(state.selectedKey)} ${esc(chordDef.label)}</span><button type="button" class="play-btn" onclick="app.playSingleChord()">Play</button></div><div class="row">${tonePills}</div><div style="margin-top:12px"><div class="group-label">Quick swap</div><div class="row">${quickSwap}</div></div></div>
       ${renderFretboard("single")}
       ${voicingSection}
@@ -2034,39 +2112,51 @@
 
   // ── Progression mode ──
   function renderProgression() {
+    const hasChords = Array.isArray(state.progChords) && state.progChords.length;
+    const chipRow = hasChords ? state.progChords.map((ch, i) => {
+      const col = PROG_COLORS[i % PROG_COLORS.length];
+      const active = state.editingIdx === i ? "active" : "";
+      return `<span class="workbar-chip ${active}" style="--c:${col}" onclick="app.selectProgressionChord(${i})"><span class="idx">${i+1}</span><span>${esc(chordSymbol(ch))}</span><button type="button" aria-label="Move ${esc(chordSymbol(ch))} left" onclick="event.stopPropagation();app.moveChordLeft(${i})">‹</button><button type="button" aria-label="Move ${esc(chordSymbol(ch))} right" onclick="event.stopPropagation();app.moveChordRight(${i})">›</button></span>`;
+    }).join("") : `<span class="suggest-empty">No progression yet. Start in Studio or add a chord below.</span>`;
+    const topActions = `<div class="workbar-actions">
+      <button type="button" class="accent-btn" onclick="app.playProgression()">Play</button>
+      ${btn(state.progLoop?"Loop on":"Loop", state.progLoop, "#6dd4a8", "app.toggleLoop()")}
+      <button type="button" class="util-btn" onclick="app.stopAudio()">Stop</button>
+      ${hasChords && state.progChords.length < 8 ? `<button type="button" class="util-btn" onclick="app.addChord()">Add chord</button>` : ""}
+      ${hasChords ? `<button type="button" class="util-btn" onclick="app.printChart()">Print</button>` : ""}
+      ${hasChords ? `<button type="button" class="util-btn danger" onclick="app.clearProgression()">Clear</button>` : ""}
+    </div>`;
+    const workbar = `<div class="progression-workbar"><div class="workbar-head"><div><div class="section-label">Current Progression</div><div class="info-text">Tap a chord to edit it. Use ‹ › to reorder. Everything below follows this order.</div></div>${topActions}</div><div class="workbar-strip">${chipRow}</div></div>`;
+    const tabs = [["fretboard","Fretboard"],["edit","Edit chords"],["voice","Voice leading"],["notes","Songwriter notes"],["charts","Charts"],["library","Library"]].map(([k,l]) => btn(l, state.progTab===k, k==="fretboard"?"#e8c547":k==="edit"?"#7eb8d4":k==="voice"?"#c47ed4":k==="notes"?"#6dd4a8":k==="charts"?"#e8823a":"#a8c4e8", `app.set('progTab','${k}')`)).join("");
+
     const genreTabs = Object.keys(PROGRESSION_LIBRARY).map(g => btn(g, state.activeGenre===g, "#6dd4a8", `app.set('activeGenre','${g.replace(/'/g,"\\'")}')`)).join("");
     const presets = PROGRESSION_LIBRARY[state.activeGenre].map((p,i) => `<button type="button" class="util-btn" onclick="app.applyPreset(${i})">${esc(p.label)}</button>`).join("");
-    const lib = state.progLibOpen ? `<div class="card" style="margin-bottom:14px"><div class="section-label">Progression Library</div><div class="mini-label">Key</div><div class="row" style="margin-bottom:10px">${keyButtons(state.selectedKey, "#e8c547", "app.setSelectedKey")}</div><div class="row" style="margin-bottom:10px">${genreTabs}</div><div class="row">${presets}</div></div>` : "";
+    const library = `<div class="card"><div class="section-label">Progression Library</div><div class="info-text" style="margin-bottom:10px">Load a familiar progression, then edit, study, or print it.</div><div class="mini-label">Key</div><div class="row" style="margin-bottom:10px">${keyButtons(state.selectedKey, "#e8c547", "app.setSelectedKey")}</div><div class="row" style="margin-bottom:10px">${genreTabs}</div><div class="row">${presets}</div></div>`;
 
-    const chordCards = state.progChords.map((ch,ci) => {
+    const chordCards = hasChords ? state.progChords.map((ch,ci) => {
       const col = PROG_COLORS[ci % PROG_COLORS.length];
       const tones = buildTones(ch.key, CHORD_TYPES[ch.type]?.intervals || []);
-      const del = state.progChords.length > 2 ? `<button type="button" class="delete-x" onclick="event.stopPropagation();app.removeChord(${ci})" aria-label="Remove chord">×</button>` : "";
-      return `<div class="chord-card"><div class="chord-inner ${state.editingIdx===ci?"active":""}" style="--c:${col}" onclick="app.set('editingIdx',${ci})"><div class="ch-name">${esc(ch.key)} ${esc(CHORD_TYPES[ch.type]?.label)}</div><div class="ch-tones">${esc(tones.join(" "))}</div><button type="button" class="play-btn" style="margin-top:5px;font-size:10px;padding:1px 7px" onclick="event.stopPropagation();app.playChordByIndex(${ci})">Play</button></div>${del}</div>`;
-    }).join("");
+      const label = chordSymbol(ch);
+      const del = state.progChords.length > 1 ? `<button type="button" class="delete-x" onclick="event.stopPropagation();app.removeChord(${ci})" aria-label="Remove chord">×</button>` : "";
+      return `<div class="chord-card"><div class="chord-inner ${state.editingIdx===ci?"active":""}" style="--c:${col}" onclick="app.selectProgressionChord(${ci})"><div class="ch-name">${ci+1}. ${esc(label)}</div><div class="ch-tones">${esc(tones.join(" "))}</div><button type="button" class="play-btn" style="margin-top:5px;font-size:10px;padding:1px 7px" onclick="event.stopPropagation();app.playChordByIndex(${ci})">Preview</button><div class="reorder-row"><button type="button" class="chord-move-btn" onclick="event.stopPropagation();app.moveChordLeft(${ci})" aria-label="Move ${esc(label)} left">‹</button><span class="mini-label" style="margin:0">move</span><button type="button" class="chord-move-btn" onclick="event.stopPropagation();app.moveChordRight(${ci})" aria-label="Move ${esc(label)} right">›</button></div></div>${del}</div>`;
+    }).join("") : "";
+    const edit = `<div class="card"><div class="section-label">Edit chords</div><div class="info-text" style="margin-bottom:10px">Select a chord, change its root or type, then use the move buttons to place it where it belongs.</div><div class="row" style="margin-bottom:12px">${state.progChords.length<8?`<button type="button" class="accent-btn" onclick="app.addChord()">Add chord</button>`:""}<button type="button" class="util-btn" onclick="app.set('progTab','library')">Load preset</button></div><div class="row" style="margin-bottom:14px">${chordCards}</div>${hasChords?renderProgEditor():""}</div>`;
 
-    const editor = renderProgEditor();
-    const mapToggle = `<div class="row" style="margin-bottom:14px">${btn("Combined map", state.progMapMode==="combined", "#e8c547", "app.set('progMapMode','combined')")}${btn("Selected chord", state.progMapMode==="selected", "#7eb8d4", "app.set('progMapMode','selected')")}</div>`;
-
+    const mapToggle = `<div class="row" style="margin-bottom:14px">${btn("Combined map", state.progMapMode==="combined", "#e8c547", "app.set('progMapMode','combined')")}${btn("Selected chord", state.progMapMode==="selected", "#7eb8d4", "app.set('progMapMode','selected')")}${btn(state.showShared?"Shared tones on":"Shared tones", state.showShared, "#fff", "app.toggle('showShared')")}</div>`;
     const sharedPanel = state.showShared ? (() => { const sh = getShared(); return sh.size ? `<div class="card" style="margin-bottom:14px;background:color-mix(in srgb, var(--text-bright) 4%, var(--surface))"><div class="section-label">Shared Tones</div><div class="row">${[...sh].map(n => `<span class="tone-pill" style="--c:var(--text-bright)" onclick="app.playNote('${n}')">${esc(n)}</span>`).join("")}</div><div class="info-text" style="margin-top:6px">Notes common to adjacent chords — your smoothest melodic connection points.</div></div>` : ""; })() : "";
+    const colorLegend = hasChords ? `<div class="legend"><div class="legend-title">Chord colors</div>${state.progChords.map((ch,ci) => { const col = PROG_COLORS[ci%PROG_COLORS.length]; return `<div class="legend-item"><div style="width:10px;height:10px;border-radius:50%;background:${col}"></div><span class="legend-text">${ci+1}. ${esc(chordSymbol(ch))}</span></div>`; }).join("")}</div>` : "";
+    const fretboard = hasChords ? `<div class="card"><div class="section-label">Progression Fretboard</div><div class="info-text" style="margin-bottom:10px">Map the full progression or focus on the selected chord.</div>${mapToggle}${sharedPanel}${renderFretboard("progression")}${colorLegend}</div>` : `<div class="card"><div class="section-label">Progression Fretboard</div><div class="info-text">Build or load a progression first. Studio is the fastest way to start.</div><button type="button" class="accent-btn" onclick="app.setMode('suggest')">Open Studio</button></div>`;
 
-    const vlPanel = state.showVL ? renderVoiceLeading() : "";
-
-    const controls = `<div class="row" style="margin-bottom:14px">
-      ${btn(state.progLibOpen?"Hide library":"Load preset", state.progLibOpen, "#6dd4a8", "app.toggle('progLibOpen')")}
-      ${state.progChords.length<8?btn("+ Add chord", false, "#e8c547", "app.addChord()"):""}
-      ${btn(state.showShared?"Shared tones ✓":"Shared tones", state.showShared, "#fff", "app.toggle('showShared')")}
-      ${btn(state.showVL?"Hide voice leading":"Voice leading", state.showVL, "#c47ed4", "app.toggle('showVL')")}
-      <button type="button" class="play-btn" onclick="app.playProgression()">Play progression</button>
-      ${btn(state.progLoop?"Loop ✓":"Loop", state.progLoop, "#6dd4a8", "app.toggleLoop()")}
-      <button type="button" class="util-btn" onclick="app.stopAudio()">Stop</button>
-    </div>`;
-
-    const colorLegend = `<div class="legend"><div class="legend-title">Chord colors</div>${state.progChords.map((ch,ci) => { const col = PROG_COLORS[ci%PROG_COLORS.length]; return `<div class="legend-item"><div style="width:10px;height:10px;border-radius:50%;background:${col}"></div><span class="legend-text">${ci+1}. ${esc(ch.key)} ${esc(CHORD_TYPES[ch.type]?.label)}</span></div>`; }).join("")}</div>`;
-
-    const songwriterPanel = renderSongwriterAnalysis(state.selectedKey);
-
-    return `${controls}${lib}${songwriterPanel}<div class="row" style="margin-bottom:14px">${chordCards}</div>${editor}${mapToggle}${sharedPanel}${vlPanel}${renderFretboard("progression")}${colorLegend}`;
+    const voice = hasChords && state.progChords.length > 1 ? `<div class="card"><div class="section-label">Voice Leading</div><div class="info-text" style="margin-bottom:10px">Compare two chords and look for common tones or small moves. These are good melody and arrangement targets.</div>${renderVoiceLeading()}</div>` : `<div class="card"><div class="section-label">Voice Leading</div><div class="info-text">Add at least two chords to compare movement.</div></div>`;
+    const notes = `<div>${renderSongwriterAnalysis(state.selectedKey)}</div>`;
+    const charts = `<div class="card"><div class="section-label">Charts & Export</div><div class="info-text" style="margin-bottom:12px">Print or save the current progression as a practice sheet.</div><div class="row"><button type="button" class="accent-btn" onclick="app.printChart()">Print</button><button type="button" class="util-btn" onclick="app.sharePNG()">Share</button><button type="button" class="util-btn" onclick="app.savePNG()">PNG</button><button type="button" class="util-btn" onclick="app.downloadSVG()">SVG</button><button type="button" class="util-btn" onclick="app.copyStateLink()">Link</button></div></div>${renderSavedCharts()}`;
+    let panel = fretboard;
+    if (state.progTab === "edit") panel = edit;
+    else if (state.progTab === "voice") panel = voice;
+    else if (state.progTab === "notes") panel = notes;
+    else if (state.progTab === "charts") panel = charts;
+    else if (state.progTab === "library") panel = library;
+    return `<div class="mode-intro"><div><div class="section-label">Study Progression</div><div class="info-text">Hear, edit, visualize, explain, and export the progression you built in Studio.</div></div></div>${workbar}<div class="studio-tabs">${tabs}</div>${panel}`;
   }
 
   function renderProgEditor() {
@@ -2214,99 +2304,58 @@
 
   // ── Help panel ──
   function renderHelp() {
-    const sections = [["start","Getting started"],["modes","What each tool does"],["workflows","Example workflows"],["controls","Controls & settings"],["faq","FAQ"]];
+    const sections = [["start","Start"],["studio","Studio workflow"],["areas","App areas"],["buttons","Button guide"],["faq","FAQ"]];
     const nav = sections.map(([k,l]) => btn(l, state.helpSection===k, "#e8c547", `app.set('helpSection','${k}')`)).join("");
-
     let body = "";
     if (state.helpSection === "start") {
-      body = `<div class="help-hero"><h2>Welcome to Open Strings</h2><p>Open Strings is a visual music-theory and practice studio for fretted instruments — tenor guitar, guitar, bass, mandolin, ukulele, banjo, and any custom tuning. It maps chords, scales, intervals, voicings, progressions, and practice tools directly onto your neck. Everything you see is playable as sound, and the app runs entirely in your browser.</p></div>
-      <div class="help-section"><h3>First five minutes</h3><div class="sub">A quick path to your first useful chart.</div>
-        <ol class="help-steps">
-          <li><strong>Pick your instrument and tuning</strong> at the top of the page. All notes, voicings, intervals, tuner tones, and fretboard drills recalculate for that setup.</li>
-          <li>On the <strong>Single</strong> tab, choose a <strong>root note</strong> and a <strong>chord type</strong>. The fretboard shows every place those chord tones appear. The white dot is the root.</li>
-          <li><strong>Tap any dot</strong> to hear that note, or press <strong>Play</strong> to hear the whole chord. Audio unlocks on your first tap, which is normal on phones and browsers.</li>
-          <li>Open <strong>Playable Voicings</strong> to see practical grips for the current tuning. Use the <strong>Preview</strong> buttons to compare shapes instead of only looking at them.</li>
-          <li>Use <strong>Scales</strong>, <strong>Progression</strong>, and <strong>More tools</strong> when you want to move from one chord chart into actual practice, songwriting, ear training, or timing work.</li>
-        </ol></div>
-      <div class="help-section"><h3>What the dots mean</h3><div class="sub">A quick visual legend for the fretboard.</div>
-        <div class="feature-grid">
-          <div class="feature-item"><h4>Root dots</h4><p>White-filled dots mark the root of the selected chord or scale. They are your strongest visual anchor when learning a shape.</p></div>
-          <div class="feature-item"><h4>Colored dots</h4><p>Solid colored dots are active chord or scale tones. Dot labels can show either interval names like R, 3, 5 or actual note names.</p></div>
-          <div class="feature-item"><h4>Scale rings</h4><p>In Single mode, a scale overlay shows non-chord scale tones as smaller rings, so you can see passing tones around the chord.</p></div>
-          <div class="feature-item"><h4>Shared outlines</h4><p>In Progression mode, shared-tone highlighting outlines notes that appear in more than one chord, which helps with smooth melodies and voice leading.</p></div>
-        </div></div>`;
-    } else if (state.helpSection === "modes") {
-      const f = (name, chip, color, desc, good) => `<div class="feature-item" style="--c:${color}"><h4>${esc(name)} <span class="chip">${esc(chip)}</span></h4><p>${desc}</p><div class="good"><b>Good for:</b> ${good}</div></div>`;
-      body = `<div class="help-section"><h3>Core tools</h3><div class="sub">The five main tabs.</div><div class="feature-grid">
-        ${f("Single","tab","#e8c547","Pick a root and chord type to map every chord tone across the neck. Expand the Diatonic panel to see all seven chords in a key, or add a scale overlay to separate chord tones from passing tones.","learning chord shapes, seeing a key's chords, connecting chords to scales.")}
-        ${f("Progression","tab","#7eb8d4","Build a progression by hand, load one from the library, or open one from the Progression Suggester. The Songwriter Notes panel explains the movement in plain language first, with optional roman numerals and deeper theory when you want it.","songwriting, arranging, finding melody targets, understanding why a progression works without needing a music-major vocabulary.")}
-        ${f("Scales","tab","#6dd4a8","Put a scale front and center. Map it across the neck, switch through position boxes, label notes by degree, see the step formula, highlight generated diatonic chords, compare against another scale, and play the scale up and down.","learning scales and modes, practising positions, soloing, chord-scale study.")}
-        ${f("Intervals","tab","#6dd4a8","Tap any two notes and Open Strings names the interval, explains its sound, and shows other places the same interval appears on your tuning.","ear training, understanding chord construction, learning fretboard geometry.")}
-        ${f("Identify","tab","#c47ed4","The reverse of Single: tap notes on the neck and the app identifies the closest chord name. Tap a note again to remove it.","naming shapes you discover, checking your own voicings.")}
-      </div></div>
-      <div class="help-section"><h3>More tools</h3><div class="sub">Found in the “More tools” dropdown.</div><div class="feature-grid">
-        ${f("Key Finder","tool","#6dd4a8","Enter the chords from a song and it ranks likely keys. It shows how many chords fit each key and lists the matching diatonic chords. Treat the result as a ranked clue, not a guarantee — real songs borrow chords all the time.","finding a song's key, transposing, spotting borrowed chords.")}
-        ${f("Modes Explorer","tool","#c47ed4","Pick a parent scale and key to see all seven modes, their notes, and how each mode is the same parent scale started from a different degree.","understanding modes, finding scale choices over chords.")}
-        ${f("Progression Suggester","tool","#6dd4a8","Choose a key and mood, preview curated or random progressions, replace your Current Progression, add borrowed color chords, or add tension-before-resolution moves. The Current Progression strip lets you keep building without leaving the Suggester.","beating writer's block, testing substitutions, adding color, and turning a rough idea into something worth studying on the fretboard.")}
-        ${f("Chord-Tone Quiz","tool","#e8c547","Drills chord construction directly — for example, identifying which note is the third, fifth, seventh, or altered tone of a chord.","fast recall of chord tones and intervals.")}
-        ${f("Ear Training","tool","#e8823a","Plays a chord with a random root and asks you to identify its quality — major, minor, dominant, diminished, and more.","recognizing chord colors by ear.")}
-        ${f("Fretboard Trainer","tool","#6dd4a8","Gives you a target note and asks you to find every instance across the visible neck, then times your result.","memorizing the fretboard, especially in a new tuning.")}
-        ${f("Metronome","tool","#e8c547","A steady click with visual beat dots, BPM controls, time signatures, accented downbeats, and a meter-identification trainer.","timing practice, odd-meter practice, learning to feel time signatures.")}
-        ${f("Tuner","tool","#a8c4e8","Plays a reference tone for each open string using your current tuning and capo setup.","quick tuning by ear without leaving the app.")}
-      </div></div>`;
-    } else if (state.helpSection === "workflows") {
-      body = `<div class="help-section"><h3>Example workflows</h3><div class="sub">Practical ways to use Open Strings.</div>
-        <div class="workflow"><div class="w-title">Learn a song you like</div><div class="w-body">Use <strong>Key Finder</strong> to enter the song's chords and estimate the key. Switch to <strong>Single</strong> to learn each chord, then <strong>Progression</strong> to hear the sequence and see how the chords connect.</div></div>
-        <div class="workflow"><div class="w-title">Write your own progression in the Suggester</div><div class="w-body">Pick a <strong>key</strong> and <strong>mood</strong>, then tap <strong>Preview</strong> on any card to hear it without changing anything. Tap <strong>Replace current</strong> when you want that idea in the Current Progression strip. Keep editing there, then tap <strong>Study full progression</strong> when you want the larger fretboard, shared-tone, voice-leading, and print/export view.</div></div>
-        <div class="workflow"><div class="w-title">Use borrowed chords without getting lost</div><div class="w-body">Open <strong>Borrowed chords</strong> and tap <strong>Add [chord]</strong>. The chord is appended to the Current Progression strip without jumping screens. Use <strong>Play current</strong> to audition the result, remove anything that doesn't work, then study the full progression only when it feels promising.</div></div>
-        <div class="workflow"><div class="w-title">Add tension before a chord</div><div class="w-body">In <strong>Add tension before a chord</strong>, each card shows a move like <strong>E7 → Am</strong>. Tap <strong>Add E7 only</strong> if you just want the tense color chord. Tap <strong>Add E7 → Am</strong> if you want the full pull-and-release move added to the Current Progression strip.</div></div>
-        <div class="workflow"><div class="w-title">Write a melody or solo</div><div class="w-body">Open <strong>Scales</strong>, pick your key and scale, and learn one position at a time. Tap generated chords to see which scale notes are chord tones for each harmony — land phrases there, then pass through the others.</div></div>
-        <div class="workflow"><div class="w-title">Build timing into theory practice</div><div class="w-body">Use the <strong>Metronome</strong> while drilling scales, chord changes, or fretboard notes. Try the meter trainer to practise hearing where beat 1 lands before you look at the answer.</div></div>
-        <div class="workflow"><div class="w-title">Learn a new instrument or tuning</div><div class="w-body">Set your <strong>instrument and tuning</strong>, use the <strong>Tuner</strong> to hear the open strings, then use <strong>Fretboard Trainer</strong>, <strong>Single</strong>, and <strong>Scales</strong> to learn the new layout.</div></div>
-        <div class="workflow"><div class="w-title">Make a practice sheet</div><div class="w-body">Configure any chart — chord, scale overlay, fret range, capo, or progression — then <strong>Print</strong> or export a <strong>PNG/SVG</strong>. Use <strong>Save</strong> for in-app recall or <strong>Link</strong> to copy the exact view.</div></div>
+      body = `<div class="help-hero"><h2>Open Strings is organized around writing songs faster.</h2><p>Set up your instrument once, build a progression in Studio, study it on the fretboard, practise it, then print a chart. Deeper theory is available when you want it, but the first goal is always: make something musical quickly.</p></div>
+      <div class="help-section"><h3>Fast path</h3><div class="sub">The simplest way to use the app.</div><ol class="help-steps">
+        <li><strong>Setup</strong> your instrument, tuning, and capo from the top bar.</li>
+        <li>Open <strong>Studio</strong>, choose a key and mood, then press <strong>Preview</strong> on a few ideas.</li>
+        <li>Press <strong>Use this</strong> when an idea feels good. It becomes your Current Progression.</li>
+        <li>Add color with <strong>Color chords</strong>, or add pull with <strong>Stronger landings</strong>.</li>
+        <li>Press <strong>Study</strong> to see fretboard maps, voice leading, Songwriter Notes, and chart options.</li>
+      </ol></div>`;
+    } else if (state.helpSection === "studio") {
+      body = `<div class="help-section"><h3>Studio workflow</h3><div class="sub">Studio is the songwriting desk.</div>
+        <div class="workflow"><div class="w-title">1. Start with mood ideas</div><div class="w-body">Choose a key and mood. The first cards are meant to be tried quickly. <strong>Preview</strong> only plays the idea. <strong>Use this</strong> replaces your Current Progression with that idea.</div></div>
+        <div class="workflow"><div class="w-title">2. Watch the Current Progression strip</div><div class="w-body">The strip shows the progression you are building. If you add a chord, it appears there immediately. Use <strong>Play</strong> to hear the full progression, <strong>Study</strong> to open the full analysis view, and <strong>‹ ›</strong> to move chords left or right.</div></div>
+        <div class="workflow"><div class="w-title">3. Put added chords where they belong</div><div class="w-body">Tap a chord in the Current Progression strip to choose an insert spot. New color chords or stronger-landing moves insert after that selected chord. Tap it again to return to adding at the end.</div></div>
+        <div class="workflow"><div class="w-title">4. Add color or pull</div><div class="w-body"><strong>Color chords</strong> are outside-the-key flavors like bittersweet minor iv or cinematic bVI. <strong>Stronger landings</strong> are moves like E7 → Am: a tension chord followed by the chord it wants to land on.</div></div>
+        <div class="workflow"><div class="w-title">5. Study only when ready</div><div class="w-body">The Study screen keeps the current progression at the top and lets you switch between Fretboard, Edit chords, Voice leading, Songwriter Notes, Charts, and Library.</div></div>
       </div>`;
-    } else if (state.helpSection === "controls") {
-      body = `<div class="help-section"><h3>Top controls</h3><div class="sub">Settings that apply across the app.</div>
-        <ul style="margin:0;padding-left:18px">
-          <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Instrument & Tuning</strong> — switches the entire fretboard and all calculations. Choose a preset or enter a custom tuning of 4–6 notes.</li>
-          <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Capo</strong> — shifts the open-string pitches up; fretboard labels show the sounding notes.</li>
-          <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Scale Overlay</strong> — in Single mode, shows a scale behind the chord. Solid dots are chord tones; rings are other scale notes.</li>
-          <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Fret range</strong> — zooms the neck to a window like 0–5, useful on phones and for focused practice.</li>
-          <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Current Progression strip</strong> — in the Suggester, shows the progression you are building and gives quick controls to play it, clear it, remove chords, or study the full Progression view.</li>
-          <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Suggester buttons</strong> — <strong>Preview</strong> only plays an idea. <strong>Replace current</strong> loads that idea into the strip and keeps you in the Suggester. <strong>Replace & study</strong> loads it and opens the full Progression view. <strong>Add [chord]</strong> appends one chord without replacing anything.</li>
-          <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Tension buttons</strong> — <strong>Add E7 only</strong> adds the tense color chord by itself. <strong>Add E7 → Am</strong> adds the tense chord plus the chord it resolves into, so you hear the full pull-and-release move.</li>
-          <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Songwriter Notes</strong> — translates theory into usable musical language: home, lift, tension, color, ending feel, melody targets, and optional deeper roman-numeral analysis.</li>
-        </ul></div>
-      <div class="help-section"><h3>Preferences</h3><div class="sub">Open the Preferences button in the toolbar.</div>
-        <ul style="margin:0;padding-left:18px">
-          <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Dot labels</strong> — show interval names like R, 3, 5 or actual note names on the dots.</li>
-          <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Accidentals</strong> — choose sharps, flats, or automatic spelling.</li>
-          <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Handedness</strong> — mirror the neck for left-handed players.</li>
-          <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Tone, Volume, Tempo</strong> — shape the built-in sound and set progression playback speed.</li>
-        </ul></div>
-      <div class="help-section"><h3>Saving & sharing</h3><div class="sub">Getting charts out of the app.</div>
-        <ul style="margin:0;padding-left:18px">
-          <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Save</strong> stores a chart in your browser to reload later. <strong>Link</strong> copies a URL that reopens the exact view.</li>
-          <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Print / PNG / SVG</strong> export exactly the chart shown. For printing, choose landscape and use <span class="kbd">Cmd/Ctrl</span> + <span class="kbd">P</span> if the print window does not appear automatically.</li>
-        </ul></div>`;
+    } else if (state.helpSection === "areas") {
+      const f = (name, color, desc) => `<div class="feature-item" style="--c:${color}"><h4>${esc(name)}</h4><p>${desc}</p></div>`;
+      body = `<div class="help-section"><h3>App areas</h3><div class="sub">Every feature now has a clearer home.</div><div class="feature-grid">
+        ${f("Studio", "#e8c547", "Build progressions from moods, borrowed color chords, and stronger-landing moves.")}
+        ${f("Study", "#7eb8d4", "Analyze the current progression: fretboard map, editing, voice leading, songwriter notes, charts, and preset library.")}
+        ${f("Fretboard", "#6dd4a8", "Chord Tones, Scales, Intervals, Find Chord, Find Key, and Modes. Use these when you want to understand where notes live.")}
+        ${f("Practice", "#c47ed4", "Metronome, tuner, fretboard trainer, ear training, and quiz tools.")}
+        ${f("Charts", "#e8823a", "Print, share, save, or export the current chord/progression chart.")}
+        ${f("Setup", "#a8c4e8", "Instrument, tuning, and capo. These settings apply everywhere.")}
+      </div></div>`;
+    } else if (state.helpSection === "buttons") {
+      body = `<div class="help-section"><h3>Button guide</h3><div class="sub">Plain meanings for the main actions.</div><dl class="help-faq">
+        <dt>Preview</dt><dd>Hear an idea without changing your current progression.</dd>
+        <dt>Use this</dt><dd>Replace the Current Progression with that whole suggested idea.</dd>
+        <dt>Add</dt><dd>Add one chord to the Current Progression. If an insert spot is selected, it inserts there; otherwise it goes to the end.</dd>
+        <dt>Insert after [chord]</dt><dd>You tapped a chord in the Current Progression strip. The new chord or move will land after that chord.</dd>
+        <dt>Add E7 → Am</dt><dd>Add the full pull-and-landing move: E7 creates tension, then Am resolves it.</dd>
+        <dt>Study</dt><dd>Open the full Study screen for the current progression.</dd>
+        <dt>Play</dt><dd>Hear the current chord or progression.</dd>
+        <dt>Print / PNG / SVG / Share</dt><dd>Export the current chart for practice, teaching, or rehearsal.</dd>
+      </dl></div>`;
     } else {
       body = `<div class="help-section"><h3>Frequently asked</h3><dl class="help-faq">
-        <dt>There's no sound.</dt><dd>Browsers only allow audio after you interact with the page. Tap any note or button once and sound will start. Check your device isn't muted, and raise Volume in Preferences.</dd>
-        <dt>Do I need an internet connection?</dt><dd>No. Everything runs in the page itself. Once the file is loaded, you can use it offline.</dd>
-        <dt>Is my data saved anywhere?</dt><dd>Saved charts and theme preference live only in your browser's local storage. Nothing is sent anywhere.</dd>
-        <dt>Why did a borrowed chord appear outside the key?</dt><dd>That is the point of borrowed chords. They intentionally pull from parallel minor, modal mixture, or dominant color to add contrast. Use Key Finder and Progression mode to see how they relate to the home key.</dd>
-        <dt>What does “Add tension before a chord” mean?</dt><dd>It means adding a chord that creates pull, followed by the chord it wants to land on. For example, E7 → Am makes Am feel like a stronger destination. You can add only E7 for color, or add the full E7 → Am move.</dd>
-        <dt>The voicings aren't the exact shapes I know.</dt><dd>Voicings are generated to be correct and playable for your tuning. Common open chords use familiar shapes where available; dense chords may use a reachable subset rather than a single official grip.</dd>
-        <dt>Why do some chords have no voicing?</dt><dd>A few dense chords cannot be fully fingered on four strings within the selected range. The app shows the best reachable version, or a note if none fits.</dd>
-        <dt>Can I use it on my phone?</dt><dd>Yes. The neck scrolls sideways; use Fret range buttons to zoom in. The larger tap targets are designed for phone use.</dd>
-        <dt>How do I put a chart on paper?</dt><dd>Configure the view, then Print or export a PNG/SVG. The export shows the active chart, including scale overlays and fret range.</dd>
+        <dt>There's no sound.</dt><dd>Browsers only allow audio after you interact with the page. Tap any note or button once and sound will start. Check your device is not muted, and raise Volume in Preferences.</dd>
+        <dt>Where did instrument and capo settings go?</dt><dd>They live in <strong>Setup</strong> in the top bar. Those settings apply everywhere instead of being repeated on every screen.</dd>
+        <dt>What happened to More Tools?</dt><dd>Those tools are now grouped by job: Fretboard for theory maps, Practice for drills and timing, Charts for printing/exporting.</dd>
+        <dt>How do I stop added chords from going to the end?</dt><dd>Tap a chord in the Current Progression strip first. New color chords and stronger-landing moves insert after the selected chord.</dd>
+        <dt>What are Stronger landings?</dt><dd>They are tension-and-resolution moves. For example, E7 → Am makes Am feel like a stronger destination.</dd>
+        <dt>Can I still print custom charts?</dt><dd>Yes. Use Charts or the export buttons on Study/Chord Tones to print, share, or save custom charts.</dd>
       </dl></div>`;
     }
-
-    return `<div class="help-panel" style="background:transparent;border:none;padding:0">
-      <div class="help-nav">${nav}</div>
-      ${body}
-    </div>`;
+    return `<div class="help-panel" style="background:transparent;border:none;padding:0"><div class="help-nav">${nav}</div>${body}</div>`;
   }
 
   // ── Preferences panel ──
@@ -2707,6 +2756,16 @@
     const keyRow = keyButtons(state.suggestKey, "#6dd4a8", "app.setSuggestKey");
     const mood = SUGGEST_MOODS[state.suggestMood];
     const chordLabel = chordSymbol;
+    const hasInsertSpot = Number.isInteger(state.suggestInsertIdx) && state.progChords[state.suggestInsertIdx];
+    const insertAnchor = hasInsertSpot ? chordSymbol(state.progChords[state.suggestInsertIdx]) : null;
+    function insertActionLabel(chords, fallback) {
+      const names = (chords || []).map(chordSymbol).join(" → " );
+      if (insertAnchor) return chords.length > 1 ? `Insert ${names} after ${insertAnchor}` : `Insert after ${insertAnchor}`;
+      return fallback || (chords.length > 1 ? `Add ${names}` : "Add chord");
+    }
+    function insertHint() {
+      return insertAnchor ? `New chords will insert after ${insertAnchor}. Tap it again to add to the end instead.` : "Tap a chord in Current Progression to choose where new chords land.";
+    }
 
     function romanListToChords(prog) { return prog.map(r => romanToChord(r, state.suggestKey)); }
     function ideaTags(prog) {
@@ -2760,9 +2819,9 @@
       const c = romanToChord(bc.roman, state.suggestKey);
       const enc = encodeURIComponent(JSON.stringify([c]));
       const deep = state.theoryDepth === "theory" ? `<details style="margin-top:7px"><summary class="info-text" style="cursor:pointer;color:var(--text-bright)">Why this works</summary><div class="info-text"><strong>Theory:</strong> ${esc(bc.deep)}</div></details>` : "";
-      return `<div class="saved-card"><div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px;flex-wrap:wrap"><span style="font-size:14px;color:var(--text-bright)">${esc(chordLabel(c))}</span><span class="tag-chip">${esc(bc.color)}</span></div><div class="info-text" style="margin-bottom:6px">${esc(bc.why)}</div><div class="info-text" style="margin-bottom:8px"><strong>Try it:</strong> ${esc(bc.use)}</div>${deep}<div class="row"><button type="button" class="pill" style="--c:#e8c547;font-size:11px" onclick="app.playSuggested('${enc}')">Preview</button><button type="button" class="pill" style="--c:#c47ed4;font-size:11px" onclick="app.appendChordToProg('${enc}')">Add chord</button></div></div>`;
+      return `<div class="saved-card"><div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px;flex-wrap:wrap"><span style="font-size:14px;color:var(--text-bright)">${esc(chordLabel(c))}</span><span class="tag-chip">${esc(bc.color)}</span></div><div class="info-text" style="margin-bottom:6px">${esc(bc.why)}</div><div class="info-text" style="margin-bottom:8px"><strong>Try it:</strong> ${esc(bc.use)}</div>${deep}<div class="row"><button type="button" class="pill" style="--c:#e8c547;font-size:11px" onclick="app.playSuggested('${enc}')">Preview</button><button type="button" class="pill" style="--c:#c47ed4;font-size:11px" onclick="app.appendChordToProg('${enc}')">${esc(insertActionLabel([c], "Add to end"))}</button></div></div>`;
     }).join("");
-    const colorPanel = `<div class="suggest-tab-panel"><div class="section-label">Add color from outside the key</div><div class="info-text" style="margin-bottom:10px">Use these when the current progression feels too plain. They add one surprise chord without forcing you to change keys.</div><div class="saved-list">${borrowedChips}</div></div>`;
+    const colorPanel = `<div class="suggest-tab-panel"><div class="section-label">Add color from outside the key</div><div class="info-text" style="margin-bottom:6px">Use these when the current progression feels too plain. They add one surprise chord without forcing you to change keys.</div><div class="reorder-tip" style="margin-bottom:10px">${esc(insertHint())}</div><div class="saved-list">${borrowedChips}</div></div>`;
 
     const landingCards = SECONDARY_DOMINANTS.map(sd => {
       const target = { key: transpose(state.suggestKey, sd.targetOffset), type: sd.targetType };
@@ -2771,23 +2830,29 @@
       const encPair = encodeURIComponent(JSON.stringify([setup, target]));
       const setupSym = chordSymbol(setup);
       const targetSym = chordSymbol(target);
-      return `<div class="saved-card"><div style="font-size:15px;color:var(--text-bright);margin-bottom:4px">${esc(setupSym)} → ${esc(targetSym)}</div><div class="info-text" style="margin-bottom:6px">${esc(sd.why)}</div><div class="info-text" style="margin-bottom:8px"><strong>Use:</strong> ${esc(sd.use)}</div>${state.theoryDepth === "theory" ? `<details style="margin-bottom:8px"><summary class="info-text" style="cursor:pointer;color:var(--text-bright)">Why this works</summary><div class="info-text">Theory: ${esc(setupSym)} is ${esc(sd.roman)} in ${esc(spell(state.suggestKey))} major.</div></details>` : ""}<div class="row"><button type="button" class="pill" style="--c:#e8823a;font-size:11px" onclick="app.appendChordToProg('${encSetup}')">Add ${esc(setupSym)}</button><button type="button" class="pill" style="--c:#e8c547;font-size:11px" onclick="app.appendChordToProg('${encPair}')">Add ${esc(setupSym)} → ${esc(targetSym)}</button></div></div>`;
+      return `<div class="saved-card"><div style="font-size:15px;color:var(--text-bright);margin-bottom:4px">${esc(setupSym)} → ${esc(targetSym)}</div><div class="info-text" style="margin-bottom:6px">${esc(sd.why)}</div><div class="info-text" style="margin-bottom:8px"><strong>Use:</strong> ${esc(sd.use)}</div>${state.theoryDepth === "theory" ? `<details style="margin-bottom:8px"><summary class="info-text" style="cursor:pointer;color:var(--text-bright)">Why this works</summary><div class="info-text">Theory: ${esc(setupSym)} is ${esc(sd.roman)} in ${esc(spell(state.suggestKey))} major.</div></details>` : ""}<div class="row"><button type="button" class="pill" style="--c:#e8823a;font-size:11px" onclick="app.appendChordToProg('${encSetup}')">${esc(insertActionLabel([setup], `Add ${setupSym}`))}</button><button type="button" class="pill" style="--c:#e8c547;font-size:11px" onclick="app.appendChordToProg('${encPair}')">${esc(insertActionLabel([setup, target], `Add ${setupSym} → ${targetSym}`))}</button></div></div>`;
     }).join("");
-    const landingsPanel = `<div class="suggest-tab-panel"><div class="section-label">Add a stronger landing</div><div class="info-text" style="margin-bottom:10px">These two-chord moves create pull, then land somewhere clear. Use them when you want the next chord to feel more important.</div><div class="saved-list">${landingCards}</div></div>`;
+    const landingsPanel = `<div class="suggest-tab-panel"><div class="section-label">Add a stronger landing</div><div class="info-text" style="margin-bottom:6px">These two-chord moves create pull, then land somewhere clear. Use them when you want the next chord to feel more important.</div><div class="reorder-tip" style="margin-bottom:10px">${esc(insertHint())}</div><div class="saved-list">${landingCards}</div></div>`;
     const notesPanel = `<div>${renderSongwriterAnalysis(state.suggestKey, false)}</div>`;
     const tabs = [["color","Color chords"],["landings","Stronger landings"],["notes","Songwriter notes"]].map(([k,l]) => btn(l, state.suggestTab===k, k==="color"?"#c47ed4":k==="landings"?"#e8c547":"#7eb8d4", `app.set('suggestTab','${k}')`)).join("");
     const tabPanel = `<div class="suggest-tabs">${tabs}</div>${state.suggestTab === "landings" ? landingsPanel : state.suggestTab === "notes" ? notesPanel : colorPanel}`;
 
     const currentChips = state.progChords.length
-      ? state.progChords.map((c,i) => `<span class="suggest-chip ${state.suggestFlashIdx===i?"flash":""}"><span>${esc(chordLabel(c))}</span><span class="roman">${i+1}</span><button type="button" aria-label="Remove ${esc(chordLabel(c))}" onclick="app.removeChord(${i})">×</button></span>`).join("")
+      ? state.progChords.map((c,i) => {
+          const label = chordLabel(c);
+          const selected = state.suggestInsertIdx === i ? "selected" : "";
+          const flash = state.suggestFlashIdx === i ? "flash" : "";
+          return `<span class="suggest-chip ${selected} ${flash}" data-prog-index="${i}" onclick="app.selectProgSlot(${i})" title="Tap to choose where new chords insert"><span>${esc(label)}</span><span class="roman">${i+1}</span><button type="button" aria-label="Move ${esc(label)} left" onclick="event.stopPropagation();app.moveChordLeft(${i})">‹</button><button type="button" aria-label="Move ${esc(label)} right" onclick="event.stopPropagation();app.moveChordRight(${i})">›</button><button type="button" aria-label="Remove ${esc(label)}" onclick="event.stopPropagation();app.removeChord(${i})">×</button></span>`;
+        }).join("")
       : `<span class="suggest-empty">No current progression yet. Use a mood idea, add a color chord, or press Surprise me.</span>`;
     const undoBtn = state.suggestUndo ? `<button type="button" class="pill" style="--c:#e8c547" onclick="app.undoSuggest()">Undo</button>` : "";
     const dockControls = state.progChords.length
       ? `<div class="row"><button type="button" class="accent-btn" onclick="app.playCurrentProgressionOnce()">Play</button><button type="button" class="pill" style="--c:#7eb8d4" onclick="app.setMode('progression')">Study</button>${undoBtn}<button type="button" class="pill" style="--c:#e87a7a" onclick="app.clearProgression()">Clear</button></div>`
       : `<div class="row">${undoBtn}<button type="button" class="pill" style="--c:#7eb8d4" onclick="app.setMode('progression')">Open builder</button></div>`;
-    const dock = `<div class="suggest-dock"><div class="suggest-dock-head"><div><div class="section-label">Current progression</div><div class="info-text">This updates immediately when you use an idea or add a chord.</div></div>${dockControls}</div><div class="suggest-strip">${currentChips}</div></div>`;
+    const dockHint = state.progChords.length ? (insertAnchor ? `Insert spot: after ${insertAnchor}. Tap it again to go back to adding at the end.` : "Tap a chord to choose an insert spot. Use ‹ › to rearrange.") : "Use an idea, add a color chord, or press Surprise me.";
+    const dock = `<div class="suggest-dock studio-current"><div class="suggest-dock-head"><div><div class="section-label">Current progression</div><div class="info-text">${esc(dockHint)}</div></div>${dockControls}</div><div class="suggest-strip">${currentChips}</div></div>`;
 
-    return `<div class="suggest-hero"><div class="section-label">Progression Suggester</div><div class="info-text" style="margin-bottom:12px">Pick a key and mood, try a progression, then shape it with color chords or stronger landings. Stay here while you build; tap Study only when you want the full fretboard map.</div><div class="mini-label">Key</div><div class="row">${keyRow}</div><div class="mini-label">Mood</div><div class="row">${moodBtns}</div></div>${ideaPanel}${tabPanel}${dock}`;
+    return `<div class="suggest-hero"><div class="section-label">Studio</div><div class="info-text" style="margin-bottom:12px">Start with a key and mood, preview ideas, then shape your progression with color chords or stronger landings. Tap Study when you want the full fretboard and chart view.</div><div class="mini-label">Key</div><div class="row">${keyRow}</div><div class="mini-label">Mood</div><div class="row">${moodBtns}</div></div>${dock}${ideaPanel}${tabPanel}`;
   }
 
   // ── Fretboard Note Trainer ──
@@ -2894,6 +2959,13 @@
     return `<div class="card"><div class="section-label">Tuner — Reference Tones</div><div class="info-text" style="margin-bottom:14px">Tap each string to hear its reference pitch and tune by ear. Reflects your current tuning${state.capo>0?" and capo":""}.</div><div class="row" style="gap:10px">${buttons}</div></div>`;
   }
 
+  function renderChartsHub() {
+    const summary = state.progChords && state.progChords.length ? state.progChords.map(chordSymbol).join(" → ") : `${state.selectedKey} ${CHORD_TYPES[state.selectedType]?.label || ""}`;
+    return `<div class="mode-intro"><div><div class="section-label">Charts</div><div class="info-text">Turn the thing you are working on into a shareable or printable practice sheet.</div></div></div>
+      <div class="card"><div class="section-label">Current chart</div><div class="summary-inline">${esc(summary)}</div><div class="info-text" style="margin:8px 0 12px">For progression charts, build in Studio or Study first. For chord charts, open Fretboard → Chord Tones, set the chord, then come back here.</div><div class="row"><button type="button" class="accent-btn" onclick="app.printChart()">Print</button><button type="button" class="util-btn" onclick="app.sharePNG()">Share</button><button type="button" class="util-btn" onclick="app.savePNG()">PNG</button><button type="button" class="util-btn" onclick="app.downloadSVG()">SVG</button><button type="button" class="util-btn" onclick="app.copyStateLink()">Link</button></div></div>
+      ${renderSavedCharts()}`;
+  }
+
   // ── Main render ──
   function render() {
     document.documentElement.setAttribute("data-theme", state.theme);
@@ -2912,35 +2984,36 @@
       case "trainer": content = renderTrainer(); break;
       case "metronome": content = renderMetronome(); break;
       case "tuner": content = renderTuner(); break;
-      default: content = renderSingle();
+      case "charts": content = renderChartsHub(); break;
+      default: content = renderSuggest();
     }
     const themeLabel = state.theme === "dark" ? "Light" : "Dark";
-    const showsGlobal = ["single","progression"].includes(state.mode);
-    const showsExport = ["single","progression"].includes(state.mode);
+    const exportModes = ["single","progression","charts"];
+    const showsExport = exportModes.includes(state.mode);
     const exportButtons = showsExport ? `<button type="button" class="util-btn" onclick="app.sharePNG()">Share</button><button type="button" class="util-btn" onclick="app.savePNG()">PNG</button><button type="button" class="util-btn" onclick="app.downloadSVG()">SVG</button><button type="button" class="util-btn" onclick="app.copyStateLink()">Link</button><button type="button" class="util-btn" onclick="app.printChart()">Print</button>` : "";
-
-    // Primary tabs (most-used) + grouped "More" select for the rest
-    const primary = [["single","Single"],["progression","Progression"],["scales","Scales"],["interval","Intervals"],["identify","Identify"]];
-    const moreModes = [["finder","Key Finder"],["modes","Modes Explorer"],["suggest","Progression Suggester"],["quiz","Chord-Tone Quiz"],["ear","Ear Training"],["trainer","Fretboard Trainer"],["metronome","Metronome"],["tuner","Tuner"]];
-    const primaryTabs = primary.map(([m,l]) => `<button type="button" role="tab" aria-selected="${state.mode===m?"true":"false"}" tabindex="${state.mode===m?"0":"-1"}" class="tab ${state.mode===m?"active":""}" onclick="app.setMode('${m}')">${l}</button>`).join("");
-    const inMore = moreModes.some(([m]) => m === state.mode);
-    const moreLabel = inMore ? (moreModes.find(([m]) => m === state.mode)[1]) : "More tools";
-    const moreOptions = `<option value="">${esc(moreLabel)}</option>` + moreModes.map(([m,l]) => `<option value="${m}" ${state.mode===m?"selected":""}>${esc(l)}</option>`).join("");
+    const currentSection = state.mode === "suggest" ? "studio" : state.mode === "progression" ? "study" : ["single","scales","interval","identify","finder","modes"].includes(state.mode) ? "fretboard" : ["quiz","ear","trainer","metronome","tuner"].includes(state.mode) ? "practice" : state.mode === "charts" ? "charts" : "studio";
+    const mainNav = [["studio","Studio","suggest"],["study","Study","progression"],["charts","Charts","charts"]].map(([sec,label,mode]) => `<button type="button" class="tab ${currentSection===sec?"active":""}" onclick="app.setMode('${mode}')">${label}</button>`).join("");
+    const fretModes = [["single","Chord Tones"],["scales","Scales"],["interval","Intervals"],["identify","Find Chord"],["finder","Find Key"],["modes","Modes"]];
+    const practiceModes = [["metronome","Metronome"],["tuner","Tuner"],["trainer","Fretboard Trainer"],["ear","Ear Training"],["quiz","Quiz"]];
+    const fretOptions = `<option value="">Fretboard</option>` + fretModes.map(([m,l]) => `<option value="${m}" ${state.mode===m?"selected":""}>${esc(l)}</option>`).join("");
+    const practiceOptions = `<option value="">Practice</option>` + practiceModes.map(([m,l]) => `<option value="${m}" ${state.mode===m?"selected":""}>${esc(l)}</option>`).join("");
+    const setupSummary = `${esc(instrumentLabel())} · ${esc(getOpenStrings().map(spell).join(" "))}${state.capo>0?` · Capo ${state.capo}`:""}`;
 
     document.getElementById("app").innerHTML = `<div class="wrap">
-      <div class="header"><div class="eyebrow">${esc(instrumentLabel())} · ${esc(getOpenStrings().map(spell).join(" "))}</div><h1>Open Strings</h1><div class="tagline">A theory &amp; practice studio for stringed instruments</div></div>
-      <div class="toolbar">
-        <div class="segmented" role="tablist">${primaryTabs}</div>
-        <select class="util-btn ${inMore?"active-more":""}" onchange="if(this.value)app.setMode(this.value)" aria-label="More tools and practice modes" style="${inMore?"border-color:var(--gold);color:var(--gold)":""}">${moreOptions}</select>
+      <div class="header"><div class="eyebrow">${setupSummary}</div><h1>Open Strings</h1><div class="tagline">Songwriting, fretboard theory, practice, and printable charts</div></div>
+      <div class="toolbar app-toolbar">
+        <div class="segmented app-nav" role="tablist">${mainNav}</div>
+        <select class="util-btn nav-select ${currentSection==="fretboard"?"active-more":""}" onchange="if(this.value)app.setMode(this.value)" aria-label="Fretboard tools">${fretOptions}</select>
+        <select class="util-btn nav-select ${currentSection==="practice"?"active-more":""}" onchange="if(this.value)app.setMode(this.value)" aria-label="Practice tools">${practiceOptions}</select>
+        <button type="button" class="util-btn setup-status" onclick="app.toggle('showSetup')">Setup: ${setupSummary}</button>
         <button type="button" class="util-btn" onclick="app.toggleTheme()" aria-label="Toggle theme">${themeLabel}</button>
         <button type="button" class="util-btn" onclick="app.toggle('showHelp')">${state.showHelp?"Hide help":"Help"}</button>
         <button type="button" class="util-btn" onclick="app.toggle('showPrefs')">${state.showPrefs?"Hide prefs":"Preferences"}</button>
         ${exportButtons}
       </div>
+      ${state.showSetup ? renderSetupPanel() : ""}
       ${state.showHelp ? renderHelp() : ""}
       ${state.showPrefs ? renderPreferences() : ""}
-      ${showsGlobal ? renderGlobalPanels() : ""}
-      ${showsGlobal ? renderSavedCharts() : ""}
       ${content}
       <div class="footer">Open Strings · single-file offline app · works on GitHub Pages<br>${esc(getOpenStrings().map(spell).join(" "))} · ${esc(tuningLabel())}</div>
     </div>`;
@@ -3087,45 +3160,144 @@
       if (!mood || !mood.progs || !mood.progs.length) return;
       const prog = mood.progs[Math.floor(Math.random() * mood.progs.length)];
       const chords = prog.map(r => romanToChord(r, state.suggestKey));
-      state.suggestUndo = { chords: (state.progChords || []).map(c => ({...c})), editingIdx: state.editingIdx };
+      app._rememberProgression();
       state.progChords = chords.slice(0, 8);
       state.editingIdx = 0;
+      state.suggestInsertIdx = null;
       state.suggestFlashIdx = state.progChords.length - 1;
       toast("Surprise progression loaded");
       audio.playProgression(state.progChords, false);
       render();
     },
     generateRandomProg() { state.suggestRandom = randomProgression(state.suggestRandomLen); render(); },
+    _rememberProgression() {
+      state.suggestUndo = { chords: (state.progChords || []).map(c => ({...c})), editingIdx: state.editingIdx, insertIdx: state.suggestInsertIdx };
+    },
+    _cleanProgSelection() {
+      if (!Array.isArray(state.progChords)) state.progChords = [];
+      if (state.editingIdx >= state.progChords.length) state.editingIdx = Math.max(0, state.progChords.length - 1);
+      if (!Number.isInteger(state.suggestInsertIdx) || state.suggestInsertIdx < 0 || state.suggestInsertIdx >= state.progChords.length) state.suggestInsertIdx = null;
+    },
+    selectProgressionChord(i) {
+      state.editingIdx = i;
+      state.suggestInsertIdx = i;
+      render();
+    },
+    selectProgSlot(i) {
+      state.suggestInsertIdx = state.suggestInsertIdx === i ? null : i;
+      state.editingIdx = i;
+      state.suggestFlashIdx = null;
+      toast(state.suggestInsertIdx === null ? "New chords will add to the end" : `New chords will insert after ${chordSymbol(state.progChords[i])}`);
+      render();
+    },
+    moveProgChord(from, to) {
+      if (!Array.isArray(state.progChords)) return;
+      from = Number(from); to = Number(to);
+      if (!Number.isInteger(from) || !Number.isInteger(to) || from === to || from < 0 || to < 0 || from >= state.progChords.length || to >= state.progChords.length) return;
+      app._rememberProgression();
+      const arr = state.progChords.slice();
+      const [moved] = arr.splice(from, 1);
+      arr.splice(to, 0, moved);
+      state.progChords = arr;
+      const mapIndex = (idx) => {
+        if (idx === null || idx === undefined) return null;
+        if (idx === from) return to;
+        if (from < to && idx > from && idx <= to) return idx - 1;
+        if (from > to && idx >= to && idx < from) return idx + 1;
+        return idx;
+      };
+      state.editingIdx = mapIndex(state.editingIdx);
+      state.suggestInsertIdx = mapIndex(state.suggestInsertIdx);
+      state.suggestFlashIdx = state.editingIdx;
+      toast(`Moved ${chordSymbol(moved)}`);
+      render();
+    },
+    moveChordLeft(i) { if (i > 0) app.moveProgChord(i, i - 1); },
+    moveChordRight(i) { if (state.progChords && i < state.progChords.length - 1) app.moveProgChord(i, i + 1); },
+    dragChordStart(ev, idx) {
+      try { ev.stopPropagation(); state.dragFromIdx = idx; ev.dataTransfer.effectAllowed = "move"; ev.dataTransfer.setData("text/plain", String(idx)); } catch (e) {}
+    },
+    dragChordOver(ev, idx) { ev.preventDefault(); try { ev.dataTransfer.dropEffect = "move"; } catch (e) {} },
+    dropChord(ev, idx) {
+      ev.preventDefault(); ev.stopPropagation();
+      let from = state.dragFromIdx;
+      try { const raw = ev.dataTransfer.getData("text/plain"); if (raw !== "") from = Number(raw); } catch (e) {}
+      state.dragFromIdx = null;
+      app.moveProgChord(from, idx);
+    },
+    dropChordToEnd(ev) {
+      ev.preventDefault();
+      if (!state.progChords || !state.progChords.length) return;
+      let from = state.dragFromIdx;
+      try { const raw = ev.dataTransfer.getData("text/plain"); if (raw !== "") from = Number(raw); } catch (e) {}
+      state.dragFromIdx = null;
+      app.moveProgChord(from, state.progChords.length - 1);
+    },
+    dragChordEnd(ev) { state.dragFromIdx = null; document.querySelectorAll(".drop-over").forEach(el => el.classList.remove("drop-over")); },
+    pointerChordStart(ev, idx) {
+      if (ev.pointerType === "mouse" && ev.button !== 0) return;
+      ev.preventDefault(); ev.stopPropagation();
+      state.pointerDrag = { from: idx, startX: ev.clientX, startY: ev.clientY, active: false, over: idx };
+      state.dragFromIdx = idx;
+      try { ev.currentTarget.setPointerCapture(ev.pointerId); ev.currentTarget.classList.add("grabbing"); } catch (e) {}
+    },
+    pointerChordMove(ev) {
+      const d = state.pointerDrag;
+      if (!d) return;
+      const dx = ev.clientX - d.startX, dy = ev.clientY - d.startY;
+      if (!d.active && Math.hypot(dx, dy) > 6) d.active = true;
+      if (!d.active) return;
+      ev.preventDefault();
+      document.querySelectorAll(".drop-over").forEach(el => el.classList.remove("drop-over"));
+      const el = document.elementFromPoint(ev.clientX, ev.clientY);
+      const target = el && el.closest ? el.closest("[data-prog-index]") : null;
+      if (target) { target.classList.add("drop-over"); d.over = Number(target.dataset.progIndex); }
+    },
+    pointerChordEnd(ev) {
+      const d = state.pointerDrag;
+      document.querySelectorAll(".drop-over").forEach(el => el.classList.remove("drop-over"));
+      try { ev.currentTarget.classList.remove("grabbing"); ev.currentTarget.releasePointerCapture(ev.pointerId); } catch (e) {}
+      state.pointerDrag = null;
+      state.dragFromIdx = null;
+      if (d && d.active && Number.isInteger(d.over)) app.moveProgChord(d.from, d.over);
+    },
     appendChordToProg(enc) {
       try {
         const chords = JSON.parse(decodeURIComponent(enc));
+        if (!Array.isArray(chords) || !chords.length) return;
         if (!Array.isArray(state.progChords)) state.progChords = [];
-        const before = state.progChords.map(c => ({...c}));
-        state.suggestUndo = { chords: before, editingIdx: state.editingIdx };
-        state.progChords = [...state.progChords, ...chords].slice(0, 8);
-        state.editingIdx = state.progChords.length - 1;
+        if (state.progChords.length + chords.length > 8) { toast("Progression limit is 8 chords"); return; }
+        app._rememberProgression();
+        const insertAt = Number.isInteger(state.suggestInsertIdx) && state.progChords[state.suggestInsertIdx] ? state.suggestInsertIdx + 1 : state.progChords.length;
+        const beforeLabel = insertAt > 0 && state.progChords[insertAt - 1] ? chordSymbol(state.progChords[insertAt - 1]) : null;
+        const arr = state.progChords.slice();
+        arr.splice(insertAt, 0, ...chords);
+        state.progChords = arr;
+        state.editingIdx = insertAt + chords.length - 1;
+        state.suggestInsertIdx = state.editingIdx;
         state.suggestFlashIdx = state.editingIdx;
         const names = chords.map(chordSymbol).join(" → ");
-        toast(`Added ${names}`);
+        toast(beforeLabel ? `Inserted ${names} after ${beforeLabel}` : `Added ${names}`);
         render();
       } catch (e) {}
     },
     loadSuggestedHere(enc) {
       try {
         const chords = JSON.parse(decodeURIComponent(enc));
-        state.suggestUndo = { chords: (state.progChords || []).map(c => ({...c})), editingIdx: state.editingIdx };
+        app._rememberProgression();
         state.progChords = chords.slice(0, 8);
         state.editingIdx = 0;
+        state.suggestInsertIdx = null;
         state.suggestFlashIdx = state.progChords.length - 1;
         toast("Current progression updated");
         render();
       } catch (e) {}
     },
-    loadSuggested(enc) { try { const chords = JSON.parse(decodeURIComponent(enc)); state.suggestUndo = { chords: (state.progChords || []).map(c => ({...c})), editingIdx: state.editingIdx }; state.progChords = chords.slice(0, 8); state.editingIdx = 0; state.suggestFlashIdx = null; state.mode = "progression"; toast("Loaded into full study view"); render(); } catch (e) {} },
+    loadSuggested(enc) { try { const chords = JSON.parse(decodeURIComponent(enc)); app._rememberProgression(); state.progChords = chords.slice(0, 8); state.editingIdx = 0; state.suggestInsertIdx = null; state.suggestFlashIdx = null; state.mode = "progression"; toast("Loaded into full study view"); render(); } catch (e) {} },
     playSuggested(enc) { try { const chords = JSON.parse(decodeURIComponent(enc)); audio.playProgression(chords, false); } catch (e) {} },
     playCurrentProgressionOnce() { if (state.progChords && state.progChords.length) audio.playProgression(state.progChords, false); },
-    undoSuggest() { if (!state.suggestUndo) return; state.progChords = state.suggestUndo.chords || []; state.editingIdx = state.suggestUndo.editingIdx || 0; state.suggestUndo = null; state.suggestFlashIdx = null; toast("Undone"); render(); },
-    clearProgression() { state.suggestUndo = { chords: (state.progChords || []).map(c => ({...c})), editingIdx: state.editingIdx }; state.progChords = []; state.editingIdx = 0; state.suggestFlashIdx = null; state.progMapMode = "combined"; audio.stopProgression(); toast("Current progression cleared"); render(); },
+    undoSuggest() { if (!state.suggestUndo) return; state.progChords = state.suggestUndo.chords || []; state.editingIdx = state.suggestUndo.editingIdx || 0; state.suggestInsertIdx = Number.isInteger(state.suggestUndo.insertIdx) ? state.suggestUndo.insertIdx : null; app._cleanProgSelection(); state.suggestUndo = null; state.suggestFlashIdx = null; toast("Undone"); render(); },
+    clearProgression() { app._rememberProgression(); state.progChords = []; state.editingIdx = 0; state.suggestInsertIdx = null; state.suggestFlashIdx = null; state.progMapMode = "combined"; audio.stopProgression(); toast("Current progression cleared"); render(); },
     // Trainer
     newTrainerTarget() {
       const strings = getOpenStrings();
@@ -3160,14 +3332,25 @@
     },
     // Tuner
     playTunerNote(note, i) { audio.playAt(i, 0); },
-    addChord() { if (state.progChords.length < 8) { state.progChords.push({ key: "C", type: "maj" }); state.editingIdx = state.progChords.length - 1; render(); } },
-    removeChord(i) { state.suggestUndo = { chords: (state.progChords || []).map(c => ({...c})), editingIdx: state.editingIdx }; state.progChords = state.progChords.filter((_, idx) => idx !== i); state.editingIdx = Math.max(0, Math.min(state.editingIdx, state.progChords.length - 1)); state.suggestFlashIdx = null; if (!state.progChords.length) state.progMapMode = "combined"; toast("Chord removed"); render(); },
+    addChord() { if (state.progChords.length < 8) { app._rememberProgression(); state.progChords.push({ key: "C", type: "maj" }); state.editingIdx = state.progChords.length - 1; state.suggestInsertIdx = state.editingIdx; render(); } },
+    removeChord(i) {
+      app._rememberProgression();
+      state.progChords = state.progChords.filter((_, idx) => idx !== i);
+      state.editingIdx = Math.max(0, Math.min(state.editingIdx >= i ? state.editingIdx - 1 : state.editingIdx, state.progChords.length - 1));
+      if (state.suggestInsertIdx === i) state.suggestInsertIdx = null;
+      else if (state.suggestInsertIdx > i) state.suggestInsertIdx -= 1;
+      state.suggestFlashIdx = null;
+      if (!state.progChords.length) state.progMapMode = "combined";
+      toast("Chord removed");
+      render();
+    },
     setProgChord(i, field, value) { state.progChords = state.progChords.map((c, idx) => idx === i ? { ...c, [field]: value } : c); render(); },
     applyPreset(i) {
       const prog = PROGRESSION_LIBRARY[state.activeGenre][i];
       const ri = CHROMATIC.indexOf(state.selectedKey);
+      app._rememberProgression();
       state.progChords = prog.semis.map((s, idx) => ({ key: CHROMATIC[(ri + s) % 12], type: prog.types[idx] || "maj" })).slice(0, 8);
-      state.editingIdx = 0; state.progLibOpen = false; render();
+      state.editingIdx = 0; state.suggestInsertIdx = null; state.progLibOpen = false; render();
     },
     intervalClick(si, fret, note) {
       if (state.itStep === 1) { state.itNote1 = note; state.itStr1 = si; state.itFret1 = fret; state.itNote2 = null; state.itStr2 = null; state.itFret2 = null; state.itStep = 2; audio.playNote(note); }
@@ -3204,9 +3387,14 @@
     },
     setSavedName(v) { state.savedName = v; },
     saveCurrentChart() {
-      const name = (state.savedName || "").trim() || (state.mode === "progression" ? `Progression ${state.progChords.map(c => c.key).join("-")}` : `${state.selectedKey} ${CHORD_TYPES[state.selectedType]?.label}`);
-      const summary = state.mode === "progression" ? state.progChords.map(c => `${c.key} ${CHORD_TYPES[c.type]?.label}`).join(" / ") : `${state.selectedKey} ${CHORD_TYPES[state.selectedType]?.label} · ${getOpenStrings().join("")}`;
-      state.savedCharts.unshift({ name, summary, created: Date.now(), data: serializeState() });
+      const isProgChart = (state.mode === "progression" || state.mode === "charts" || state.mode === "suggest") && Array.isArray(state.progChords) && state.progChords.length;
+      const name = (state.savedName || "").trim() || (isProgChart ? `Progression ${state.progChords.map(c => c.key).join("-")}` : `${state.selectedKey} ${CHORD_TYPES[state.selectedType]?.label}`);
+      const summary = isProgChart ? state.progChords.map(c => `${c.key} ${CHORD_TYPES[c.type]?.label}`).join(" / ") : `${state.selectedKey} ${CHORD_TYPES[state.selectedType]?.label} · ${getOpenStrings().join("")}`;
+      const savedMode = state.mode;
+      if (isProgChart && state.mode !== "progression") state.mode = "progression";
+      const data = serializeState();
+      state.mode = savedMode;
+      state.savedCharts.unshift({ name, summary, created: Date.now(), data });
       state.savedCharts = state.savedCharts.slice(0, 30);
       state.savedName = ""; persistSavedCharts(); toast("Chart saved"); render();
     },
@@ -3292,6 +3480,7 @@
       }
     } catch (e) { /* PWA is a progressive enhancement; ignore failures */ }
   })();
-  </script>
+  
+</script>
 </body>
 </html>
