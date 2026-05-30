@@ -131,6 +131,8 @@
   .dot span { font-size: 9px; font-weight: bold; font-family: ui-monospace, monospace; color: var(--dot-text); }
   .dot.root span { color: var(--c); }
   .dot.shared { outline: 2px solid var(--text-bright); outline-offset: 2px; }
+  .dot.root-shared { width: 30px; height: 30px; }
+  .dot.anchor-note { width: 30px; height: 30px; box-shadow: 0 0 14px rgba(255,255,255,0.45), 0 0 0 2px rgba(255,255,255,0.25); outline: 2px solid rgba(255,255,255,0.5); outline-offset: 2px; }
   .multi { position: absolute; top: -3px; right: -3px; width: 8px; height: 8px; border-radius: 50%; background: var(--text-bright); border: 1px solid var(--bg); }
   .scale-dot { position: relative; z-index: 2; width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid color-mix(in srgb, var(--c) 62%, transparent); background: color-mix(in srgb, var(--c) 18%, transparent); }
   .faded-note { position: relative; z-index: 1; font-size: 9px; color: var(--faint); font-family: ui-monospace, monospace; }
@@ -334,9 +336,36 @@
   .workbar-actions { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
   .workbar-strip { display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; }
   .workbar-bass { margin-top:10px; padding-top:10px; border-top:1px solid color-mix(in srgb, var(--gold) 18%, var(--border)); }
-  .workbar-chip { --c: var(--gold); display:inline-flex; align-items:center; gap:6px; border:1px solid color-mix(in srgb, var(--c) 35%, var(--border)); color:var(--c); background:color-mix(in srgb, var(--c) 10%, transparent); border-radius:999px; padding:6px 8px; font-size:12px; cursor:pointer; }
+  .studio-dock { position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; background: linear-gradient(to top, color-mix(in srgb, var(--bg) 96%, transparent), color-mix(in srgb, var(--bg) 86%, transparent)); border-top: 1px solid color-mix(in srgb, var(--gold) 22%, var(--border)); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 8px 14px 10px; display: flex; align-items: center; gap: 8px; min-height: 52px; }
+  .studio-dock-chips { display: flex; gap: 5px; overflow-x: auto; flex: 1; scrollbar-width: none; -ms-overflow-style: none; min-width: 0; }
+  .studio-dock-chips::-webkit-scrollbar { display: none; }
+  .dock-chip { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border: 1px solid color-mix(in srgb, var(--c, var(--gold)) 40%, var(--border)); color: var(--c, var(--gold)); background: color-mix(in srgb, var(--c, var(--gold)) 12%, var(--surface)); border-radius: 10px; padding: 8px 12px; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; flex-shrink: 0; min-width: 52px; transition: background 0.12s; }
+  .dock-chip:hover { background: color-mix(in srgb, var(--c,var(--gold)) 22%, var(--surface)); }
+  .dock-chip.selected { background: color-mix(in srgb, var(--c,var(--gold)) 24%, var(--surface)); box-shadow: 0 0 0 2px color-mix(in srgb, var(--c,var(--gold)) 35%, transparent) inset; }
+  .dock-chip-roman { font-size: 10px; font-weight: 400; font-family: ui-monospace, monospace; opacity: 0.75; line-height: 1; }
+  .dock-chip-name { font-size: 14px; font-weight: 600; line-height: 1; }
+  .dock-chip-moves { display: flex; gap: 0; margin-top: 2px; }
+  .dock-chip-move { border: none; background: transparent; color: inherit; cursor: pointer; padding: 1px 4px; font-size: 13px; line-height: 1; opacity: 0.55; border-radius: 4px; }
+  .dock-chip-move:hover { opacity: 1; background: color-mix(in srgb, var(--c,var(--gold)) 18%, transparent); }
+  .dock-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; flex-direction: column; }
+  .dock-actions .accent-btn { font-size: 13px; padding: 9px 18px; }
+  .dock-actions .util-btn { font-size: 12px; padding: 7px 13px; }
+  .dock-collapse-btn { border: none; background: transparent; color: var(--muted); cursor: pointer; font-size: 11px; padding: 3px 6px; border-radius: 4px; opacity: 0.7; letter-spacing: 0.05em; }
+  .dock-collapse-btn:hover { opacity: 1; color: var(--text); }
+  .studio-dock { position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; background: linear-gradient(to top, color-mix(in srgb, var(--bg) 98%, transparent) 60%, color-mix(in srgb, var(--bg) 82%, transparent)); border-top: 1px solid color-mix(in srgb, var(--gold) 28%, var(--border)); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); padding: 12px 16px 16px; display: flex; align-items: flex-start; gap: 12px; min-height: 100px; box-shadow: 0 -8px 32px color-mix(in srgb, var(--shadow) 60%, transparent); }
+  .studio-dock-chips { display: flex; gap: 7px; overflow-x: auto; flex: 1; scrollbar-width: none; -ms-overflow-style: none; min-width: 0; align-items: flex-start; padding-bottom: 2px; }
+  .studio-dock-chips::-webkit-scrollbar { display: none; }
+  .studio-dock-collapsed { min-height: 38px; padding: 8px 14px; align-items: center; cursor: pointer; }
+  .dock-collapsed-summary { flex: 1; font-size: 12px; color: var(--muted); letter-spacing: 0.03em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .wrap.has-dock { padding-bottom: 120px; }
+  .wrap.has-dock-collapsed { padding-bottom: 50px; }
+  .workbar-chip { --c: var(--gold); display:inline-flex; flex-direction:column; align-items:center; gap:1px; border:1px solid color-mix(in srgb, var(--c) 35%, var(--border)); color:var(--c); background:color-mix(in srgb, var(--c) 10%, transparent); border-radius:8px; padding:5px 8px; font-size:13px; font-weight:600; cursor:pointer; }
   .workbar-chip.active { background:color-mix(in srgb, var(--c) 20%, transparent); box-shadow:0 0 0 2px color-mix(in srgb, var(--c) 24%, transparent) inset; }
-  .workbar-chip .idx { opacity:.7; font-family:ui-monospace, monospace; font-size:10px; }
+  .workbar-chip .chip-roman { font-size:9px; font-weight:400; font-family:ui-monospace,monospace; opacity:0.7; line-height:1; }
+  .workbar-chip .chip-name { font-size:13px; font-weight:600; line-height:1; }
+  .workbar-chip .chip-moves { display:flex; gap:0; }
+  .workbar-chip .chip-moves button { border:none; background:transparent; color:inherit; cursor:pointer; padding:1px 3px; font-size:12px; opacity:0.6; border-radius:3px; }
+  .workbar-chip .chip-moves button:hover { opacity:1; }
   .studio-tabs { display:flex; flex-wrap:wrap; gap:6px; margin:0 0 14px; }
   .summary-inline { font-size:18px; color:var(--text-bright); line-height:1.4; }
   .util-btn.danger { border-color: color-mix(in srgb, #e87a7a 40%, var(--border)); color:#e87a7a; }
@@ -1007,6 +1036,8 @@
     showShared: false,
     showVL: false,
     progMapMode: "combined",
+    sharedDotMode: "single",   // "single" | "shared" — multicolor shared-tone dots in combined map
+    dockCollapsed: false,       // whether the Studio mini-dock is collapsed to a thin tab
     vlFrom: 0,
     vlTo: 1,
     itNote1: null, itNote2: null, itStr1: null, itFret1: null, itStr2: null, itFret2: null, itStep: 1,
@@ -1493,6 +1524,14 @@
     return hits;
   }
 
+  // Conic-gradient CSS for a list of hex colors, used for multicolor shared-tone dots.
+  // e.g. ["#e8c547","#7eb8d4"] → "conic-gradient(#e8c547 0.0% 50.0%,#7eb8d4 50.0% 100.0%)"
+  function conicGradient(colors) {
+    if (colors.length === 1) return colors[0];
+    const step = 100 / colors.length;
+    return "conic-gradient(" + colors.map((c, i) => `${c} ${(i * step).toFixed(1)}% ${((i + 1) * step).toFixed(1)}%`).join(",") + ")";
+  }
+
   // Directional voice leading using absolute pitch (keeps P5 vs P4 distinct conceptually via nearest motion)
   function bestVoiceLeading(fromTones, toTones) {
     return fromTones.map(from => {
@@ -1542,11 +1581,96 @@
   function isDominantLike(type) {
     return chordHasInterval(type, 4) && chordHasInterval(type, 10);
   }
+
+  // Detects whether a chord array should be analysed in a minor-key context.
+  // Heuristic: the first chord is minor quality (i), or more than half the chords
+  // are minor quality and the first chord's root is the most common root overall.
+  function detectMinorKey(chords) {
+    if (!chords || !chords.length) return false;
+    const firstQ = baseQuality(chords[0].type);
+    if (firstQ === "minor") return true;
+    // Secondary heuristic: majority minor-quality chords
+    const minorCount = chords.filter(c => baseQuality(c.type) === "minor").length;
+    return minorCount > chords.length / 2;
+  }
+
+  // Roman numeral analysis for a minor-key context (natural minor / Aeolian default,
+  // with harmonic minor V recognised). Covers the 7 natural-minor diatonic chords
+  // plus common colour chords borrowed from harmonic/melodic minor and Dorian.
+  function _romanInfoForChordMinor(ch, key) {
+    const off = semiBetweenDir(key, ch.key);
+    const rawQuality = baseQuality(ch.type);
+    const dom = isDominantLike(ch.type);
+
+    // Sus chords — positional label, same as major
+    if (rawQuality === "sus") {
+      const sr = ["isus","bIIsus","iisus","IIIsus","IVsus","ivsus","#ivsus","vsus","VIsus","visus","VIIsus","viisus"];
+      return { roman: sr[off] || `sus(${off})`, role:"color", plain:"suspended chord — open sound over the minor key", source:"Sus chords are ambiguous and float nicely over minor harmony.", color:"#6dd4a8" };
+    }
+    // Augmented — positional
+    if (ch.type === "aug" || ch.type === "maj7s5" || ch.type === "7s5") {
+      const ar = ["iaug","bIIaug","IIaug","IIIaug","#ivaug","Vaug","#Vaug","VIaug","bviaug","VIaug","VIIaug","viiaug"];
+      return { roman: ar[off] || `aug(${off})`, role:"color", plain:"augmented — dreamy chromatic color in the minor context", source:"Raised 5th adds colour; common in chromatic voice leading.", color:"#e87a3a" };
+    }
+
+    // ── Natural minor diatonic chords ──────────────────────────────────────────
+    // i  — minor tonic
+    if (rawQuality === "minor"  && off === 0)  return { roman:"i",    role:"home",         plain:"minor home — the emotional centre", source:"Natural minor tonic chord.", color:"#7eb8d4" };
+    // ii° — half-diminished predominant
+    if (rawQuality === "dim"    && off === 2)  return { roman:"ii°",  role:"tension",      plain:"diminished supertonic — dark pull toward V or iv", source:"Diatonic to natural minor; common in jazz and classical minor.", color:"#c47ed4" };
+    // III — relative major (the big bright sound)
+    if (rawQuality === "major"  && off === 3)  return { roman:"III",  role:"relative major", plain:"the relative major — brightens without leaving the key", source:"Diatonic to natural minor. This is the 'bright moment' in a minor progression.", color:"#e8c547" };
+    // iv — minor subdominant
+    if (rawQuality === "minor"  && off === 5)  return { roman:"iv",   role:"subdominant",  plain:"minor iv — dark subdominant pull", source:"Diatonic natural minor subdominant.", color:"#6dd4a8" };
+    // V — harmonic minor dominant (raised 7th — strong resolution)
+    if (rawQuality === "major"  && off === 7)  return { roman: dom ? "V7" : "V", role:"tension", plain: dom ? "harmonic minor dominant 7 — strong pull home to i" : "major V — harmonic minor lift, strong pull to i", source:"Raised 7th (harmonic minor) creates a leading tone and strong resolution back to i.", color:"#e87a3a" };
+    // v — natural minor dominant (no leading tone — softer)
+    if (rawQuality === "minor"  && off === 7)  return { roman:"v",    role:"soft tension",  plain:"minor v — softer, modal tension without the leading tone", source:"Natural minor dominant; less directional than the major V but still creates movement.", color:"#7eb8d4" };
+    // VI — major submediant (the warm, hopeful chord in a minor key)
+    if (rawQuality === "major"  && off === 8)  return { roman:"VI",   role:"major lift",   plain:"major VI — warm, hopeful brightness in the minor key", source:"Diatonic to natural minor. This chord gives minor progressions their emotional lift.", color:"#e8c547" };
+    // VII — natural minor subtonic (not the leading tone — more modal)
+    if (rawQuality === "major"  && off === 10) return { roman:"VII",  role:"modal lift",   plain:"major VII — the Aeolian subtonic, drives forward without fully resolving", source:"Diatonic to natural minor. Feels powerful and slightly unresolved.", color:"#d4876d" };
+    // vii° — leading-tone diminished (harmonic/melodic minor)
+    if (rawQuality === "dim"    && off === 11) return { roman:"vii°", role:"tension",      plain:"leading-tone diminished — strong chromatic pull to i", source:"From harmonic minor; the raised 7th creates a strong resolution urge.", color:"#c47ed4" };
+
+    // ── Common borrowed / colour chords in minor ───────────────────────────────
+    // II (major) — Neapolitan area or Dorian influence
+    if (rawQuality === "major"  && off === 2)  return { roman:"II",   role:"color",        plain:"major II — Dorian color or Neapolitan area", source:"Borrowed; gives a bright or dramatic push, common in Dorian-inflected minor.", color:"#d4c46d" };
+    // iv (already diatonic above) — IVmaj when it appears in harmonic minor
+    if (rawQuality === "major"  && off === 5)  return { roman:"IV",   role:"major subdominant", plain:"major IV — Dorian lift over the minor key", source:"From Dorian mode; creates a brighter subdominant than iv.", color:"#6dd4a8" };
+    // bII — Neapolitan
+    if (rawQuality === "major"  && off === 1)  return { roman:"bII",  role:"drama",        plain:"Neapolitan — strong dramatic pull in minor", source:"Classical Neapolitan chord; creates striking tension, usually before V or i.", color:"#e87a7a" };
+    // #iv° / ii° at off 6
+    if (rawQuality === "dim"    && off === 6)  return { roman:"#iv°", role:"tension",      plain:"chromatic diminished — strong passing tension", source:"Chromatic colour chord.", color:"#c47ed4" };
+    // i7 — minor tonic with 7th
+    if ((ch.type === "min7" || ch.type === "mmaj7") && off === 0) return { roman: ch.type === "mmaj7" ? "i(maj7)" : "i7", role:"home", plain:"minor tonic 7th — adds depth without leaving home", source:"Tonic minor 7th chord; the maj7 variant appears in harmonic minor.", color:"#7eb8d4" };
+    // ii∅7 — half-diminished
+    if (ch.type === "m7b5"  && off === 2)  return { roman:"iiø7",  role:"tension",      plain:"half-diminished ii — jazzy pull toward V", source:"Diatonic to natural minor as the full ii chord.", color:"#c47ed4" };
+
+    // ── Catch-all: generate a positional Roman numeral ─────────────────────────
+    const upperNums = ["I","bII","II","III","IV","#IV","#IV","V","VI","VI","VII","VII"];
+    const lowerNums = ["i","bii","ii","iii","iv","#iv","#iv","v","vi","vi","vii","vii"];
+    const isMinorQ  = ["min","min7","min9","min11","m7b5","mmaj7","m6"].includes(ch.type);
+    const baseR     = isMinorQ ? lowerNums[off] : upperNums[off];
+    const suffix    = ch.type === "7" ? "7" : ch.type === "maj7" ? "maj7" : ch.type === "dim7" ? "°7" : ch.type === "m7b5" ? "ø7" : "";
+    return { roman:`${baseR}${suffix}`, role:"color", plain:"chromatic colour chord — outside the natural minor scale", source:"Not diatonic to natural minor, but can add unexpected character.", color:"#bfb6a4" };
+  }
   function _romanInfoForChord(ch, key) {
     const off = semiBetweenDir(key, ch.key);
-    // Suspended chords are functionally neutral; classify them by their position in the
-    // key like a major chord so they read as diatonic (e.g. Dsus4 in C = a ii-area color).
-    const quality = baseQuality(ch.type) === "sus" ? "major" : baseQuality(ch.type);
+    // Suspended and augmented chords are handled separately before quality-based routing
+    const rawQuality = baseQuality(ch.type);
+    // Sus chords: label by position, always
+    if (rawQuality === "sus") {
+      const susRomans = ["Isus","bIIsus","IIsus","bIIIsus","IIIsus","IVsus","#IVsus","Vsus","bVIsus","VIsus","bVIIsus","VIIsus"];
+      return { roman: susRomans[off] || `sus(${off})`, role:"color", plain:"suspended chord — open, unresolved sound", source:"Sus chords omit the third, creating an ambiguous, floating sound.", color:"#6dd4a8" };
+    }
+    // Augmented chords: baseQuality returns "major" for aug (it has a major 3rd),
+    // so we must check the type string directly before the quality routing.
+    if (ch.type === "aug" || ch.type === "maj7s5" || ch.type === "7s5") {
+      const augRomans = ["Iaug","bIIaug","IIaug","bIIIaug","IIIaug","IVaug","#IVaug","Vaug","bVIaug","VIaug","bVIIaug","VIIaug"];
+      return { roman: augRomans[off] || `aug(${off})`, role:"color", plain:"augmented chord — raised 5th creates a dreamy, unstable tension", source:"The raised 5th creates an unsettled quality; common in chromatic voice leading.", color:"#e87a3a" };
+    }
+    const quality = rawQuality === "sus" ? "major" : rawQuality;
     const dom = isDominantLike(ch.type);
     const secondary = {
       0: { roman:"V/IV", role:"pull", plain:"points at the IV chord", source:"Secondary dominant: the tonic 7 chord works like the V of IV." },
@@ -1570,10 +1694,43 @@
     if (quality === "major" && off === 8) return { roman:"bVI", role:"cinematic", plain:"dark dramatic drop", source:"Borrowed from the parallel minor key.", color:"#c47ed4" };
     if (quality === "major" && off === 3) return { roman:"bIII", role:"modal color", plain:"minor-key shadow without fully leaving major", source:"Borrowed from the parallel minor key.", color:"#c47ed4" };
     if (quality === "major" && off === 1) return { roman:"bII", role:"drama", plain:"strong outside tension", source:"Neapolitan-style borrowed chord; often aims at V or I.", color:"#e87a7a" };
-    return { roman:`${spell(ch.key)} ${CHORD_TYPES[ch.type]?.label || ch.type}`, role:"color", plain:"outside-key color", source:"Not a standard diatonic chord in this major-key view. That can still be a great songwriting choice.", color:"#bfb6a4" };
+
+    // ── Expanded chromatic coverage — ensures every chord gets a proper Roman numeral ──
+    // Major chords at remaining offsets
+    if (quality === "major" && off === 2)  return { roman:"II",  role:"modal color", plain:"major II — bright, Lydian-flavored lift", source:"Borrowed/modal; common in pop and neo-soul.", color:"#d4c46d" };
+    if (quality === "major" && off === 4)  return { roman:"III", role:"modal color", plain:"major III — warm borrowed color", source:"Borrowed from the parallel major or modal interchange.", color:"#d4876d" };
+    if (quality === "major" && off === 6)  return { roman:"#IV",  role:"color",      plain:"tritone substitution area", source:"Chromatic/jazz color chord.", color:"#bfb6a4" };
+    if (quality === "major" && off === 9)  return { roman:"VI",  role:"modal color", plain:"major VI — unexpected brightness", source:"Modal borrowing; creates a lifted, surprising feel.", color:"#d4876d" };
+    if (quality === "major" && off === 11) return { roman:"VII", role:"modal color", plain:"major VII — Mixolydian-adjacent lift", source:"Modal color; less common but effective as a passing chord.", color:"#d4876d" };
+    // Minor chords at remaining offsets
+    if (quality === "minor" && off === 1)  return { roman:"bii", role:"color",       plain:"chromatic minor — unusual tension", source:"Chromatic color chord.", color:"#bfb6a4" };
+    if (quality === "minor" && off === 3)  return { roman:"biii",role:"dark color",  plain:"minor bIII area", source:"Modal/chromatic color.", color:"#9a9082" };
+    if (quality === "minor" && off === 6)  return { roman:"#iv", role:"color",       plain:"raised minor — chromatic area", source:"Chromatic passing color.", color:"#bfb6a4" };
+    if (quality === "minor" && off === 8)  return { roman:"bvi", role:"dark color",  plain:"minor bVI — dark minor area", source:"Minor mode color.", color:"#9a9082" };
+    if (quality === "minor" && off === 10) return { roman:"bvii",role:"dark color",  plain:"minor bVII — modal minor area", source:"Minor mode color.", color:"#9a9082" };
+    if (quality === "minor" && off === 11) return { roman:"vii", role:"color",       plain:"minor VII — uncommon chromatic color", source:"Chromatic color.", color:"#bfb6a4" };
+    // Diminished at any offset — give a positional Roman numeral
+    if (quality === "dim") {
+      const diminishedRomans = ["i°","bii°","ii°","biii°","iii°","iv°","#iv°","v°","bvi°","vi°","bvii°","vii°"];
+      return { roman: diminishedRomans[off] || `${off}°`, role:"tension", plain:"diminished color — unstable, creates tension", source:"Chromatic or modal diminished chord.", color:"#c47ed4" };
+    }
+    // Sus chords — handled at top of function
+    // Augmented — handled at top of function
+    // 7th chord types not caught by secondary dominant logic
+    const romanNumeralsUpper = ["I","bII","II","bIII","III","IV","#IV","V","bVI","VI","bVII","VII"];
+    const romanNumeralsLower = ["i","bii","ii","biii","iii","iv","#iv","v","bvi","vi","bvii","vii"];
+    const isMinorQuality = ["min","min7","min9","min11","m7b5","mmaj7","m6"].includes(ch.type);
+    const baseRoman = isMinorQuality ? (romanNumeralsLower[off] || `${off}`) : (romanNumeralsUpper[off] || `${off}`);
+    const suffix = ch.type === "maj7" ? "maj7" : ch.type === "min7" ? "7" : ch.type === "7" ? "7" : ch.type === "dim7" ? "°7" : ch.type === "m7b5" ? "ø7" : "";
+    return { roman:`${baseRoman}${suffix}`, role:"color", plain:"outside-key color chord — adds unexpected flavor", source:"Chromatic or extended color chord not native to this key.", color:"#bfb6a4" };
   }
-  function romanInfoForChord(ch, key) {
-    const result = _romanInfoForChord(ch, key);
+  function romanInfoForChord(ch, key, mode) {
+    // mode: "minor" forces minor-key analysis. If not supplied, auto-detects
+    // from the chord itself — if the chord at the tonic position is minor quality,
+    // the caller is in a minor-key context. The mode param lets analyzeProgression
+    // pass a pre-detected mode for the whole progression.
+    const useMinor = mode === "minor";
+    const result = useMinor ? _romanInfoForChordMinor(ch, key) : _romanInfoForChord(ch, key);
     if (result && ch && ch.bass && ch.bass !== ch.key) {
       const bassOff = semiBetweenDir(ch.key, ch.bass);
       const bassLabel = ["1","b2","2","b3","3","4","b5","5","b6","6","b7","7"][bassOff] || "?";
@@ -1583,31 +1740,58 @@
   }
 
   function analyzeProgression(chords, key) {
-    const items = (chords || []).map(ch => ({ chord: ch, ...romanInfoForChord(ch, key) }));
-    if (!items.length) return { items, headline:"Build a progression to see songwriter notes.", movement:"", ending:"", feel:"", bestUse:"" };
+    const isMinor = detectMinorKey(chords);
+    const mode = isMinor ? "minor" : "major";
+    const items = (chords || []).map(ch => ({ chord: ch, ...romanInfoForChord(ch, key, mode) }));
+    if (!items.length) return { items, headline:"Build a progression to see songwriter notes.", movement:"", ending:"", feel:"", bestUse:"", isMinor };
     const roles = items.map(i => i.role);
     const romans = items.map(i => i.roman);
-    const hasBorrowed = items.some(i => /Borrowed|Mixolydian|Neapolitan|outside-key/i.test(i.source));
+    const hasBorrowed = items.some(i => /Borrowed|Neapolitan|outside|chromatic/i.test(i.source));
     const hasSecondary = items.some(i => /^V\//.test(i.roman));
-    const hasMinorColor = romans.some(r => ["vi","i","iv","bVI","bIII"].includes(r));
+    const hasMinorColor = romans.some(r => isMinor ? ["III","VI","VII","iv"].includes(r) : ["vi","i","iv","bVI","bIII"].includes(r));
     const dominantCount = items.filter(i => i.role === "tension" || i.role === "pull").length;
-    let headline = "Straightforward, playable chord movement.";
-    if (hasSecondary && hasBorrowed) headline = "Colorful progression with both outside-key color and chords that make another chord feel like a destination.";
-    else if (hasSecondary) headline = "Directed progression: one or more chords make the next chord feel important.";
-    else if (hasBorrowed) headline = "Colorful progression: borrowed chords add surprise without losing the home key.";
-    else if (hasMinorColor) headline = "Song-friendly progression with major/minor contrast.";
-    else if (dominantCount >= 2) headline = "Tension-forward progression that wants resolution.";
+    let headline;
+    if (isMinor) {
+      if (hasSecondary && hasBorrowed) headline = "Rich minor progression with borrowed colour and directed chord motion.";
+      else if (hasSecondary) headline = "Minor progression with a chord that makes the next landing feel important.";
+      else if (hasBorrowed) headline = "Minor progression with colour chords — emotional range beyond natural minor.";
+      else if (romans.includes("V") || romans.includes("V7")) headline = "Minor progression with a harmonic-minor lift — the major V makes home feel closer.";
+      else if (romans.includes("VI") || romans.includes("III")) headline = "Natural minor progression with its characteristic bright major chords.";
+      else headline = "Natural minor progression — dark, grounded, Aeolian feel.";
+    } else {
+      if (hasSecondary && hasBorrowed) headline = "Colorful progression with both outside-key color and chords that make another chord feel like a destination.";
+      else if (hasSecondary) headline = "Directed progression: one or more chords make the next chord feel important.";
+      else if (hasBorrowed) headline = "Colorful progression: borrowed chords add surprise without losing the home key.";
+      else if (hasMinorColor) headline = "Song-friendly progression with major/minor contrast.";
+      else if (dominantCount >= 2) headline = "Tension-forward progression that wants resolution.";
+      else headline = "Straightforward, playable chord movement.";
+    }
     const first = items[0]?.roman || "";
-    const last = items[items.length-1]?.roman || "";
-    const prev = items[items.length-2]?.roman || "";
-    let ending = "Loop-friendly / open: it should keep moving when it repeats.";
-    if ((prev === "V" || prev === "V7") && first === "I" && last !== "I") ending = "Strong loop: the last chord snaps back to I when the progression repeats.";
-    if ((prev === "V" || prev === "V7") && last === "I") ending = "Strong ending: V to I sounds final and resolved.";
-    else if ((prev === "IV" || prev === "iv") && last === "I") ending = "Soft ending: IV or iv to I gives an ‘amen’ / bittersweet return.";
-    else if ((prev === "V" || prev === "V7") && last === "vi") ending = "Surprise ending: V goes to vi instead of home, so it feels emotional or unresolved.";
-    else if (last === "V" || last === "V7") ending = "Unfinished ending: ending on V creates a clear need to continue.";
-    const bestUse = hasBorrowed ? "Use when a section needs a lift, darker turn, or one surprise chord." : hasSecondary ? "Use when one chord should feel like a destination." : dominantCount ? "Good before a chorus, turnaround, or section ending." : "Good for verses, choruses, and quick songwriting starts.";
-    return { items, headline, movement: roles.join(" → "), ending, bestUse };
+    const last  = items[items.length-1]?.roman || "";
+    const prev  = items[items.length-2]?.roman || "";
+    const homeR = isMinor ? "i" : "I";
+    let ending = "Loop-friendly / open — keeps moving when it repeats.";
+    if ((prev === "V" || prev === "V7") && first === homeR && last !== homeR)
+      ending = "Strong loop: ends on the dominant, snaps back to " + homeR + " when it repeats.";
+    if ((prev === "V" || prev === "V7") && last === homeR)
+      ending = isMinor ? "Strong ending: V to i — the harmonic-minor pull resolves home." : "Strong ending: V to I sounds final and resolved.";
+    else if ((prev === "iv" || prev === "IV") && last === homeR)
+      ending = isMinor ? "Soft ending: iv or IV back to i — bittersweet, hymn-like resolution." : "Soft ending: IV or iv to I gives an 'amen' / bittersweet return.";
+    else if ((prev === "V" || prev === "V7") && last === (isMinor ? "VI" : "vi"))
+      ending = isMinor ? "Deceptive ending: V steps up to VI instead of resolving to i — emotional, unresolved." : "Surprise ending: V goes to vi instead of home — emotional and unresolved.";
+    else if (last === "V" || last === "V7")
+      ending = isMinor ? "Unfinished: ending on V creates a clear pull back to i." : "Unfinished: ending on V creates a clear need to continue.";
+    else if (isMinor && last === "VII")
+      ending = "Ends on VII — modal, open, not quite resolved. Sounds like the music keeps going.";
+    const bestUse = isMinor
+      ? (hasBorrowed || hasSecondary ? "Good for a dramatic bridge, emotional chorus, or a verse that needs extra weight."
+        : romans.includes("V") || romans.includes("V7") ? "Good for passages that need a clear sense of resolution in a minor key."
+        : "Good for verses and sections that need a dark, grounded, modal feel.")
+      : (hasBorrowed ? "Use when a section needs a lift, darker turn, or one surprise chord."
+        : hasSecondary ? "Use when one chord should feel like a destination."
+        : dominantCount ? "Good before a chorus, turnaround, or section ending."
+        : "Good for verses, choruses, and quick songwriting starts.");
+    return { items, headline, movement: roles.join(" \u2192 "), ending, bestUse, isMinor };
   }
   function melodyTargetsFor(chords) {
     const counts = {};
@@ -1825,13 +2009,13 @@
         let d = null;
         if (isChordChart) {
           const idx = singleTones.indexOf(note);
-          if (idx >= 0) d = { color: chordDef.color, isRoot: idx === 0, label: chordDef.intLabels?.[idx] || "?" };
+          if (idx >= 0) { const ivLabel = chordDef.intLabels?.[idx] || "?"; d = { color: chordDef.color, isRoot: idx === 0, label: state.noteDisplay === "note" ? spell(note) : ivLabel }; }
         } else {
           state.progChords.forEach((ch, ci) => {
             if (d) return;
             const tones = buildTones(ch.key, CHORD_TYPES[ch.type]?.intervals || []);
             const idx = tones.indexOf(note);
-            if (idx >= 0) d = { color: PROG_COLORS[ci % PROG_COLORS.length], isRoot: idx === 0, label: CHORD_TYPES[ch.type]?.intLabels?.[idx] || "?" };
+            if (idx >= 0) { const ivLabel = CHORD_TYPES[ch.type]?.intLabels?.[idx] || "?"; d = { color: PROG_COLORS[ci % PROG_COLORS.length], isRoot: idx === 0, label: state.noteDisplay === "note" ? spell(note) : ivLabel }; }
           });
         }
         if (!d) {
@@ -1942,7 +2126,7 @@
         if (idx < 0) return;
         const x = fbLeft + fi * colW + colW / 2;
         const iv = scaleDef.intervals[idx];
-        const label = state.scalesShowDegrees ? (degLabels[iv] || String(idx + 1)) : spell(note);
+        const label = state.noteDisplay === "note" ? spell(note) : (state.scalesShowDegrees ? (degLabels[iv] || String(idx + 1)) : spell(note));
         if (idx === 0) {
           svg += `<circle cx="${x}" cy="${y}" r="${dotR}" fill="${rootFill}" stroke="${scaleDef.color}" stroke-width="2.5"/>`;
           svg += `<text x="${x}" y="${y+4}" text-anchor="middle" fill="${scaleDef.color}" font-size="9" font-weight="bold" font-family="monospace">${esc(label)}</text>`;
@@ -2120,13 +2304,27 @@
             if (idx >= 0) dot = { color: PROG_COLORS[ai % PROG_COLORS.length], isRoot: idx === 0, label: dotLabel(CHORD_TYPES[ch.type]?.intLabels?.[idx] || "?", note), multi: false };
           } else {
             const hits = progDot(note);
-            if (hits.length > 0) { const p = hits.find(h => h.isRoot) || hits[0]; dot = { color: p.color, isRoot: p.isRoot, label: dotLabel(p.label, note), multi: hits.length > 1 }; }
+            if (hits.length > 0) {
+              const isMulti = hits.length > 1 && state.sharedDotMode === "shared" && state.progMapMode === "combined";
+              if (isMulti) {
+                // Shared note: conic-gradient, label is the note name (interval is ambiguous across chords)
+                const colors = hits.map(h => h.color);
+                dot = { color: conicGradient(colors), isRoot: hits.some(h => h.isRoot), isAnchor: hits.length >= 3, isSharedMulti: true, label: spell(note), multi: false };
+              } else {
+                const p = hits.find(h => h.isRoot) || hits[0];
+                dot = { color: p.color, isRoot: p.isRoot, label: dotLabel(p.label, note), multi: hits.length > 1 };
+              }
+            }
           }
         }
 
         let inner = "";
         if (dot) {
-          inner = `<div class="dot ${dot.isRoot ? "root" : ""} ${isShared ? "shared" : ""}" style="--c:${cssColor(dot.color)}"><span>${esc(dot.label)}</span>${dot.multi ? `<div class="multi"></div>` : ""}</div>`;
+          if (dot.isSharedMulti) {
+            inner = `<div class="dot ${dot.isRoot ? "root-shared" : ""} ${dot.isAnchor ? "anchor-note" : ""}" style="background:${dot.color}${dot.isRoot ? ";box-shadow:0 0 0 2.5px var(--text-bright)" : ""}"><span style="color:#fff;text-shadow:0 0 3px rgba(0,0,0,0.75)">${esc(dot.label)}</span></div>`;
+          } else {
+            inner = `<div class="dot ${dot.isRoot ? "root" : ""} ${isShared ? "shared" : ""}" style="--c:${cssColor(dot.color)}"><span>${esc(dot.label)}</span>${dot.multi ? `<div class="multi"></div>` : ""}</div>`;
+          }
         } else if (isSN && scaleDef) {
           inner = `<div class="scale-dot" style="--c:${cssColor(scaleDef.color)}"></div>`;
         } else {
@@ -2342,10 +2540,14 @@
   // ── Progression mode ──
   function renderProgression() {
     const hasChords = Array.isArray(state.progChords) && state.progChords.length;
+    const analysisKey = state.suggestKey || state.selectedKey || (hasChords ? state.progChords[0].key : "C");
     const chipRow = hasChords ? state.progChords.map((ch, i) => {
       const col = PROG_COLORS[i % PROG_COLORS.length];
       const active = state.editingIdx === i ? "active" : "";
-      return `<span class="workbar-chip ${active}" style="--c:${col}" onclick="app.selectProgressionChord(${i})"><span class="idx">${i+1}</span><span>${esc(chordSymbol(ch))}</span><button type="button" aria-label="Move ${esc(chordSymbol(ch))} left" onclick="event.stopPropagation();app.moveChordLeft(${i})">‹</button><button type="button" aria-label="Move ${esc(chordSymbol(ch))} right" onclick="event.stopPropagation();app.moveChordRight(${i})">›</button></span>`;
+      const info = romanInfoForChord(ch, analysisKey);
+      const roman = info ? info.roman : "";
+      const sym = chordSymbol(ch);
+      return `<span class="workbar-chip ${active}" style="--c:${col}" onclick="app.selectProgressionChord(${i})" title="${esc(roman ? roman + ' — ' + info.role : sym)}"><span class="chip-roman">${esc(roman)}</span><span class="chip-name">${esc(sym)}</span><span class="chip-moves"><button type="button" aria-label="Move left" onclick="event.stopPropagation();app.moveChordLeft(${i})">‹</button><button type="button" aria-label="Move right" onclick="event.stopPropagation();app.moveChordRight(${i})">›</button></span></span>`;
     }).join("") : `<span class="suggest-empty">No progression yet. Start in Studio or add a chord below.</span>`;
     const topActions = `<div class="workbar-actions">
       <button type="button" class="accent-btn" onclick="app.playProgression()">Play</button>
@@ -2367,14 +2569,18 @@
       const col = PROG_COLORS[ci % PROG_COLORS.length];
       const tones = buildTones(ch.key, CHORD_TYPES[ch.type]?.intervals || []);
       const label = chordSymbol(ch);
+      const info = romanInfoForChord(ch, analysisKey);
+      const romanBadge = info ? `<div style="font-size:9px;color:${info.color || "var(--muted)"};margin-top:3px;font-family:ui-monospace,monospace">${esc(info.roman)} · ${esc(info.role)}</div>` : "";
       const del = state.progChords.length > 1 ? `<button type="button" class="delete-x" onclick="event.stopPropagation();app.removeChord(${ci})" aria-label="Remove chord">×</button>` : "";
-      return `<div class="chord-card"><div class="chord-inner ${state.editingIdx===ci?"active":""}" style="--c:${col}" onclick="app.selectProgressionChord(${ci})"><div class="ch-name">${ci+1}. ${esc(label)}</div><div class="ch-tones">${esc(tones.join(" "))}</div><button type="button" class="play-btn" style="margin-top:5px;font-size:10px;padding:1px 7px" onclick="event.stopPropagation();app.playChordByIndex(${ci})">Preview</button><div class="reorder-row"><button type="button" class="chord-move-btn" onclick="event.stopPropagation();app.moveChordLeft(${ci})" aria-label="Move ${esc(label)} left">‹</button><span class="mini-label" style="margin:0">move</span><button type="button" class="chord-move-btn" onclick="event.stopPropagation();app.moveChordRight(${ci})" aria-label="Move ${esc(label)} right">›</button></div></div>${del}</div>`;
+      return `<div class="chord-card"><div class="chord-inner ${state.editingIdx===ci?"active":""}" style="--c:${col}" onclick="app.selectProgressionChord(${ci})"><div class="ch-name">${ci+1}. ${esc(label)}</div><div class="ch-tones">${esc(tones.join(" "))}</div>${romanBadge}<button type="button" class="play-btn" style="margin-top:5px;font-size:10px;padding:1px 7px" onclick="event.stopPropagation();app.playChordByIndex(${ci})">Preview</button><div class="reorder-row"><button type="button" class="chord-move-btn" onclick="event.stopPropagation();app.moveChordLeft(${ci})" aria-label="Move ${esc(label)} left">‹</button><span class="mini-label" style="margin:0">move</span><button type="button" class="chord-move-btn" onclick="event.stopPropagation();app.moveChordRight(${ci})" aria-label="Move ${esc(label)} right">›</button></div></div>${del}</div>`;
     }).join("") : "";
     const edit = `<div class="card"><div class="section-label">Edit chords</div><div class="info-text" style="margin-bottom:10px">Select a chord, change its root or type, then use the move buttons to place it where it belongs.</div><div class="row" style="margin-bottom:12px">${state.progChords.length<8?`<button type="button" class="accent-btn" onclick="app.addChord()">Add chord</button>`:""}<button type="button" class="util-btn" onclick="app.set('progTab','library')">Load preset</button></div><div class="row" style="margin-bottom:14px">${chordCards}</div>${hasChords?renderProgEditor():""}</div>`;
 
-    const mapToggle = `<div class="row" style="margin-bottom:14px">${btn("Combined map", state.progMapMode==="combined", "#e8c547", "app.set('progMapMode','combined')")}${btn("Selected chord", state.progMapMode==="selected", "#7eb8d4", "app.set('progMapMode','selected')")}${btn(state.showShared?"Shared tones on":"Shared tones", state.showShared, "#fff", "app.toggle('showShared')")}</div>`;
+    const dotToggle = state.progMapMode === "combined" ? `${btn("Single color", state.sharedDotMode==="single", "#a8c4e8", "app.set('sharedDotMode','single')")}${btn("Shared tones", state.sharedDotMode==="shared", "#6dd4a8", "app.set('sharedDotMode','shared')")}` : "";
+    const mapToggle = `<div class="row" style="margin-bottom:10px">${btn("Combined map", state.progMapMode==="combined", "#e8c547", "app.set('progMapMode','combined')")}${btn("Selected chord", state.progMapMode==="selected", "#7eb8d4", "app.set('progMapMode','selected')")}${btn(state.showShared?"Shared tones on":"Shared tones", state.showShared, "#fff", "app.toggle('showShared')")}</div>${dotToggle ? `<div class="row" style="margin-bottom:14px;align-items:center"><div class="mini-label" style="margin:0 4px 0 0">Dot style</div>${dotToggle}</div>` : ""}`;
     const sharedPanel = state.showShared ? (() => { const sh = getShared(); return sh.size ? `<div class="card" style="margin-bottom:14px;background:color-mix(in srgb, var(--text-bright) 4%, var(--surface))"><div class="section-label">Shared Tones</div><div class="row">${[...sh].map(n => `<span class="tone-pill" style="--c:var(--text-bright)" onclick="app.playNote('${n}')">${esc(n)}</span>`).join("")}</div><div class="info-text" style="margin-top:6px">Notes common to adjacent chords — your smoothest melodic connection points.</div></div>` : ""; })() : "";
-    const colorLegend = hasChords ? `<div class="legend"><div class="legend-title">Chord colors</div>${state.progChords.map((ch,ci) => { const col = PROG_COLORS[ci%PROG_COLORS.length]; return `<div class="legend-item"><div style="width:10px;height:10px;border-radius:50%;background:${col}"></div><span class="legend-text">${ci+1}. ${esc(chordSymbol(ch))}</span></div>`; }).join("")}</div>` : "";
+    const sharedLegend = (state.progMapMode === "combined" && state.sharedDotMode === "shared") ? `<div class="legend-item"><div style="width:11px;height:11px;border-radius:50%;background:conic-gradient(#e8c547 0% 50%,#7eb8d4 50% 100%)"></div><span class="legend-text">Shared tone (split color)</span></div><div class="legend-item"><div style="width:13px;height:13px;border-radius:50%;background:conic-gradient(#e8c547 0% 33%,#7eb8d4 33% 66%,#e87a3a 66% 100%);box-shadow:0 0 6px rgba(255,255,255,0.4)"></div><span class="legend-text">Anchor note (3+ chords)</span></div>` : "";
+    const colorLegend = hasChords ? `<div class="legend"><div class="legend-title">Chord colors</div>${state.progChords.map((ch,ci) => { const col = PROG_COLORS[ci%PROG_COLORS.length]; return `<div class="legend-item"><div style="width:10px;height:10px;border-radius:50%;background:${col}"></div><span class="legend-text">${ci+1}. ${esc(chordSymbol(ch))}</span></div>`; }).join("")}${sharedLegend}</div>` : "";
     const fretboard = hasChords ? `<div class="card"><div class="section-label">Progression Fretboard</div><div class="info-text" style="margin-bottom:10px">Map the full progression or focus on the selected chord.</div>${mapToggle}${sharedPanel}${renderFretboard("progression")}${colorLegend}</div>` : `<div class="card"><div class="section-label">Progression Fretboard</div><div class="info-text">Build or load a progression first. Studio is the fastest way to start.</div><button type="button" class="accent-btn" onclick="app.setMode('suggest')">Open Studio</button></div>`;
 
     const voice = hasChords && state.progChords.length > 1 ? `<div class="card"><div class="section-label">Voice Leading</div><div class="info-text" style="margin-bottom:10px">Compare two chords and look for common tones or small moves. These are good melody and arrangement targets.</div>${renderVoiceLeading()}</div>` : `<div class="card"><div class="section-label">Voice Leading</div><div class="info-text">Add at least two chords to compare movement.</div></div>`;
@@ -3426,6 +3632,51 @@
   }
 
   // ── Main render ──
+  function renderStudioDock() {
+    if (!state.progChords || !state.progChords.length) return "";
+    const dockKey = state.suggestKey || state.selectedKey || state.progChords[0].key;
+
+    // Collapsed state: thin tab showing progression as text + expand button
+    if (state.dockCollapsed) {
+      const summary = state.progChords.map(chordSymbol).join("  ·  ");
+      return `<div class="studio-dock studio-dock-collapsed" onclick="app.set('dockCollapsed',false)">
+        <span class="dock-collapsed-summary">♩ ${esc(summary)}</span>
+        <button type="button" class="dock-collapse-btn" onclick="event.stopPropagation();app.set('dockCollapsed',false)" aria-label="Expand dock">▲ Show progression</button>
+      </div>`;
+    }
+
+    const chips = state.progChords.map((ch, ci) => {
+      const col = PROG_COLORS[ci % PROG_COLORS.length];
+      const selected = state.suggestInsertIdx === ci;
+      const sym = chordSymbol(ch);
+      const info = romanInfoForChord(ch, dockKey);
+      const roman = info ? info.roman : "";
+      const role = info ? info.role : "";
+      return `<span class="dock-chip ${selected ? "selected" : ""}" style="--c:${col}"
+          onclick="app.selectProgressionChord(${ci})"
+          title="${esc(roman ? roman + ' — ' + role : sym)}">
+        <span class="dock-chip-roman">${esc(roman)}</span>
+        <span class="dock-chip-name">${esc(sym)}</span>
+        <span class="dock-chip-moves">
+          <button type="button" class="dock-chip-move" onclick="event.stopPropagation();app.moveChordLeft(${ci})" aria-label="Move ${esc(sym)} left">‹</button>
+          <button type="button" class="dock-chip-move" onclick="event.stopPropagation();app.moveChordRight(${ci})" aria-label="Move ${esc(sym)} right">›</button>
+        </span>
+      </span>`;
+    }).join("");
+
+    const chordCount = state.progChords.length;
+    const countLabel = `<span style="font-size:10px;color:var(--muted);align-self:flex-end;padding-bottom:4px">${chordCount}/8</span>`;
+
+    return `<div class="studio-dock">
+      <div class="studio-dock-chips">${chips}${countLabel}</div>
+      <div class="dock-actions">
+        <button type="button" class="accent-btn" onclick="app.playCurrentProgressionOnce()" aria-label="Play progression" title="Play">▶ Play</button>
+        <button type="button" class="util-btn" onclick="app.setMode('progression')" title="Open full Study view">Study →</button>
+        <button type="button" class="dock-collapse-btn" onclick="app.set('dockCollapsed',true)" aria-label="Hide dock" title="Hide">▼ Hide</button>
+      </div>
+    </div>`;
+  }
+
   function render() {
     document.documentElement.setAttribute("data-theme", state.theme);
     let content;
@@ -3465,7 +3716,9 @@
 
     const setupSummary = `${esc(instrumentLabel())} · ${esc(getOpenStrings().map(spell).join(" "))}${state.capo>0?` · Capo ${state.capo}`:""}`;
 
-    document.getElementById("app").innerHTML = `<div class="wrap">
+    const showDock = state.mode === "suggest" && state.progChords && state.progChords.length > 0;
+    const dockClass = showDock ? (state.dockCollapsed ? " has-dock-collapsed" : " has-dock") : "";
+    document.getElementById("app").innerHTML = `<div class="wrap${dockClass}">
       <div class="header"><div class="eyebrow">${setupSummary}</div><h1>Open Strings</h1><div class="tagline">Songwriting, fretboard theory, practice, and printable charts</div></div>
       <div class="toolbar primary-bar">
         <div class="segmented app-nav" role="tablist">${primaryNav}</div>
@@ -3481,8 +3734,8 @@
       ${state.showHelp ? renderHelp() : ""}
       ${state.showPrefs ? renderPreferences() : ""}
       ${content}
-      <div class="footer">Open Strings · single-file offline app · works on GitHub Pages<br>${esc(getOpenStrings().map(spell).join(" "))} · ${esc(tuningLabel())}</div>
-    </div>`;
+      <div class="footer">Open Strings · Built and designed by Ethan Grimes · ethangrimes305@gmail.com<br>${esc(getOpenStrings().map(spell).join(" "))} · ${esc(tuningLabel())}</div>
+    </div>${showDock ? renderStudioDock() : ""}`;
 
     // Preserve horizontal scroll position of fretboards across re-renders, so tapping a
     // high-fret note (e.g. in the Chord Identifier) doesn't snap the neck back to fret 0.
