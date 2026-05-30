@@ -207,6 +207,22 @@
   .suggest-chip .roman { color: var(--dim); font-style: italic; font-size: 10px; }
   .suggest-chip button { min-width: 22px; min-height: 22px; border-radius: 50%; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; line-height: 1; }
   .suggest-chip button:hover { color: #e87a7a; border-color: #e87a7a; }
+  .analysis-card { background: linear-gradient(180deg, color-mix(in srgb, #7eb8d4 7%, var(--surface)), var(--surface)); border: 1px solid var(--border); border-left: 3px solid #7eb8d4; border-radius: 6px; padding: 14px 16px; margin-bottom: 14px; }
+  .analysis-topline { font-size: 17px; color: var(--text-bright); line-height: 1.35; margin: 5px 0 8px; }
+  .analysis-subline { font-size: 13px; color: var(--muted); line-height: 1.55; margin-bottom: 10px; }
+  .theory-depth { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 12px; }
+  .analysis-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin-top: 10px; }
+  .analysis-item { background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; padding: 10px 11px; }
+  .analysis-item h4 { margin: 0 0 5px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); }
+  .analysis-item p { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.45; }
+  .analysis-roman-row { display: flex; flex-wrap: wrap; gap: 7px; margin: 10px 0 4px; }
+  .analysis-roman { display: inline-flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text-bright); font-size: 12px; }
+  .analysis-roman .role { color: var(--dim); font-size: 10px; text-transform: uppercase; letter-spacing: .06em; }
+  .analysis-list { display: flex; flex-direction: column; gap: 7px; margin-top: 8px; }
+  .analysis-line { font-size: 13px; color: var(--muted); line-height: 1.45; }
+  .analysis-line strong { color: var(--text-bright); }
+  .mini-targets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .mini-targets span { border: 1px solid var(--border); background: var(--surface); color: var(--text-bright); border-radius: 999px; padding: 4px 8px; font-size: 12px; }
   .beat-dot { width: 22px; height: 22px; border-radius: 50%; background: var(--surface-2); border: 2px solid var(--border); transition: background 0.06s, box-shadow 0.06s; }
   .beat-dot.accent { border-color: var(--gold); }
 
@@ -925,6 +941,7 @@
     suggestRandom: null,    // last randomly-generated progression (array of romans)
     suggestRandomLen: 4,    // desired length for the randomizer
     suggestShowBorrowed: false,
+    theoryDepth: "useful",       // "simple", "useful", or "theory" for songwriter explanations
     // Metronome
     metroBpm: 100,
     metroSig: "4/4",
@@ -1335,6 +1352,135 @@
     if (d === 2) return { label: "Whole step", color: "#d4c46d" };
     if (d <= 4) return { label: "Small leap", color: "#e8823a" };
     return { label: "Leap", color: "#e87a7a" };
+  }
+
+
+  // ── Songwriter-first theory helpers ──
+  function chordLabel(c) {
+    return `${spell(c.key)} ${CHORD_TYPES[c.type]?.label.replace(' ','') || c.type}`;
+  }
+  function chordHasInterval(type, interval) {
+    const ints = (CHORD_TYPES[type]?.intervals || []).map(v => ((v % 12) + 12) % 12);
+    return ints.includes(((interval % 12) + 12) % 12);
+  }
+  function isDominantLike(type) {
+    return chordHasInterval(type, 4) && chordHasInterval(type, 10);
+  }
+  function romanInfoForChord(ch, key) {
+    const off = semiBetweenDir(key, ch.key);
+    const quality = baseQuality(ch.type);
+    const dom = isDominantLike(ch.type);
+    const secondary = {
+      0: { roman:"V/IV", role:"setup", plain:"points at the IV chord", source:"Secondary dominant: the tonic 7 chord works like the V of IV." },
+      2: { roman:"V/V", role:"setup", plain:"points hard at the V chord", source:"Secondary dominant: V of V." },
+      4: { roman:"V/vi", role:"setup", plain:"points hard at the vi minor chord", source:"Secondary dominant: V of vi." },
+      9: { roman:"V/ii", role:"setup", plain:"points hard at the ii minor chord", source:"Secondary dominant: V of ii." },
+      11:{ roman:"V/iii", role:"setup", plain:"points hard at the iii minor chord", source:"Secondary dominant: V of iii." }
+    };
+    if (dom && off !== 7 && secondary[off]) return { ...secondary[off], color:"#e8823a" };
+    if ((quality === "major" || quality === "other") && off === 0) return { roman: dom ? "I7" : "I", role:"home", plain:"home base", source: dom ? "Tonic dominant color; often pushes toward IV." : "Diatonic tonic chord.", color:"#e8c547" };
+    if (quality === "minor" && off === 0) return { roman:"i", role:"minor home", plain:"minor home base", source:"Minor tonic color against this key center.", color:"#7eb8d4" };
+    if (quality === "minor" && off === 2) return { roman:"ii", role:"lift", plain:"sets up motion toward V or I", source:"Diatonic predominant chord.", color:"#6dd4a8" };
+    if (quality === "minor" && off === 4) return { roman:"iii", role:"soft home", plain:"a gentler substitute for home", source:"Diatonic tonic-family chord.", color:"#7eb8d4" };
+    if (quality === "major" && off === 5) return { roman:"IV", role:"lift", plain:"opens the section up", source:"Diatonic predominant / plagal color.", color:"#6dd4a8" };
+    if (quality === "minor" && off === 5) return { roman:"iv", role:"bittersweet", plain:"adds a sad pull back home", source:"Borrowed from the parallel minor key.", color:"#c47ed4" };
+    if (quality === "major" && off === 7) return { roman: dom ? "V7" : "V", role:"tension", plain:"wants to resolve home", source:"Diatonic dominant chord.", color:"#e87a3a" };
+    if (quality === "minor" && off === 7) return { roman:"v", role:"dark tension", plain:"minor-key dominant color", source:"Borrowed/modal dominant color.", color:"#7eb8d4" };
+    if (quality === "minor" && off === 9) return { roman:"vi", role:"minor color", plain:"relative-minor emotion", source:"Diatonic tonic-family chord.", color:"#7eb8d4" };
+    if (quality === "dim" && off === 11) return { roman:"vii°", role:"tension", plain:"unstable pull toward home", source:"Diatonic leading-tone chord.", color:"#c47ed4" };
+    if (quality === "major" && off === 10) return { roman:"bVII", role:"rock lift", plain:"anthemic outside-key lift", source:"Borrowed from Mixolydian or the parallel minor palette.", color:"#d4876d" };
+    if (quality === "major" && off === 8) return { roman:"bVI", role:"cinematic", plain:"dark dramatic drop", source:"Borrowed from the parallel minor key.", color:"#c47ed4" };
+    if (quality === "major" && off === 3) return { roman:"bIII", role:"modal color", plain:"minor-key shadow without fully leaving major", source:"Borrowed from the parallel minor key.", color:"#c47ed4" };
+    if (quality === "major" && off === 1) return { roman:"bII", role:"drama", plain:"strong outside tension", source:"Neapolitan-style borrowed chord; often aims at V or I.", color:"#e87a7a" };
+    return { roman:`${spell(ch.key)} ${CHORD_TYPES[ch.type]?.label || ch.type}`, role:"color", plain:"outside-key color", source:"Not a standard diatonic chord in this major-key view. That can still be a great songwriting choice.", color:"#bfb6a4" };
+  }
+  function analyzeProgression(chords, key) {
+    const items = (chords || []).map(ch => ({ chord: ch, ...romanInfoForChord(ch, key) }));
+    if (!items.length) return { items, headline:"Build a progression to see songwriter notes.", movement:"", ending:"", feel:"", bestUse:"" };
+    const roles = items.map(i => i.role);
+    const romans = items.map(i => i.roman);
+    const hasBorrowed = items.some(i => /Borrowed|Mixolydian|Neapolitan|outside-key/i.test(i.source));
+    const hasSecondary = items.some(i => /^V\//.test(i.roman));
+    const hasMinorColor = romans.some(r => ["vi","i","iv","bVI","bIII"].includes(r));
+    const dominantCount = items.filter(i => i.role === "tension" || i.role === "setup").length;
+    let headline = "Straightforward, playable chord movement.";
+    if (hasSecondary && hasBorrowed) headline = "Colorful progression with both outside-key color and chords that point at a target.";
+    else if (hasSecondary) headline = "Directed progression: one or more chords make the next chord feel important.";
+    else if (hasBorrowed) headline = "Colorful progression: borrowed chords add surprise without losing the home key.";
+    else if (hasMinorColor) headline = "Song-friendly progression with major/minor contrast.";
+    else if (dominantCount >= 2) headline = "Tension-forward progression that wants resolution.";
+    const first = items[0]?.roman || "";
+    const last = items[items.length-1]?.roman || "";
+    const prev = items[items.length-2]?.roman || "";
+    let ending = "Loop-friendly / open: it should keep moving when it repeats.";
+    if ((prev === "V" || prev === "V7") && first === "I" && last !== "I") ending = "Strong loop: the last chord snaps back to I when the progression repeats.";
+    if ((prev === "V" || prev === "V7") && last === "I") ending = "Strong ending: V to I sounds final and resolved.";
+    else if ((prev === "IV" || prev === "iv") && last === "I") ending = "Soft ending: IV or iv to I gives an ‘amen’ / bittersweet return.";
+    else if ((prev === "V" || prev === "V7") && last === "vi") ending = "Surprise ending: V goes to vi instead of home, so it feels emotional or unresolved.";
+    else if (last === "V" || last === "V7") ending = "Unfinished ending: ending on V creates a clear need to continue.";
+    const bestUse = hasBorrowed ? "Use when a section needs a lift, darker turn, or one surprise chord." : hasSecondary ? "Use when one chord should feel like a destination." : dominantCount ? "Good before a chorus, turnaround, or section ending." : "Good for verses, choruses, and quick songwriting starts.";
+    return { items, headline, movement: roles.join(" → "), ending, bestUse };
+  }
+  function melodyTargetsFor(chords) {
+    const counts = {};
+    const strong = [];
+    (chords || []).forEach((ch, i) => {
+      const def = CHORD_TYPES[ch.type] || CHORD_TYPES.maj;
+      const tones = buildTones(ch.key, def.intervals || []);
+      tones.forEach(n => counts[n] = (counts[n] || 0) + 1);
+      const labels = def.intLabels || [];
+      const targets = tones.map((n, ti) => ({ note:n, label:labels[ti] || "" })).filter(t => ["3","b3","7","b7"].includes(t.label));
+      if (targets.length) strong.push({ idx:i+1, label:chordLabel(ch), targets });
+    });
+    const safe = Object.entries(counts).filter(([n,c]) => c >= 2).sort((a,b) => b[1]-a[1] || CHROMATIC.indexOf(a[0])-CHROMATIC.indexOf(b[0])).map(([n]) => n).slice(0, 8);
+    const roots = (chords || []).map(c => c.key);
+    return { safe, roots, strong };
+  }
+  function bassMovementIdeas(chords) {
+    if (!chords || chords.length < 2) return [];
+    const ideas = [];
+    for (let i = 0; i < chords.length - 1; i++) {
+      const cur = chords[i], next = chords[i+1];
+      const def = CHORD_TYPES[cur.type] || CHORD_TYPES.maj;
+      const tones = buildTones(cur.key, def.intervals || []);
+      const rootJump = Math.min(semiBetweenDir(cur.key, next.key), 12 - semiBetweenDir(cur.key, next.key));
+      const candidates = tones.map((n, ti) => {
+        const up = semiBetweenDir(n, next.key), down = 12 - up;
+        return { note:n, label:def.intLabels?.[ti] || "tone", dist:Math.min(up, down) };
+      }).filter(c => c.note !== cur.key).sort((a,b) => a.dist - b.dist);
+      if (candidates.length && candidates[0].dist < rootJump) {
+        ideas.push(`Try ${chordLabel(cur)}/${spell(candidates[0].note)} before ${chordLabel(next)} for smoother bass motion.`);
+      }
+    }
+    return ideas.slice(0, 3);
+  }
+  function renderTheoryDepthControls() {
+    return `<div class="theory-depth">${btn("Simple", state.theoryDepth==="simple", "#6dd4a8", "app.set('theoryDepth','simple')")}${btn("Useful", state.theoryDepth==="useful", "#e8c547", "app.set('theoryDepth','useful')")}${btn("Theory", state.theoryDepth==="theory", "#c47ed4", "app.set('theoryDepth','theory')")}</div>`;
+  }
+  function renderSongwriterAnalysis(key, compact=false) {
+    const chords = state.progChords || [];
+    const analysis = analyzeProgression(chords, key);
+    if (!chords.length) return `<div class="analysis-card"><div class="section-label">Songwriter Notes</div><div class="analysis-subline">Build or load a progression to see plain-language theory, melody targets, and ending feel.</div></div>`;
+    const targets = melodyTargetsFor(chords);
+    const bassIdeas = bassMovementIdeas(chords);
+    const romanRow = analysis.items.map((it, i) => `<span class="analysis-roman" style="--c:${it.color}"><strong>${i+1}. ${esc(chordLabel(it.chord))}</strong><span>${esc(it.roman)}</span><span class="role">${esc(it.role)}</span></span>`).join("");
+    const safe = targets.safe.length ? targets.safe.map(n => `<span onclick="app.playNote('${n}')">${esc(spell(n))}</span>`).join("") : `<span>Use chord roots first</span>`;
+    const strongLines = targets.strong.slice(0, compact ? 3 : 6).map(g => `<div class="analysis-line"><strong>${esc(g.idx + '. ' + g.label)}:</strong> target ${g.targets.map(t => `${esc(spell(t.note))} (${esc(t.label)})`).join(", ")}</div>`).join("");
+    const bassLines = bassIdeas.length ? bassIdeas.map(x => `<div class="analysis-line">${esc(x)}</div>`).join("") : `<div class="analysis-line">Root movement already looks clear. For smoother motion, try holding shared tones or using chord tones as passing bass notes.</div>`;
+    let deep = "";
+    if (state.theoryDepth === "useful" || state.theoryDepth === "theory") {
+      deep += `<div class="analysis-roman-row">${romanRow}</div>`;
+    }
+    if (state.theoryDepth === "theory") {
+      deep += `<div class="analysis-list">${analysis.items.map(it => `<div class="analysis-line"><strong>${esc(chordLabel(it.chord))} = ${esc(it.roman)}:</strong> ${esc(it.source)}</div>`).join("")}</div>`;
+    }
+    const fullGrid = compact ? "" : `<div class="analysis-grid">
+      <div class="analysis-item"><h4>Ending feel</h4><p>${esc(analysis.ending)}</p></div>
+      <div class="analysis-item"><h4>Best use</h4><p>${esc(analysis.bestUse)}</p></div>
+      <div class="analysis-item"><h4>Melody targets</h4><p>Safe notes appear in multiple chords. Strong notes are 3rds and 7ths.</p><div class="mini-targets">${safe}</div></div>
+      <div class="analysis-item"><h4>Bass motion</h4><div class="analysis-list">${bassLines}</div></div>
+    </div>${strongLines ? `<div class="analysis-item" style="margin-top:10px"><h4>Strong note targets</h4><div class="analysis-list">${strongLines}</div></div>` : ""}`;
+    return `<div class="analysis-card"><div class="section-label">Songwriter Notes in ${esc(spell(key))}</div>${renderTheoryDepthControls()}<div class="analysis-topline">${esc(analysis.headline)}</div><div class="analysis-subline"><strong>Movement:</strong> ${esc(analysis.movement)} · <strong>Ending:</strong> ${esc(analysis.ending)}</div>${deep}${fullGrid}</div>`;
   }
 
   // Chord identifier — given a set of pitch classes, find best matching chord
@@ -1882,7 +2028,9 @@
 
     const colorLegend = `<div class="legend"><div class="legend-title">Chord colors</div>${state.progChords.map((ch,ci) => { const col = PROG_COLORS[ci%PROG_COLORS.length]; return `<div class="legend-item"><div style="width:10px;height:10px;border-radius:50%;background:${col}"></div><span class="legend-text">${ci+1}. ${esc(ch.key)} ${esc(CHORD_TYPES[ch.type]?.label)}</span></div>`; }).join("")}</div>`;
 
-    return `${controls}${lib}<div class="row" style="margin-bottom:14px">${chordCards}</div>${editor}${mapToggle}${sharedPanel}${vlPanel}${renderFretboard("progression")}${colorLegend}`;
+    const songwriterPanel = renderSongwriterAnalysis(state.selectedKey);
+
+    return `${controls}${lib}${songwriterPanel}<div class="row" style="margin-bottom:14px">${chordCards}</div>${editor}${mapToggle}${sharedPanel}${vlPanel}${renderFretboard("progression")}${colorLegend}`;
   }
 
   function renderProgEditor() {
@@ -2055,7 +2203,7 @@
       const f = (name, chip, color, desc, good) => `<div class="feature-item" style="--c:${color}"><h4>${esc(name)} <span class="chip">${esc(chip)}</span></h4><p>${desc}</p><div class="good"><b>Good for:</b> ${good}</div></div>`;
       body = `<div class="help-section"><h3>Core tools</h3><div class="sub">The five main tabs.</div><div class="feature-grid">
         ${f("Single","tab","#e8c547","Pick a root and chord type to map every chord tone across the neck. Expand the Diatonic panel to see all seven chords in a key, or add a scale overlay to separate chord tones from passing tones.","learning chord shapes, seeing a key's chords, connecting chords to scales.")}
-        ${f("Progression","tab","#7eb8d4","Build a progression by hand, load one from the library, or open one from the Progression Suggester. See chords together by color, highlight shared tones, inspect voice leading, loop playback, and adjust tempo.","songwriting, arranging, finding melody targets, understanding why a progression works.")}
+        ${f("Progression","tab","#7eb8d4","Build a progression by hand, load one from the library, or open one from the Progression Suggester. The Songwriter Notes panel explains the movement in plain language first, with optional roman numerals and deeper theory when you want it.","songwriting, arranging, finding melody targets, understanding why a progression works without needing a music-major vocabulary.")}
         ${f("Scales","tab","#6dd4a8","Put a scale front and center. Map it across the neck, switch through position boxes, label notes by degree, see the step formula, highlight generated diatonic chords, compare against another scale, and play the scale up and down.","learning scales and modes, practising positions, soloing, chord-scale study.")}
         ${f("Intervals","tab","#6dd4a8","Tap any two notes and Open Strings names the interval, explains its sound, and shows other places the same interval appears on your tuning.","ear training, understanding chord construction, learning fretboard geometry.")}
         ${f("Identify","tab","#c47ed4","The reverse of Single: tap notes on the neck and the app identifies the closest chord name. Tap a note again to remove it.","naming shapes you discover, checking your own voicings.")}
@@ -2063,7 +2211,7 @@
       <div class="help-section"><h3>More tools</h3><div class="sub">Found in the “More tools” dropdown.</div><div class="feature-grid">
         ${f("Key Finder","tool","#6dd4a8","Enter the chords from a song and it ranks likely keys. It shows how many chords fit each key and lists the matching diatonic chords. Treat the result as a ranked clue, not a guarantee — real songs borrow chords all the time.","finding a song's key, transposing, spotting borrowed chords.")}
         ${f("Modes Explorer","tool","#c47ed4","Pick a parent scale and key to see all seven modes, their notes, and how each mode is the same parent scale started from a different degree.","understanding modes, finding scale choices over chords.")}
-        ${f("Progression Suggester","tool","#6dd4a8","Choose a key and mood, hear curated progressions, generate theory-aware random progressions, and add borrowed chords from outside the key. The built-in Current Progression strip lets you keep building without leaving the Suggester.","beating writer's block, testing substitutions, adding color to a progression.")}
+        ${f("Progression Suggester","tool","#6dd4a8","Choose a key and mood, hear curated progressions, generate random progressions, add secondary-dominant setup chords, and borrow color from outside the key. The built-in Current Progression strip lets you keep building without leaving the Suggester.","beating writer's block, testing substitutions, adding color, making one chord point harder at the next.")}
         ${f("Chord-Tone Quiz","tool","#e8c547","Drills chord construction directly — for example, identifying which note is the third, fifth, seventh, or altered tone of a chord.","fast recall of chord tones and intervals.")}
         ${f("Ear Training","tool","#e8823a","Plays a chord with a random root and asks you to identify its quality — major, minor, dominant, diminished, and more.","recognizing chord colors by ear.")}
         ${f("Fretboard Trainer","tool","#6dd4a8","Gives you a target note and asks you to find every instance across the visible neck, then times your result.","memorizing the fretboard, especially in a new tuning.")}
@@ -2088,6 +2236,7 @@
           <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Scale Overlay</strong> — in Single mode, shows a scale behind the chord. Solid dots are chord tones; rings are other scale notes.</li>
           <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Fret range</strong> — zooms the neck to a window like 0–5, useful on phones and for focused practice.</li>
           <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Current Progression strip</strong> — in the Suggester, shows the progression you are building and gives quick controls to hear it, clear it, remove chords, or open the full Progression view.</li>
+          <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Songwriter Notes</strong> — translates theory into usable musical language: home, lift, tension, color, ending feel, melody targets, and optional deeper roman-numeral analysis.</li>
         </ul></div>
       <div class="help-section"><h3>Preferences</h3><div class="sub">Open the Preferences button in the toolbar.</div>
         <ul style="margin:0;padding-left:18px">
@@ -2472,15 +2621,21 @@
   // Functional-harmony tables for the randomizer (major-key model).
   const RAND_DIATONIC = { "I":"T","ii":"SD","iii":"T","IV":"SD","V":"D","vi":"T","viio":"D" };
   const RAND_NEXT = { "T":["SD","D","T"], "SD":["D","SD"], "D":["T"] };
-  // Borrowed chords that reliably sound good in a major key, with a short rationale.
+  // Borrowed chords that reliably sound good in a major key, with songwriter-first explanations.
   const BORROWED_CHORDS = [
-    { roman:"bVII", why:"Mixolydian/rock flavor; strong plagal pull back to I." },
-    { roman:"iv",   why:"Borrowed minor iv; bittersweet, classic on the way to I." },
-    { roman:"bVI",  why:"From parallel minor; cinematic lift, often pairs with bVII." },
-    { roman:"bIII", why:"From parallel minor; surprising bright-to-dark turn." },
-    { roman:"bII",  why:"Neapolitan; dramatic pre-dominant, resolves to V or I." },
-    { roman:"V7",   why:"Secondary dominant feel; sharpens the pull to I." },
-    { roman:"I7",   why:"Dominant 7 on the tonic; sets up a move to IV." }
+    { roman:"bVII", color:"Classic rock lift", why:"Anthemic, open, and a little less polished than V.", use:"Great before IV or I.", deep:"Borrowed from Mixolydian or the parallel minor palette." },
+    { roman:"iv",   color:"Bittersweet turn", why:"Makes a major key suddenly feel more emotional.", use:"Beautiful right before I.", deep:"Minor iv borrowed from the parallel minor key." },
+    { roman:"bVI",  color:"Cinematic drop", why:"A darker chord that still feels strong and singable.", use:"Try it before bVII, IV, V, or I.", deep:"Borrowed from the parallel minor key." },
+    { roman:"bIII", color:"Minor-key shadow", why:"Adds a bold modal color without fully leaving major.", use:"Good after I or before IV/bVII.", deep:"Borrowed from the parallel minor key." },
+    { roman:"bII",  color:"Drama button", why:"Very tense and unmistakably outside the key.", use:"Use sparingly before V or I.", deep:"Neapolitan-style borrowed chord." },
+    { roman:"I7",   color:"Push toward IV", why:"Turns home into a setup chord.", use:"Add before IV for blues, soul, or gospel movement.", deep:"The tonic dominant 7 acts like V/IV." }
+  ];
+  const SECONDARY_DOMINANTS = [
+    { roman:"V/vi", target:"vi", targetOffset:9, targetType:"min", why:"Make the relative minor feel like a destination.", use:"Great for a sadder verse turn or emotional lift." },
+    { roman:"V/ii", target:"ii", targetOffset:2, targetType:"min", why:"Make the ii chord feel intentional instead of random.", use:"Useful before ii–V or a pre-chorus setup." },
+    { roman:"V/V",  target:"V",  targetOffset:7, targetType:"maj", why:"Aim harder at the V chord.", use:"Classic way to build energy before resolving." },
+    { roman:"V/IV", target:"IV", targetOffset:5, targetType:"maj", why:"Turn the I chord into a push toward IV.", use:"Blues, soul, gospel, and old-school pop color." },
+    { roman:"V/iii",target:"iii",targetOffset:4, targetType:"min", why:"Point at a softer, moodier chord.", use:"Good for surprising but smooth motion." }
   ];
 
   function randomProgression(len) {
@@ -2519,7 +2674,7 @@
     const currentControls = state.progChords.length
       ? `<div class="row"><button type="button" class="accent-btn" onclick="app.playCurrentProgressionOnce()">Hear current</button><button type="button" class="pill" style="--c:#7eb8d4" onclick="app.setMode('progression')">Open in Progression</button><button type="button" class="pill" style="--c:#e87a7a" onclick="app.clearProgression()">Clear</button></div>`
       : `<div class="row"><button type="button" class="pill" style="--c:#7eb8d4" onclick="app.setMode('progression')">Open empty Progression panel</button></div>`;
-    const currentSection = `<div class="suggest-current"><div class="section-label" style="margin-bottom:6px">Current Progression</div><div class="info-text">Build here without leaving the Suggester. When it feels promising, open the full Progression view for fretboard mapping, shared tones, and voice leading.</div><div class="suggest-strip">${currentChips}</div>${currentControls}</div>`;
+    const currentSection = `<div class="suggest-current"><div class="section-label" style="margin-bottom:6px">Current Progression</div><div class="info-text">Build here without leaving the Suggester. When it feels promising, open the full Progression view for fretboard mapping, shared tones, and voice leading.</div><div class="suggest-strip">${currentChips}</div>${currentControls}</div>${renderSongwriterAnalysis(state.suggestKey, true)}`;
 
     const cardFor = (prog) => {
       const chords = prog.map(r => romanToChord(r, state.suggestKey));
@@ -2545,11 +2700,21 @@
     const borrowedChips = BORROWED_CHORDS.map(bc => {
       const c = romanToChord(bc.roman, state.suggestKey);
       const enc = encodeURIComponent(JSON.stringify([c]));
-      return `<div class="saved-card"><div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px"><span style="font-size:14px;color:var(--text-bright)">${esc(bc.roman)}</span><span style="font-size:12px;color:var(--muted)">${esc(chordLabel(c))}</span></div><div class="info-text" style="margin-bottom:8px">${esc(bc.why)}</div><button type="button" class="pill" style="--c:#c47ed4;font-size:11px" onclick="app.appendChordToProg('${enc}')">Add</button></div>`;
+      const deep = state.theoryDepth === "theory" ? `<div class="info-text" style="margin-top:6px"><strong>Theory:</strong> ${esc(bc.deep)}</div>` : "";
+      return `<div class="saved-card"><div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px;flex-wrap:wrap"><span style="font-size:14px;color:var(--text-bright)">${esc(bc.roman)}</span><span style="font-size:12px;color:var(--muted)">${esc(chordLabel(c))}</span><span class="chip">${esc(bc.color)}</span></div><div class="info-text" style="margin-bottom:6px">${esc(bc.why)}</div><div class="info-text" style="margin-bottom:8px"><strong>Try it:</strong> ${esc(bc.use)}</div>${deep}<button type="button" class="pill" style="--c:#c47ed4;font-size:11px" onclick="app.appendChordToProg('${enc}')">Add color chord</button></div>`;
     }).join("");
-    const borrowedSection = `<div class="card" style="margin-bottom:14px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:10px"><div class="section-label" style="margin:0">Borrowed chords for ${esc(spell(state.suggestKey))} major</div><button type="button" class="pill" style="--c:#c47ed4;font-size:11px;padding:3px 9px" onclick="app.toggle('suggestShowBorrowed')">${state.suggestShowBorrowed?"hide":"show"}</button></div>${state.suggestShowBorrowed ? `<div class="info-text" style="margin-bottom:10px">Borrowed chords intentionally step outside the key for color. Tap <strong>Add</strong> to append one to the Current Progression strip without leaving this panel.</div><div class="saved-list">${borrowedChips}</div>` : `<div class="info-text">Common outside-the-key chords that add color and surprise. Tap show to explore and append them without losing your place.</div>`}</div>`;
+    const borrowedSection = `<div class="card" style="margin-bottom:14px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:10px"><div class="section-label" style="margin:0">Borrowed chords for ${esc(spell(state.suggestKey))} major</div><button type="button" class="pill" style="--c:#c47ed4;font-size:11px;padding:3px 9px" onclick="app.toggle('suggestShowBorrowed')">${state.suggestShowBorrowed?"hide":"show"}</button></div>${state.suggestShowBorrowed ? `<div class="info-text" style="margin-bottom:10px">Borrowed chords are color tools. They step outside the key on purpose, but the goal is simple: add a darker turn, a bigger lift, or one surprise chord.</div><div class="saved-list">${borrowedChips}</div>` : `<div class="info-text">Common outside-the-key chords that add color and surprise. Tap show to explore and append them without losing your place.</div>`}</div>`;
 
-    return `<div class="card" style="margin-bottom:14px"><div class="section-label">Progression Suggester</div><div class="info-text" style="margin-bottom:12px">Pick a key and mood for curated progressions, generate a random one, or borrow chords from outside the key. Build in the Current Progression strip, then jump to Progression mode only when you want the full fretboard map.</div><div class="mini-label">Key</div><div class="row" style="margin-bottom:10px">${keyRow}</div><div class="mini-label">Mood</div><div class="row">${moodBtns}</div></div>${currentSection}${randomSection}${borrowedSection}<div class="section-label" style="margin:0 0 10px 2px">${esc(mood.label)} progressions</div><div class="saved-list">${cards}</div>`;
+    const secondaryCards = SECONDARY_DOMINANTS.map(sd => {
+      const target = { key: transpose(state.suggestKey, sd.targetOffset), type: sd.targetType };
+      const setup = { key: transpose(target.key, 7), type: "7" };
+      const encSetup = encodeURIComponent(JSON.stringify([setup]));
+      const encPair = encodeURIComponent(JSON.stringify([setup, target]));
+      return `<div class="saved-card"><div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px;flex-wrap:wrap"><span style="font-size:14px;color:var(--text-bright)">${esc(sd.roman)}</span><span style="font-size:12px;color:var(--muted)">${esc(chordLabel(setup))} → ${esc(chordLabel(target))}</span></div><div class="info-text" style="margin-bottom:6px">${esc(sd.why)}</div><div class="info-text" style="margin-bottom:8px"><strong>Use:</strong> ${esc(sd.use)}</div><div class="row"><button type="button" class="pill" style="--c:#e8823a;font-size:11px" onclick="app.appendChordToProg('${encSetup}')">Add setup</button><button type="button" class="pill" style="--c:#e8c547;font-size:11px" onclick="app.appendChordToProg('${encPair}')">Add with target</button></div></div>`;
+    }).join("");
+    const secondarySection = `<div class="card" style="margin-bottom:14px"><div class="section-label">Make the next chord stronger</div><div class="info-text" style="margin-bottom:10px">These are secondary dominants explained like songwriting moves: add a chord that points at the chord you want to land on.</div><div class="saved-list">${secondaryCards}</div></div>`;
+
+    return `<div class="card" style="margin-bottom:14px"><div class="section-label">Progression Suggester</div><div class="info-text" style="margin-bottom:12px">Pick a key and mood for curated progressions, generate a random one, add a setup chord that points at the next chord, or borrow color from outside the key. Build in the Current Progression strip, then jump to Progression mode only when you want the full fretboard map.</div><div class="mini-label">Key</div><div class="row" style="margin-bottom:10px">${keyRow}</div><div class="mini-label">Mood</div><div class="row">${moodBtns}</div></div>${currentSection}${randomSection}${secondarySection}${borrowedSection}<div class="section-label" style="margin:0 0 10px 2px">${esc(mood.label)} progressions</div><div class="saved-list">${cards}</div>`;
   }
 
   // ── Fretboard Note Trainer ──
