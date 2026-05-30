@@ -3387,14 +3387,9 @@
     },
     setSavedName(v) { state.savedName = v; },
     saveCurrentChart() {
-      const isProgChart = (state.mode === "progression" || state.mode === "charts" || state.mode === "suggest") && Array.isArray(state.progChords) && state.progChords.length;
-      const name = (state.savedName || "").trim() || (isProgChart ? `Progression ${state.progChords.map(c => c.key).join("-")}` : `${state.selectedKey} ${CHORD_TYPES[state.selectedType]?.label}`);
-      const summary = isProgChart ? state.progChords.map(c => `${c.key} ${CHORD_TYPES[c.type]?.label}`).join(" / ") : `${state.selectedKey} ${CHORD_TYPES[state.selectedType]?.label} · ${getOpenStrings().join("")}`;
-      const savedMode = state.mode;
-      if (isProgChart && state.mode !== "progression") state.mode = "progression";
-      const data = serializeState();
-      state.mode = savedMode;
-      state.savedCharts.unshift({ name, summary, created: Date.now(), data });
+      const name = (state.savedName || "").trim() || (state.mode === "progression" ? `Progression ${state.progChords.map(c => c.key).join("-")}` : `${state.selectedKey} ${CHORD_TYPES[state.selectedType]?.label}`);
+      const summary = state.mode === "progression" ? state.progChords.map(c => `${c.key} ${CHORD_TYPES[c.type]?.label}`).join(" / ") : `${state.selectedKey} ${CHORD_TYPES[state.selectedType]?.label} · ${getOpenStrings().join("")}`;
+      state.savedCharts.unshift({ name, summary, created: Date.now(), data: serializeState() });
       state.savedCharts = state.savedCharts.slice(0, 30);
       state.savedName = ""; persistSavedCharts(); toast("Chart saved"); render();
     },
