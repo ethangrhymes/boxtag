@@ -39,7 +39,7 @@
     --text-bright: #14110b;
     --muted: #4f473b;
     --dim: #625846;
-    --faint: #766b59;
+    --faint: #5c5346;
     --gold: #7a5700;
     --wire: #8d806d;
     --fret: #9b8e78;
@@ -307,7 +307,15 @@
   }
 
   /* UX overhaul: clearer navigation, setup, and progression workflow */
-  .app-toolbar { align-items: stretch; gap: 8px; }
+  .primary-bar { margin-bottom: 8px; }
+  .primary-bar .app-nav { flex: 1 1 240px; min-width: 200px; }
+  .primary-bar .nav-select { flex: 1 1 150px; min-width: 130px; }
+  .utility-bar { margin-bottom: 18px; gap: 6px; align-items: center; }
+  .utility-bar .util-btn { font-size: 11px; padding: 7px 12px; min-height: 34px; }
+  .utility-spacer { flex: 1 1 auto; }
+  .util-btn.util-on { border-color: var(--gold); color: var(--gold); background: color-mix(in srgb, var(--gold) 12%, var(--surface)); }
+  .util-btn.util-charts { border-color: color-mix(in srgb, var(--accent-blue) 45%, var(--border)); color: var(--accent-blue); }
+  .util-btn.util-charts:hover { background: color-mix(in srgb, var(--accent-blue) 12%, var(--surface)); border-color: var(--accent-blue); }
   .app-nav { flex: 0 1 340px; min-width: 220px; }
   .nav-select.active-more, .util-btn.active-more { border-color: var(--gold); color: var(--gold); background: color-mix(in srgb, var(--gold) 10%, var(--surface)); }
   .setup-status { max-width: 320px; overflow: hidden; text-overflow: ellipsis; }
@@ -331,9 +339,15 @@
   .studio-tabs { display:flex; flex-wrap:wrap; gap:6px; margin:0 0 14px; }
   .summary-inline { font-size:18px; color:var(--text-bright); line-height:1.4; }
   .util-btn.danger { border-color: color-mix(in srgb, #e87a7a 40%, var(--border)); color:#e87a7a; }
+  .pref-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+  .pref-item { min-width: 0; }
+  .pref-hint { font-size: 11px; color: var(--muted); line-height: 1.5; margin-top: 6px; }
   @media (max-width: 720px) {
     .app-nav { flex: 1 1 100%; }
+    .primary-bar .nav-select { flex: 1 1 calc(50% - 4px); }
     .nav-select, .setup-status { flex: 1 1 150px; }
+    .utility-bar { flex-wrap: wrap; }
+    .utility-bar .util-btn { flex: 1 1 auto; }
     .setup-grid { grid-template-columns: 1fr; }
     .progression-workbar, .studio-current { position: static; }
     .workbar-actions { width:100%; }
@@ -1453,7 +1467,9 @@
   }
   function romanInfoForChord(ch, key) {
     const off = semiBetweenDir(key, ch.key);
-    const quality = baseQuality(ch.type);
+    // Suspended chords are functionally neutral; classify them by their position in the
+    // key like a major chord so they read as diatonic (e.g. Dsus4 in C = a ii-area color).
+    const quality = baseQuality(ch.type) === "sus" ? "major" : baseQuality(ch.type);
     const dom = isDominantLike(ch.type);
     const secondary = {
       0: { roman:"V/IV", role:"pull", plain:"points at the IV chord", source:"Secondary dominant: the tonic 7 chord works like the V of IV." },
@@ -1612,6 +1628,9 @@
     if (t.intervals.includes(4)) return "major";
     if (t.intervals.includes(3) && t.intervals.includes(6)) return "dim";
     if (t.intervals.includes(3)) return "minor";
+    // Suspended chords have neither a major nor minor 3rd; treat as major-functioning
+    // so they're recognized as diatonic rather than labeled "outside-key color".
+    if ((t.intervals.includes(5) || t.intervals.includes(2)) && t.intervals.includes(7)) return "sus";
     return "other";
   }
 
@@ -2304,55 +2323,86 @@
 
   // ── Help panel ──
   function renderHelp() {
-    const sections = [["start","Start"],["studio","Studio workflow"],["areas","App areas"],["buttons","Button guide"],["faq","FAQ"]];
+    const sections = [["start","Start"],["studio","Studio workflow"],["areas","App areas"],["tools","Fretboard & practice"],["prefs","Settings"],["buttons","Button guide"],["faq","FAQ"]];
     const nav = sections.map(([k,l]) => btn(l, state.helpSection===k, "#e8c547", `app.set('helpSection','${k}')`)).join("");
     let body = "";
     if (state.helpSection === "start") {
       body = `<div class="help-hero"><h2>Open Strings is organized around writing songs faster.</h2><p>Set up your instrument once, build a progression in Studio, study it on the fretboard, practise it, then print a chart. Deeper theory is available when you want it, but the first goal is always: make something musical quickly.</p></div>
       <div class="help-section"><h3>Fast path</h3><div class="sub">The simplest way to use the app.</div><ol class="help-steps">
-        <li><strong>Setup</strong> your instrument, tuning, and capo from the top bar.</li>
+        <li><strong>⚙ Setup</strong> your instrument, tuning, and capo from the top bar. You only do this once.</li>
         <li>Open <strong>Studio</strong>, choose a key and mood, then press <strong>Preview</strong> on a few ideas.</li>
         <li>Press <strong>Use this</strong> when an idea feels good. It becomes your Current Progression.</li>
         <li>Add color with <strong>Color chords</strong>, or add pull with <strong>Stronger landings</strong>.</li>
-        <li>Press <strong>Study</strong> to see fretboard maps, voice leading, Songwriter Notes, and chart options.</li>
-      </ol></div>`;
+        <li>Press <strong>Study</strong> to see fretboard maps, voice leading, and Songwriter Notes; then open <strong>Charts</strong> to print or export.</li>
+      </ol></div>
+      <div class="help-section"><h3>Finding your way around</h3><div class="sub">The top bar has two rows.</div>
+        <div class="info-text">The <strong>top row</strong> is where you go: Studio (write), Study (analyze), Charts (print/export), plus two dropdowns — Fretboard (theory maps) and Practice (timing and drills). The <strong>second row</strong> is settings: Setup, Preferences, and Help. Whatever you pick in a dropdown shows its name, so you always know where you are.</div>
+      </div>`;
     } else if (state.helpSection === "studio") {
       body = `<div class="help-section"><h3>Studio workflow</h3><div class="sub">Studio is the songwriting desk.</div>
-        <div class="workflow"><div class="w-title">1. Start with mood ideas</div><div class="w-body">Choose a key and mood. The first cards are meant to be tried quickly. <strong>Preview</strong> only plays the idea. <strong>Use this</strong> replaces your Current Progression with that idea.</div></div>
-        <div class="workflow"><div class="w-title">2. Watch the Current Progression strip</div><div class="w-body">The strip shows the progression you are building. If you add a chord, it appears there immediately. Use <strong>Play</strong> to hear the full progression, <strong>Study</strong> to open the full analysis view, and <strong>‹ ›</strong> to move chords left or right.</div></div>
-        <div class="workflow"><div class="w-title">3. Put added chords where they belong</div><div class="w-body">Tap a chord in the Current Progression strip to choose an insert spot. New color chords or stronger-landing moves insert after that selected chord. Tap it again to return to adding at the end.</div></div>
-        <div class="workflow"><div class="w-title">4. Add color or pull</div><div class="w-body"><strong>Color chords</strong> are outside-the-key flavors like bittersweet minor iv or cinematic bVI. <strong>Stronger landings</strong> are moves like E7 → Am: a tension chord followed by the chord it wants to land on.</div></div>
-        <div class="workflow"><div class="w-title">5. Study only when ready</div><div class="w-body">The Study screen keeps the current progression at the top and lets you switch between Fretboard, Edit chords, Voice leading, Songwriter Notes, Charts, and Library.</div></div>
+        <div class="workflow"><div class="w-title">1. Start with mood ideas</div><div class="w-body">Choose a key and mood. The cards are meant to be tried quickly. <strong>Preview</strong> just plays the idea; <strong>Use this</strong> makes it your Current Progression.</div></div>
+        <div class="workflow"><div class="w-title">2. Watch the Current Progression strip</div><div class="w-body">The strip shows what you're building. <strong>Play</strong> hears the whole thing, <strong>Study</strong> opens the full analysis, and <strong>‹ ›</strong> move chords left or right.</div></div>
+        <div class="workflow"><div class="w-title">3. Put added chords where they belong</div><div class="w-body">Tap a chord in the strip to choose an insert spot. New color chords and stronger-landing moves insert after it. Tap again to go back to adding at the end.</div></div>
+        <div class="workflow"><div class="w-title">4. Add color or pull</div><div class="w-body"><strong>Color chords</strong> are out-of-key flavors like a bittersweet minor iv or cinematic bVI. <strong>Stronger landings</strong> are tension-and-resolution moves like E7 → Am.</div></div>
+        <div class="workflow"><div class="w-title">5. Surprise me / Refresh ideas</div><div class="w-body">Refresh swaps in new suggestions for the current mood; Surprise me generates a fresh progression that still follows real harmony rules. Both are good for breaking a blank-page moment.</div></div>
       </div>`;
     } else if (state.helpSection === "areas") {
       const f = (name, color, desc) => `<div class="feature-item" style="--c:${color}"><h4>${esc(name)}</h4><p>${desc}</p></div>`;
-      body = `<div class="help-section"><h3>App areas</h3><div class="sub">Every feature now has a clearer home.</div><div class="feature-grid">
-        ${f("Studio", "#e8c547", "Build progressions from moods, borrowed color chords, and stronger-landing moves.")}
-        ${f("Study", "#7eb8d4", "Analyze the current progression: fretboard map, editing, voice leading, songwriter notes, charts, and preset library.")}
-        ${f("Fretboard", "#6dd4a8", "Chord Tones, Scales, Intervals, Find Chord, Find Key, and Modes. Use these when you want to understand where notes live.")}
-        ${f("Practice", "#c47ed4", "Metronome, tuner, fretboard trainer, ear training, and quiz tools.")}
-        ${f("Charts", "#e8823a", "Print, share, save, or export the current chord/progression chart.")}
-        ${f("Setup", "#a8c4e8", "Instrument, tuning, and capo. These settings apply everywhere.")}
+      body = `<div class="help-section"><h3>App areas</h3><div class="sub">Every feature has a clear home.</div><div class="feature-grid">
+        ${f("Studio", "#e8c547", "Build progressions from moods, borrowed color chords, and stronger-landing moves. This is where songs start.")}
+        ${f("Study", "#7eb8d4", "Analyze the current progression: fretboard map, chord editing, voice leading, Songwriter Notes, and your saved library.")}
+        ${f("Charts", "#e8823a", "Print, share, save, or export the current chord or progression as a clean practice sheet.")}
+        ${f("Fretboard", "#6dd4a8", "Theory maps: Chord Tones, Scales, Intervals, Find Chord, Find Key, and Modes. Use these to see where notes live.")}
+        ${f("Practice", "#c47ed4", "Hands-on drills: Metronome, Tuner, Fretboard Trainer, Ear Training, and Quiz.")}
+        ${f("⚙ Setup", "#a8c4e8", "Instrument, tuning, and capo. Set once; it applies everywhere in the app.")}
       </div></div>`;
+    } else if (state.helpSection === "tools") {
+      const f = (name, color, desc, good) => `<div class="feature-item" style="--c:${color}"><h4>${esc(name)}</h4><p>${desc}</p><div class="good"><b>Good for:</b> ${good}</div></div>`;
+      body = `<div class="help-section"><h3>Fretboard tools</h3><div class="sub">In the Fretboard dropdown. These answer “where are the notes?”</div><div class="feature-grid">
+        ${f("Chord Tones", "#e8c547", "Pick a root and chord type to see every place that chord's notes appear, with the root marked. Includes playable voicings and the diatonic chords for a key.", "learning a chord's shapes and seeing a key's chords.")}
+        ${f("Scales", "#6dd4a8", "A scale across the whole neck with degree labels, position boxes to practise one shape at a time, the step-pattern formula, the chords the scale makes, and a compare-two-scales overlay.", "learning scales, practising positions, soloing.")}
+        ${f("Intervals", "#6dd4a8", "Tap two notes and it names the interval, explains its sound, and shows where that shape repeats on your tuning.", "ear training and understanding fretboard geometry.")}
+        ${f("Find Chord", "#c47ed4", "Tap notes on the neck and it tells you what chord you've built.", "naming a shape you stumbled onto.")}
+        ${f("Find Key", "#6dd4a8", "Enter a song's chords and it ranks the most likely keys.", "figuring out what key a song is in.")}
+        ${f("Modes", "#c47ed4", "Shows all seven modes of a parent scale and how each is the same notes from a different starting point.", "understanding modes and modal sounds.")}
+      </div></div>
+      <div class="help-section"><h3>Practice tools</h3><div class="sub">In the Practice dropdown. These build skills.</div><div class="feature-grid">
+        ${f("Metronome", "#e8c547", "A steady click with an accented downbeat, tempo 40–240, and time signatures from 2/4 to 7/8. A “train my ear” mode plays a hidden meter and asks you to identify it.", "timing practice and learning to count time signatures.")}
+        ${f("Tuner", "#a8c4e8", "Plays a clean reference tone for each open string of your current tuning.", "tuning by ear without a separate app.")}
+        ${f("Fretboard Trainer", "#6dd4a8", "Names a note and times how fast you find every instance across the neck.", "memorizing the fretboard and learning a new tuning.")}
+        ${f("Ear Training", "#e8823a", "Plays a chord and asks you to identify its quality — major, minor, dominant, and so on.", "recognizing chord colors by ear.")}
+        ${f("Quiz", "#e8c547", "Drills the notes inside chords, like “what's the third of A7?”", "building fast chord-construction recall.")}
+      </div></div>`;
+    } else if (state.helpSection === "prefs") {
+      body = `<div class="help-section"><h3>Settings &amp; preferences</h3><div class="sub">Open Preferences in the top bar.</div><dl class="help-faq">
+        <dt>Appearance (dark / light)</dt><dd>The light and dark mode switch lives in Preferences. Your choice is saved on the device and remembered next time you open the app.</dd>
+        <dt>Dot labels</dt><dd>Choose whether the fretboard dots show interval/degree labels (R, 3, 5) or the actual note names (C, E, G). Intervals help you see structure; note names help you learn the neck.</dd>
+        <dt>Accidentals</dt><dd>How notes are spelled. <strong>Auto</strong> chooses sharps or flats to match the key (flat keys get flats). Or force <strong>Sharps</strong> or <strong>Flats</strong> everywhere.</dd>
+        <dt>Handedness</dt><dd>Left-handed mirrors the whole fretboard so the low string is where a left-handed player expects it.</dd>
+        <dt>Tone</dt><dd>The synthesized sound. <strong>Plucked string</strong> is the most guitar-like; the others are simple synth waveforms if you prefer a cleaner test tone.</dd>
+        <dt>Volume &amp; Progression tempo</dt><dd>Volume sets playback loudness. Progression tempo sets how fast progressions play back, shown in BPM.</dd>
+        <dt>⚙ Setup (instrument, tuning, capo)</dt><dd>Separate from Preferences, in its own top-bar button. These define your instrument and apply across every screen.</dd>
+      </dl></div>`;
     } else if (state.helpSection === "buttons") {
       body = `<div class="help-section"><h3>Button guide</h3><div class="sub">Plain meanings for the main actions.</div><dl class="help-faq">
         <dt>Preview</dt><dd>Hear an idea without changing your current progression.</dd>
         <dt>Use this</dt><dd>Replace the Current Progression with that whole suggested idea.</dd>
         <dt>Add</dt><dd>Add one chord to the Current Progression. If an insert spot is selected, it inserts there; otherwise it goes to the end.</dd>
-        <dt>Insert after [chord]</dt><dd>You tapped a chord in the Current Progression strip. The new chord or move will land after that chord.</dd>
+        <dt>Insert after [chord]</dt><dd>You tapped a chord in the strip. The new chord or move will land after that chord.</dd>
         <dt>Add E7 → Am</dt><dd>Add the full pull-and-landing move: E7 creates tension, then Am resolves it.</dd>
         <dt>Study</dt><dd>Open the full Study screen for the current progression.</dd>
         <dt>Play</dt><dd>Hear the current chord or progression.</dd>
-        <dt>Print / PNG / SVG / Share</dt><dd>Export the current chart for practice, teaching, or rehearsal.</dd>
+        <dt>Charts &amp; export</dt><dd>Jump to the Charts area to print, share, save, or export the current chart.</dd>
       </dl></div>`;
     } else {
       body = `<div class="help-section"><h3>Frequently asked</h3><dl class="help-faq">
-        <dt>There's no sound.</dt><dd>Browsers only allow audio after you interact with the page. Tap any note or button once and sound will start. Check your device is not muted, and raise Volume in Preferences.</dd>
-        <dt>Where did instrument and capo settings go?</dt><dd>They live in <strong>Setup</strong> in the top bar. Those settings apply everywhere instead of being repeated on every screen.</dd>
-        <dt>What happened to More Tools?</dt><dd>Those tools are now grouped by job: Fretboard for theory maps, Practice for drills and timing, Charts for printing/exporting.</dd>
+        <dt>There's no sound.</dt><dd>Browsers only allow audio after you interact with the page. Tap any note or button once and sound will start. Check your device isn't muted, and raise Volume in Preferences.</dd>
+        <dt>Where do I change dark/light mode?</dt><dd>It's in <strong>Preferences</strong> (top bar), under Appearance. Your choice is remembered next time.</dd>
+        <dt>Where did instrument and capo settings go?</dt><dd>They live in <strong>⚙ Setup</strong> in the top bar. Those settings apply everywhere instead of being repeated on every screen.</dd>
+        <dt>How do the Fretboard and Practice menus work?</dt><dd>They're dropdowns holding related tools. When you pick one, the menu shows its name so you can see which tool is active.</dd>
         <dt>How do I stop added chords from going to the end?</dt><dd>Tap a chord in the Current Progression strip first. New color chords and stronger-landing moves insert after the selected chord.</dd>
-        <dt>What are Stronger landings?</dt><dd>They are tension-and-resolution moves. For example, E7 → Am makes Am feel like a stronger destination.</dd>
-        <dt>Can I still print custom charts?</dt><dd>Yes. Use Charts or the export buttons on Study/Chord Tones to print, share, or save custom charts.</dd>
+        <dt>What are Stronger landings?</dt><dd>Tension-and-resolution moves. For example, E7 → Am makes Am feel like a stronger destination.</dd>
+        <dt>Can I use it offline / install it?</dt><dd>Yes. Once loaded it works offline, and you can add it to your home screen to run it like an app.</dd>
       </dl></div>`;
     }
     return `<div class="help-panel" style="background:transparent;border:none;padding:0"><div class="help-nav">${nav}</div>${body}</div>`;
@@ -2362,14 +2412,17 @@
   function renderPreferences() {
     const waveOptions = [["pluck","Plucked string"],["triangle","Triangle"],["sine","Sine"],["square","Square"],["sawtooth","Sawtooth"]];
     const waveBtns = waveOptions.map(([w,l]) => btn(l, state.audioWave===w, "#a8c4e8", `app.set('audioWave','${w}')`)).join("");
+    const themeBtns = `${btn("Dark", state.theme==="dark", "#e8c547", "app.setTheme('dark')")}${btn("Light", state.theme==="light", "#e8c547", "app.setTheme('light')")}`;
+    const pref = (label, control, hint) => `<div class="pref-item"><div class="mini-label">${esc(label)}</div><div class="row">${control}</div>${hint?`<div class="pref-hint">${hint}</div>`:""}</div>`;
     return `<div class="card" style="margin-bottom:16px"><div class="section-label">Preferences</div>
-      <div style="display:flex;flex-wrap:wrap;gap:18px">
-        <div><div class="mini-label">Dot labels</div><div class="row">${btn("Intervals", state.noteDisplay==="interval", "#e8c547", "app.set('noteDisplay','interval')")}${btn("Note names", state.noteDisplay==="note", "#e8c547", "app.set('noteDisplay','note')")}</div></div>
-        <div><div class="mini-label">Accidentals</div><div class="row">${btn("Auto", state.accidental==="auto", "#7eb8d4", "app.set('accidental','auto')")}${btn("Sharps ♯", state.accidental==="sharp", "#7eb8d4", "app.set('accidental','sharp')")}${btn("Flats ♭", state.accidental==="flat", "#7eb8d4", "app.set('accidental','flat')")}</div></div>
-        <div><div class="mini-label">Handedness</div><div class="row">${btn("Right-handed", !state.leftHanded, "#6dd4a8", "app.set('leftHanded',false)")}${btn("Left-handed", state.leftHanded, "#6dd4a8", "app.set('leftHanded',true)")}</div></div>
-        <div><div class="mini-label">Tone</div><div class="row">${waveBtns}</div></div>
-        <div style="min-width:160px"><div class="mini-label">Volume</div><input type="range" min="0.02" max="0.4" step="0.02" value="${state.audioVolume}" oninput="app.set('audioVolume',parseFloat(this.value))" style="width:100%" aria-label="Volume" /></div>
-        <div style="min-width:160px"><div class="mini-label">Progression tempo</div><input type="range" min="300" max="1400" step="50" value="${state.progTempo}" oninput="app.set('progTempo',parseInt(this.value))" style="width:100%" aria-label="Tempo" /><div class="info-text" style="font-size:10px">${Math.round(60000/state.progTempo)} BPM</div></div>
+      <div class="pref-grid">
+        ${pref("Appearance", themeBtns, "Switch between dark and light. Your choice is remembered next time.")}
+        ${pref("Dot labels", `${btn("Intervals", state.noteDisplay==="interval", "#e8c547", "app.set('noteDisplay','interval')")}${btn("Note names", state.noteDisplay==="note", "#e8c547", "app.set('noteDisplay','note')")}`, "Show scale-degree/interval labels (R, 3, 5) or actual note names on the fretboard dots.")}
+        ${pref("Accidentals", `${btn("Auto", state.accidental==="auto", "#7eb8d4", "app.set('accidental','auto')")}${btn("Sharps ♯", state.accidental==="sharp", "#7eb8d4", "app.set('accidental','sharp')")}${btn("Flats ♭", state.accidental==="flat", "#7eb8d4", "app.set('accidental','flat')")}`, "How notes are spelled. Auto picks sharps or flats based on the key you're in.")}
+        ${pref("Handedness", `${btn("Right-handed", !state.leftHanded, "#6dd4a8", "app.set('leftHanded',false)")}${btn("Left-handed", state.leftHanded, "#6dd4a8", "app.set('leftHanded',true)")}`, "Left-handed mirrors the fretboard so the low string sits where you expect.")}
+        ${pref("Tone", waveBtns, "The synthesized sound. Plucked string is the most natural; the others are simple synth waveforms.")}
+        <div class="pref-item" style="min-width:180px"><div class="mini-label">Volume</div><input type="range" min="0.02" max="0.4" step="0.02" value="${state.audioVolume}" oninput="app.set('audioVolume',parseFloat(this.value))" style="width:100%" aria-label="Volume" /><div class="pref-hint">Playback volume for notes and chords.</div></div>
+        <div class="pref-item" style="min-width:180px"><div class="mini-label">Progression tempo</div><input type="range" min="300" max="1400" step="50" value="${state.progTempo}" oninput="app.set('progTempo',parseInt(this.value))" style="width:100%" aria-label="Tempo" /><div class="pref-hint">${Math.round(60000/state.progTempo)} BPM — how fast progressions play back.</div></div>
       </div></div>`;
   }
 
@@ -2960,10 +3013,34 @@
   }
 
   function renderChartsHub() {
-    const summary = state.progChords && state.progChords.length ? state.progChords.map(chordSymbol).join(" → ") : `${state.selectedKey} ${CHORD_TYPES[state.selectedType]?.label || ""}`;
-    return `<div class="mode-intro"><div><div class="section-label">Charts</div><div class="info-text">Turn the thing you are working on into a shareable or printable practice sheet.</div></div></div>
-      <div class="card"><div class="section-label">Current chart</div><div class="summary-inline">${esc(summary)}</div><div class="info-text" style="margin:8px 0 12px">For progression charts, build in Studio or Study first. For chord charts, open Fretboard → Chord Tones, set the chord, then come back here.</div><div class="row"><button type="button" class="accent-btn" onclick="app.printChart()">Print</button><button type="button" class="util-btn" onclick="app.sharePNG()">Share</button><button type="button" class="util-btn" onclick="app.savePNG()">PNG</button><button type="button" class="util-btn" onclick="app.downloadSVG()">SVG</button><button type="button" class="util-btn" onclick="app.copyStateLink()">Link</button></div></div>
-      ${renderSavedCharts()}`;
+    const hasProg = state.progChords && state.progChords.length > 0;
+    const progSummary = hasProg ? state.progChords.map(chordSymbol).join("  →  ") : null;
+    const chordSummary = `${spell(state.selectedKey)} ${CHORD_TYPES[state.selectedType]?.label || ""}`;
+
+    // What will the chart show? Whichever was most recently the focus.
+    const intro = `<div class="mode-intro"><div><div class="section-label">Charts</div><div class="info-text">Print or export the chord or progression you're working on as a clean practice sheet. Everything here acts on your current work — there's nothing to set up.</div></div></div>`;
+
+    const current = `<div class="card" style="margin-bottom:14px"><div class="section-label">What will print</div>
+      ${hasProg
+        ? `<div class="summary-inline">${esc(progSummary)}</div><div class="info-text" style="margin-top:6px">Your current progression (${state.progChords.length} chord${state.progChords.length>1?"s":""} in ${esc(spell(state.suggestKey || state.selectedKey))}). Build or edit it in Studio or Study.</div>`
+        : `<div class="summary-inline">${esc(chordSummary)}</div><div class="info-text" style="margin-top:6px">Your current chord. To chart a full progression, build one in Studio first. To change the chord, open Fretboard → Chord Tones.</div>`}
+    </div>`;
+
+    const exportCard = `<div class="card" style="margin-bottom:14px"><div class="section-label">Export &amp; sharing</div>
+      <div class="info-text" style="margin-bottom:12px">All exports show exactly the chart above — the fretboard diagram with your current tuning, scale overlay, and fret range.</div>
+      <div class="row">
+        <button type="button" class="accent-btn" onclick="app.printChart()">Print</button>
+        <button type="button" class="util-btn" onclick="app.savePNG()">Save PNG image</button>
+        <button type="button" class="util-btn" onclick="app.downloadSVG()">Save SVG (vector)</button>
+        <button type="button" class="util-btn" onclick="app.sharePNG()">Share…</button>
+        <button type="button" class="util-btn" onclick="app.copyStateLink()">Copy link</button>
+      </div>
+      <div class="pref-hint" style="margin-top:10px">Print works best in landscape. PNG is a regular image for messages or docs; SVG stays crisp at any size; Copy link makes a URL that reopens this exact view.</div>
+    </div>`;
+
+    const saveCard = "";
+
+    return `${intro}${current}${exportCard}${renderSavedCharts()}`;
   }
 
   // ── Main render ──
@@ -2987,29 +3064,36 @@
       case "charts": content = renderChartsHub(); break;
       default: content = renderSuggest();
     }
-    const themeLabel = state.theme === "dark" ? "Light" : "Dark";
-    const exportModes = ["single","progression","charts"];
-    const showsExport = exportModes.includes(state.mode);
-    const exportButtons = showsExport ? `<button type="button" class="util-btn" onclick="app.sharePNG()">Share</button><button type="button" class="util-btn" onclick="app.savePNG()">PNG</button><button type="button" class="util-btn" onclick="app.downloadSVG()">SVG</button><button type="button" class="util-btn" onclick="app.copyStateLink()">Link</button><button type="button" class="util-btn" onclick="app.printChart()">Print</button>` : "";
     const currentSection = state.mode === "suggest" ? "studio" : state.mode === "progression" ? "study" : ["single","scales","interval","identify","finder","modes"].includes(state.mode) ? "fretboard" : ["quiz","ear","trainer","metronome","tuner"].includes(state.mode) ? "practice" : state.mode === "charts" ? "charts" : "studio";
-    const mainNav = [["studio","Studio","suggest"],["study","Study","progression"],["charts","Charts","charts"]].map(([sec,label,mode]) => `<button type="button" class="tab ${currentSection===sec?"active":""}" onclick="app.setMode('${mode}')">${label}</button>`).join("");
+
+    // Primary navigation — the places you go. Studio / Study / Charts are direct tabs;
+    // Fretboard and Practice are dropdowns (they hold sub-tools) and now display the
+    // active sub-tool's name so you always know where you are.
     const fretModes = [["single","Chord Tones"],["scales","Scales"],["interval","Intervals"],["identify","Find Chord"],["finder","Find Key"],["modes","Modes"]];
     const practiceModes = [["metronome","Metronome"],["tuner","Tuner"],["trainer","Fretboard Trainer"],["ear","Ear Training"],["quiz","Quiz"]];
-    const fretOptions = `<option value="">Fretboard</option>` + fretModes.map(([m,l]) => `<option value="${m}" ${state.mode===m?"selected":""}>${esc(l)}</option>`).join("");
-    const practiceOptions = `<option value="">Practice</option>` + practiceModes.map(([m,l]) => `<option value="${m}" ${state.mode===m?"selected":""}>${esc(l)}</option>`).join("");
+    const fretActiveLabel = (fretModes.find(([m]) => m === state.mode) || [])[1];
+    const practiceActiveLabel = (practiceModes.find(([m]) => m === state.mode) || [])[1];
+    const fretOptions = `<option value="">${currentSection==="fretboard" && fretActiveLabel ? esc("Fretboard — "+fretActiveLabel) : "Fretboard ▾"}</option>` + fretModes.map(([m,l]) => `<option value="${m}" ${state.mode===m?"selected":""}>${esc(l)}</option>`).join("");
+    const practiceOptions = `<option value="">${currentSection==="practice" && practiceActiveLabel ? esc("Practice — "+practiceActiveLabel) : "Practice ▾"}</option>` + practiceModes.map(([m,l]) => `<option value="${m}" ${state.mode===m?"selected":""}>${esc(l)}</option>`).join("");
+
+    const primaryNav =
+      `<button type="button" class="tab ${currentSection==="studio"?"active":""}" onclick="app.setMode('suggest')">Studio</button>` +
+      `<button type="button" class="tab ${currentSection==="study"?"active":""}" onclick="app.setMode('progression')">Study</button>` +
+      `<button type="button" class="tab ${currentSection==="charts"?"active":""}" onclick="app.setMode('charts')">Charts</button>`;
+
     const setupSummary = `${esc(instrumentLabel())} · ${esc(getOpenStrings().map(spell).join(" "))}${state.capo>0?` · Capo ${state.capo}`:""}`;
 
     document.getElementById("app").innerHTML = `<div class="wrap">
       <div class="header"><div class="eyebrow">${setupSummary}</div><h1>Open Strings</h1><div class="tagline">Songwriting, fretboard theory, practice, and printable charts</div></div>
-      <div class="toolbar app-toolbar">
-        <div class="segmented app-nav" role="tablist">${mainNav}</div>
+      <div class="toolbar primary-bar">
+        <div class="segmented app-nav" role="tablist">${primaryNav}</div>
         <select class="util-btn nav-select ${currentSection==="fretboard"?"active-more":""}" onchange="if(this.value)app.setMode(this.value)" aria-label="Fretboard tools">${fretOptions}</select>
         <select class="util-btn nav-select ${currentSection==="practice"?"active-more":""}" onchange="if(this.value)app.setMode(this.value)" aria-label="Practice tools">${practiceOptions}</select>
-        <button type="button" class="util-btn setup-status" onclick="app.toggle('showSetup')">Setup: ${setupSummary}</button>
-        <button type="button" class="util-btn" onclick="app.toggleTheme()" aria-label="Toggle theme">${themeLabel}</button>
-        <button type="button" class="util-btn" onclick="app.toggle('showHelp')">${state.showHelp?"Hide help":"Help"}</button>
-        <button type="button" class="util-btn" onclick="app.toggle('showPrefs')">${state.showPrefs?"Hide prefs":"Preferences"}</button>
-        ${exportButtons}
+      </div>
+      <div class="toolbar utility-bar">
+        <button type="button" class="util-btn ${state.showSetup?"util-on":""}" onclick="app.toggle('showSetup')" title="Instrument, tuning, capo">⚙ Setup</button>
+        <button type="button" class="util-btn ${state.showPrefs?"util-on":""}" onclick="app.toggle('showPrefs')">${state.showPrefs?"Close preferences":"Preferences"}</button>
+        <button type="button" class="util-btn ${state.showHelp?"util-on":""}" onclick="app.toggle('showHelp')">${state.showHelp?"Close help":"Help"}</button>
       </div>
       ${state.showSetup ? renderSetupPanel() : ""}
       ${state.showHelp ? renderHelp() : ""}
@@ -3055,6 +3139,7 @@
     set(key, value) { state[key] = value; render(); },
     toggle(key) { state[key] = !state[key]; render(); },
     toggleTheme() { state.theme = state.theme === "dark" ? "light" : "dark"; try { localStorage.setItem("os-theme", state.theme); } catch (e) {} render(); },
+    setTheme(t) { state.theme = t; try { localStorage.setItem("os-theme", t); } catch (e) {} render(); },
     setMode(mode) {
       if (state.mode === "metronome" && mode !== "metronome") { audio.stopMetronome(); state.metroRunning = false; state.metroCurrentBeat = -1; }
       if (state.mode === "progression" && mode !== "progression") { audio.stopProgression(); }
