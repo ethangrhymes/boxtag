@@ -369,6 +369,7 @@
     "m6":      { label: "Minor 6",      intervals: [0,3,7,9],       color: "#7e96d4", group: "Sixth",     intLabels: ["R","b3","5","6"] },
     "69":      { label: "6/9",          intervals: [0,4,7,9,14],    color: "#d4a76d", group: "Sixth",     intLabels: ["R","3","5","6","9"] },
     "maj7":    { label: "Major 7",      intervals: [0,4,7,11],      color: "#c47ed4", group: "Sevenths",  intLabels: ["R","3","5","7"] },
+    "maj7s5":  { label: "Maj7#5",       intervals: [0,4,8,11],      color: "#d48a6d", group: "Sevenths",  intLabels: ["R","3","#5","7"] },
     "7":       { label: "Dominant 7",   intervals: [0,4,7,10],      color: "#e8823a", group: "Sevenths",  intLabels: ["R","3","5","b7"] },
     "min7":    { label: "Minor 7",      intervals: [0,3,7,10],      color: "#7eb8d4", group: "Sevenths",  intLabels: ["R","b3","5","b7"] },
     "m7b5":    { label: "Half-Dim (m7b5)", intervals: [0,3,6,10],  color: "#b47ed4", group: "Sevenths",  intLabels: ["R","b3","b5","b7"] },
@@ -410,6 +411,62 @@
     "whole_tone": { label: "Whole Tone",       intervals: [0,2,4,6,8,10],    color: "#9ed47e" },
     "hw_dim":     { label: "Half-Whole Dim.",  intervals: [0,1,3,4,6,7,9,10],color: "#7ed4a0" }
   };
+
+  // Map a semitone interval to its scale-degree label (used by Scales mode dot labels).
+  const DEGREE_LABEL = { 0:"1", 1:"b2", 2:"2", 3:"b3", 4:"3", 5:"4", 6:"b5", 7:"5", 8:"b6", 9:"6", 10:"b7", 11:"7" };
+  // Practical overrides for chord-scale contexts where players usually think in tensions.
+  const DEGREE_LABEL_OVERRIDES = {
+    altered:    { 0:"1", 1:"b9", 3:"#9", 4:"3", 6:"b5/#11", 8:"#5/b13", 10:"b7" },
+    lydian_dom: { 0:"1", 2:"2/9", 4:"3", 6:"#4/#11", 7:"5", 9:"6/13", 10:"b7" },
+    hw_dim:     { 0:"1", 1:"b9", 3:"#9", 4:"3", 6:"b5", 7:"5", 9:"6/13", 10:"b7" },
+    whole_tone: { 0:"1", 2:"2/9", 4:"3", 6:"#4/#11", 8:"#5", 10:"b7" }
+  };
+  // For scales with a #4/#5 character (Lydian, whole tone, augmented), show #4/#5 instead of b5/b6.
+  function degreeLabelsFor(intervals, scaleType) {
+    if (scaleType && DEGREE_LABEL_OVERRIDES[scaleType]) return DEGREE_LABEL_OVERRIDES[scaleType];
+    const sharpFour = intervals.includes(6) && !intervals.includes(7); // tritone with no perfect 5th → #4
+    const labels = {};
+    intervals.forEach(iv => {
+      let l = DEGREE_LABEL[iv] || String(iv);
+      if (iv === 6 && (sharpFour || intervals.includes(4))) l = "#4";
+      if (iv === 8 && intervals.includes(7)) l = "#5";
+      labels[iv] = l;
+    });
+    return labels;
+  }
+
+  // Practical chord-scale suggestions shown in Scales mode. These do not replace the
+  // diatonic chord generator; they tell players what chord sound the scale is commonly used over.
+  const SCALE_CHORD_USES = {
+    major:      { chord: "maj7 / maj6 / add9", note: "Stable major-key sound; Ionian's generated 7th chords are the standard diatonic 7th chords." },
+    minor:      { chord: "m7 / m9 / m11", note: "Aeolian/natural minor color; useful for minor-key melody and modal vamps." },
+    harmonic:   { chord: "m(maj7), V7b9, dim7", note: "Minor-key tension source; the raised 7th creates strong dominant pull." },
+    melodic:    { chord: "m(maj7), m6, maj7#5", note: "Jazz melodic minor color; generates several important altered and Lydian sounds." },
+    pent_maj:   { chord: "major, 6, add9", note: "Simple major melody vocabulary with no 4th or 7th." },
+    pent_min:   { chord: "minor, m7, 5", note: "Core rock/blues minor vocabulary with no 2nd or 6th." },
+    blues:      { chord: "7, m7, 5", note: "Minor pentatonic plus the blue note; works especially well over blues and rock dominant harmony." },
+    dorian:     { chord: "m7 / m6 / m9", note: "Minor mode with a natural 6; common for funk, jazz, and modal minor vamps." },
+    phrygian:   { chord: "m7b9 / susb9", note: "Dark minor color built around the flat 2." },
+    lydian:     { chord: "maj7#11", note: "Bright major color with a raised 4th; avoids the natural-4 clash against maj7 harmony." },
+    mixolydian: { chord: "7 / 9 / 13", note: "Dominant scale; the natural 3 and flat 7 define the V7 sound." },
+    locrian:    { chord: "m7b5", note: "Half-diminished sound; useful over iiø7 in minor keys." },
+    lydian_dom: { chord: "7#11 / 9#11 / 13#11", note: "Dominant chord with a raised 4th/#11; common melodic-minor mode color." },
+    altered:    { chord: "7alt / 7b9 / 7#9 / 7#5 / 7b5", note: "Maximum altered dominant tension; usually resolves to a tonic chord a fifth below." },
+    whole_tone: { chord: "7#5 / 9#5", note: "Symmetrical augmented-dominant sound with no perfect 5th." },
+    hw_dim:     { chord: "13b9 / 7b9#9 / 7b5", note: "Half-whole diminished dominant color; strong over V7b9 and related altered dominants." }
+  };
+  // Human-readable step pattern, e.g. "W W H W W W H" for major.
+  function scaleFormula(intervals) {
+    const steps = [];
+    for (let i = 1; i < intervals.length; i++) {
+      const d = intervals[i] - intervals[i-1];
+      steps.push(d === 2 ? "W" : d === 1 ? "H" : d === 3 ? "W+H" : d + "st");
+    }
+    // wrap to octave
+    const wrap = 12 - intervals[intervals.length-1];
+    steps.push(wrap === 2 ? "W" : wrap === 1 ? "H" : wrap === 3 ? "W+H" : wrap + "st");
+    return steps.join(" ");
+  }
 
   // Voicings are generated algorithmically from the chord tones and the active tuning,
   // so they are always correct for any instrument, tuning, key, and chord type.
@@ -805,6 +862,14 @@
     capo: 0,
     scaleKey: "G",
     scaleType: null,
+    // Dedicated Scales mode
+    scalesKey: "C",
+    scalesType: "major",
+    scalesPosition: null,      // null = whole neck; otherwise a position index
+    scalesShowDegrees: true,   // show degree numbers vs note names on dots
+    scalesHighlightChord: null,// chord index from the scale's diatonic set to highlight
+    scalesChordMode: "seventh",// "triad" or "seventh" for the generated scale chords
+    scalesCompare: null,       // second scale type to compare against, or null
     showVoicings: false,
     showScalePanel: false,
     showDiatonic: false,
@@ -1889,9 +1954,10 @@
         </div></div>`;
     } else if (state.helpSection === "modes") {
       const f = (name, chip, color, desc, good) => `<div class="feature-item" style="--c:${color}"><h4>${esc(name)} <span class="chip">${esc(chip)}</span></h4><p>${desc}</p><div class="good"><b>Good for:</b> ${good}</div></div>`;
-      body = `<div class="help-section"><h3>Core tools</h3><div class="sub">The four main tabs.</div><div class="feature-grid">
+      body = `<div class="help-section"><h3>Core tools</h3><div class="sub">The five main tabs.</div><div class="feature-grid">
         ${f("Single","tab","#e8c547","Pick a root and chord type to map every chord tone across the neck. Expand the Diatonic panel to see all seven chords that belong to a key, or overlay a scale to see which notes are chord tones and which are passing tones.","learning a chord's shapes, seeing a key's chords, connecting chords to scales.")}
         ${f("Progression","tab","#7eb8d4","Build a chord progression by hand or load one from the genre library. See all chords mapped together by color, highlight tones shared between chords, and open the Voice Leading view to see how each note moves from one chord to the next. Play it back, loop it, and adjust the tempo.","songwriting, understanding why a progression works, finding melody notes.")}
+        ${f("Scales","tab","#6dd4a8","Put a scale front and center. See it mapped across the whole neck with each note labeled by its scale degree, focus on one position box at a time to practise shapes, view the step-pattern formula, see every chord the scale produces (tap one to highlight its tones), and overlay a second scale to compare. Hit Play scale to hear it run up and down.","learning scales and modes, practising positions, soloing, understanding scale-to-chord relationships.")}
         ${f("Intervals","tab","#6dd4a8","Tap any two notes and Open Strings names the interval between them, explains how it sounds and where it's used, and shows every other place that same interval shape appears on your tuning.","ear training, understanding chord construction, learning the fretboard geometry.")}
         ${f("Identify","tab","#c47ed4","The reverse of Single: tap notes on the neck and it tells you what chord you've built. Tap a note again to remove it.","naming a shape you stumbled onto, checking your own voicings.")}
       </div></div>
@@ -1908,7 +1974,8 @@
       body = `<div class="help-section"><h3>Example workflows</h3><div class="sub">Practical ways people use Open Strings.</div>
         <div class="workflow"><div class="w-title">Learn a song you like</div><div class="w-body">Use <strong>Key Finder</strong> to enter the song's chords and confirm its key. Switch to <strong>Single</strong> to learn each chord's shapes, then to <strong>Progression</strong> to load the sequence, hear it, and see how the chords connect.</div></div>
         <div class="workflow"><div class="w-title">Write your own progression</div><div class="w-body">Start in <strong>Progression Suggester</strong> with a key and mood, load a suggestion you like, then refine it in <strong>Progression</strong> mode. Turn on <strong>Voice Leading</strong> and <strong>Shared tones</strong> to find melody notes that move smoothly between chords.</div></div>
-        <div class="workflow"><div class="w-title">Write a melody or solo</div><div class="w-body">In <strong>Single</strong>, overlay a scale and notice which scale notes are chord tones (solid dots) versus passing tones (rings). Land phrases on chord tones; pass through the rest. Use <strong>Intervals</strong> to understand the leaps you're hearing.</div></div>
+        <div class="workflow"><div class="w-title">Write a melody or solo</div><div class="w-body">Open <strong>Scales</strong>, pick your key and scale, and learn it one position at a time. Tap the diatonic chords to see which scale notes are chord tones for each chord — land phrases on those, and pass through the rest. Use <strong>Intervals</strong> to understand the leaps you're hearing. For chord-by-chord soloing, <strong>Single</strong> with a scale overlay shows chord tones (solid) versus passing tones (rings).</div></div>
+        <div class="workflow"><div class="w-title">Learn scales and modes</div><div class="w-body">In <strong>Scales</strong>, switch between positions to drill each shape, turn on degree labels to learn the scale's structure, and use Compare to see how two scales differ (for example Dorian vs Natural Minor). The <strong>Modes Explorer</strong> shows how all seven modes come from one parent scale.</div></div>
         <div class="workflow"><div class="w-title">Learn a new instrument or tuning</div><div class="w-body">Set your <strong>instrument and tuning</strong>, then use the <strong>Fretboard Trainer</strong> to memorize where notes fall. The <strong>Tuner</strong> gets you in tune; <strong>Single</strong> shows you the new chord shapes.</div></div>
         <div class="workflow"><div class="w-title">Make a practice sheet</div><div class="w-body">Configure any chart — chord, scale overlay, fret range, capo — then <strong>Print</strong> or export a <strong>PNG/SVG</strong>. Set a fret range like 0–5 first to zoom in. Use <strong>Save</strong> to keep charts in the app, or <strong>Link</strong> to copy a shareable URL of the exact view.</div></div>
       </div>`;
@@ -2002,6 +2069,228 @@
     const numberRow = displayFrets.map(f => `<div class="fret-num ${[3,5,7,9,12].includes(f)?"marked":""}">${f}</div>`).join("");
 
     return `<div class="card" style="margin-bottom:14px"><div class="section-label">Chord Identifier</div>${resultHtml}<div class="row" style="margin-top:10px">${picked.length?`<button type="button" class="util-btn" onclick="app.clearIdNotes()">Clear</button>`:""}</div></div><div class="fret-scroll"><div class="fretboard" style="min-width:${minW}px"><div class="fret-numbers">${numberRow}</div>${rows}</div></div>`;
+  }
+
+  // ── Scales mode (dedicated scale studio) ────────────────────────────────────
+  // Computes position "boxes": contiguous fret windows that contain a playable shape
+  // of the scale, so players can practise one position at a time.
+  function scalePositions(strings, scaleTones, rootNote) {
+    // Build position windows anchored where the root falls on the lowest string,
+    // plus a root on the next string, giving practical mid-neck boxes. Each window is
+    // a 4-fret span clamped to 0–12.
+    const anchors = new Set();
+    // Roots on the lowest two strings make the most natural box anchors.
+    [0, 1].forEach(s => {
+      if (!strings[s]) return;
+      for (let f = 0; f <= 12; f++) {
+        if (noteAtFret(strings[s], f) === rootNote) anchors.add(Math.max(0, f - 1));
+      }
+    });
+    anchors.add(0); // always include open position
+    const windows = [...anchors]
+      .map(start => [Math.min(start, 9), Math.min(start + 3, 12)])
+      .filter(w => w[1] <= 12);
+    // Dedupe and sort by starting fret
+    const seen = new Set(), out = [];
+    windows.sort((a,b) => a[0] - b[0]).forEach(w => { const k = w.join("-"); if (!seen.has(k)) { seen.add(k); out.push(w); } });
+    return out.slice(0, 5);
+  }
+
+  function renderScales() {
+    const scaleDef = SCALES[state.scalesType] || SCALES.major;
+    const root = state.scalesKey;
+    // Use capo-effective open strings so Scales mode matches actual sounding notes
+    // when a capo is set elsewhere in the app.
+    const rawStrings = getOpenStrings();
+    const strings = rawStrings.map(s => noteAtFret(s, state.capo));
+    const scaleTones = buildTones(root, scaleDef.intervals);
+    const degLabels = degreeLabelsFor(scaleDef.intervals, state.scalesType);
+    const color = scaleDef.color;
+    const lefty = state.leftHanded;
+
+    const cmpDef = state.scalesCompare ? SCALES[state.scalesCompare] : null;
+    const cmpTones = cmpDef ? buildTones(root, cmpDef.intervals) : [];
+
+    const positions = scalePositions(strings, scaleTones, root);
+    let winLo = 0, winHi = 12;
+    if (state.scalesPosition != null && positions[state.scalesPosition]) {
+      [winLo, winHi] = positions[state.scalesPosition];
+    }
+    const displayFrets = [];
+    for (let f = 0; f <= 12; f++) displayFrets.push(f);
+
+    const keyRow = keyButtons(root, color, "app.setScalesKey");
+    const typeButtons = Object.entries(SCALES).map(([k,v]) => btn(v.label, state.scalesType===k, v.color, `app.setScalesType('${k}')`)).join("");
+
+    const notePills = scaleDef.intervals.map((iv,i) => {
+      const n = scaleTones[i];
+      const isR = i === 0;
+      return `<span class="tone-pill ${isR?"root":""}" style="--c:${color}" onclick="app.playNote('${n}')">${esc(spell(n))} <span style="opacity:.6;font-size:10px">${esc(degLabels[iv])}</span></span>`;
+    }).join("");
+
+    const posButtons = `<button type="button" class="pill ${state.scalesPosition===null?"active":""}" style="--c:${color}" onclick="app.set('scalesPosition',null)">Whole neck</button>` +
+      positions.map((w,i) => btn(`Pos ${i+1} (fr ${w[0]}–${w[1]})`, state.scalesPosition===i, color, `app.set('scalesPosition',${i})`)).join("");
+
+    const chordSuffix = qual => ({
+      maj:"", min:"m", dim:"°", aug:"+",
+      maj7:"maj7", maj7s5:"maj7#5", "7":"7", min7:"m7", m7b5:"m7b5", dim7:"°7", mmaj7:"m(maj7)", "7s5":"7#5", "7b5":"7b5"
+    }[qual] || "");
+
+    const romanByInterval = { 0:"I", 1:"bII", 2:"II", 3:"bIII", 4:"III", 5:"IV", 6:"#IV", 7:"V", 8:"bVI", 9:"VI", 10:"bVII", 11:"VII" };
+    const lowerRoman = r => r.replace(/[IV]+$/, m => m.toLowerCase());
+    const triadChordQual = (third, fifth) => {
+      if (third===4 && fifth===7) return "maj";
+      if (third===3 && fifth===7) return "min";
+      if (third===3 && fifth===6) return "dim";
+      if (third===4 && fifth===8) return "aug";
+      return "maj";
+    };
+    const seventhChordQual = (third, fifth, seventh) => {
+      if (third===4 && fifth===7 && seventh===11) return "maj7";
+      if (third===4 && fifth===7 && seventh===10) return "7";
+      if (third===3 && fifth===7 && seventh===10) return "min7";
+      if (third===3 && fifth===6 && seventh===10) return "m7b5";
+      if (third===3 && fifth===6 && seventh===9) return "dim7";
+      if (third===4 && fifth===8 && seventh===11) return "maj7s5";
+      if (third===3 && fifth===7 && seventh===11) return "mmaj7";
+      if (third===4 && fifth===8 && seventh===10) return "7s5";
+      if (third===4 && fifth===6 && seventh===10) return "7b5";
+      return "maj";
+    };
+    const romanFor = (rootIv, qual) => {
+      const base = romanByInterval[rootIv % 12] || "I";
+      const minorish = qual === "min" || qual === "min7" || qual === "m7b5" || qual === "dim" || qual === "dim7" || qual === "mmaj7";
+      let r = minorish ? lowerRoman(base) : base;
+      if (qual === "dim") r += "°";
+      else if (qual === "aug") r += "+";
+      else if (qual === "m7b5") r += "ø7";
+      else if (qual === "dim7") r += "°7";
+      else if (qual === "mmaj7") r += "(maj7)";
+      else if (qual === "maj7s5") r += "maj7#5";
+      else if (qual === "7s5") r += "7#5";
+      else if (qual === "7b5") r += "7b5";
+      else if (qual === "7") r += "7";
+      else if (qual === "maj7") r += "maj7";
+      else if (qual === "min7") r += "7";
+      return r;
+    };
+
+    const highlightedSteps = state.scalesChordMode === "triad" ? [0,2,4] : [0,2,4,6];
+    let diatonicHtml = "";
+    if (scaleDef.intervals.length === 7) {
+      const chips = scaleDef.intervals.map((rootIv, i) => {
+        const steps = state.scalesChordMode === "triad" ? [0,2,4] : [0,2,4,6];
+        const deg = steps.map(step => {
+          const idx = (i + step) % 7;
+          const wraps = Math.floor((i + step) / 7);
+          return scaleDef.intervals[idx] + wraps * 12;
+        });
+        const third = (deg[1] - deg[0] + 120) % 12;
+        const fifth = (deg[2] - deg[0] + 120) % 12;
+        const seventh = deg[3] == null ? null : (deg[3] - deg[0] + 120) % 12;
+        const chordRoot = scaleTones[i];
+        const qual = state.scalesChordMode === "triad" ? triadChordQual(third, fifth) : seventhChordQual(third, fifth, seventh);
+        const active = state.scalesHighlightChord === i;
+        return `<div class="diatonic-chip" style="${active?`border-color:${color}`:""}" onclick="app.toggleScaleChord(${i})"><div class="dia-roman">${esc(romanFor(rootIv, qual))}</div><div class="dia-name">${esc(spell(chordRoot) + chordSuffix(qual))}</div></div>`;
+      }).join("");
+      const modeButtons = `${btn("Triads", state.scalesChordMode==="triad", color, "app.setScaleChordMode('triad')")}${btn("7th chords", state.scalesChordMode==="seventh", color, "app.setScaleChordMode('seventh')")}`;
+      const chordModeLabel = state.scalesChordMode === "triad" ? "triads" : "diatonic 7th chords";
+      diatonicHtml = `<div class="card" style="margin-bottom:14px"><div class="section-label">Diatonic ${state.scalesChordMode === "triad" ? "triads" : "7th chords"} from this scale</div><div class="row" style="margin-bottom:10px">${modeButtons}</div><div class="info-text" style="margin-bottom:10px">These ${chordModeLabel} are built by stacking every other note within ${esc(spell(root))} ${esc(scaleDef.label)}. Tap one to highlight all of its chord tones on the neck above.</div><div class="diatonic-wrap">${chips}</div></div>`;
+    }
+
+    const scaleUse = SCALE_CHORD_USES[state.scalesType];
+    const scaleUseHtml = scaleUse ? `<div class="card" style="margin-bottom:14px"><div class="section-label">Best chord-scale use</div><div style="font-size:16px;color:var(--text-bright);margin-bottom:6px">${esc(scaleUse.chord)}</div><div class="info-text">${esc(scaleUse.note)}</div></div>` : "";
+
+    const highlightChordTones = (() => {
+      if (state.scalesHighlightChord == null || scaleDef.intervals.length !== 7) return null;
+      const i = state.scalesHighlightChord;
+      const deg = highlightedSteps.map(step => scaleTones[(i + step) % 7]);
+      return new Set(deg);
+    })();
+
+    const numberRow = displayFrets.map(f => `<div class="fret-num ${[3,5,7,9,12].includes(f) ? "marked" : ""}">${f}</div>`).join("");
+    const rows = [...strings].reverse().map((open, si) => {
+      const stringIdx = strings.length - 1 - si;
+      const thick = 1 + si * 0.5;
+      const fretsForRow = lefty ? [...displayFrets].reverse() : displayFrets;
+      const cells = fretsForRow.map(fret => {
+        const note = noteAtFret(open, fret);
+        const isNut = fret === 0;
+        const nutSide = lefty ? "right" : "left";
+        const inWindow = fret >= winLo && fret <= winHi;
+        const idx = scaleTones.indexOf(note);
+        const inScale = idx >= 0;
+        const inCmp = cmpTones.includes(note);
+        let inner = "";
+        if (inScale && inWindow) {
+          const iv = scaleDef.intervals[idx];
+          const isRoot = idx === 0;
+          const labelText = state.scalesShowDegrees ? degLabels[iv] : spell(note);
+          const dimmed = highlightChordTones && !highlightChordTones.has(note);
+          const chordTone = highlightChordTones && highlightChordTones.has(note);
+          inner = `<div class="dot ${isRoot?"root":""}" style="--c:${cssColor(color)};${dimmed?"opacity:0.28":""}${chordTone?";box-shadow:0 0 12px "+cssColor(color):""}"><span>${esc(labelText)}</span></div>`;
+        } else if (inScale && !inWindow) {
+          inner = `<div class="scale-dot" style="--c:${cssColor(color)};opacity:0.4"></div>`;
+        } else if (inCmp && cmpDef) {
+          inner = `<div class="scale-dot" style="--c:${cssColor(cmpDef.color)}"></div>`;
+        } else {
+          inner = `<span class="faded-note">${esc(spell(note))}</span>`;
+        }
+        return `<div class="cell" onclick="app.playAt(${stringIdx},${fret})" role="button" tabindex="0" onkeydown="app.cellKey(event,${stringIdx},${fret})" aria-label="${esc(open)} string fret ${fret}, ${esc(spell(note))}${inScale?", scale degree "+degLabels[scaleDef.intervals[idx]]:""}"><div class="string-line" style="height:${thick}px;${nutSide}:${isNut?"50%":"0"}"></div>${isNut?`<div class="nut-line" style="${lefty?"left:auto;right:50%;transform:translateX(50%)":""}"></div>`:""}${fret>0?`<div class="fret-wire" style="${lefty?"left:auto;right:0":""}"></div>`:""}${inner}</div>`;
+      }).join("");
+      const label = `<div class="string-label">${esc(spell(open))}</div>`;
+      return `<div class="string-row">${lefty?"":label}${cells}${lefty?label:""}</div>`;
+    }).join("");
+    const markerFrets = lefty ? [...displayFrets].reverse() : displayFrets;
+    const markerRow = markerFrets.map(f => {
+      if ([3,5,7,9].includes(f)) return `<div class="marker-cell"><div class="marker"></div></div>`;
+      if (f === 12) return `<div class="marker-cell"><div class="marker double"><span></span><span></span></div></div>`;
+      return `<div class="marker-cell"></div>`;
+    }).join("");
+    const numbersFinal = lefty ? [...displayFrets].reverse().map(f => `<div class="fret-num ${[3,5,7,9,12].includes(f) ? "marked" : ""}">${f}</div>`).join("") : numberRow;
+    const minW = 52 + displayFrets.length * 46;
+    const leftMargin = lefty ? `<style>.markers,.fret-numbers{margin-left:0;margin-right:52px}</style>` : "";
+    const fretboard = `<div class="fret-scroll"><div class="fretboard" style="min-width:${minW}px">${leftMargin}<div class="fret-numbers" style="${lefty?"margin-left:0;justify-content:flex-start":""}">${numbersFinal}</div>${rows}<div class="markers" style="${lefty?"margin-left:0":""}">${markerRow}</div></div></div>`;
+
+    const cmpButtons = `<button type="button" class="pill ${state.scalesCompare===null?"active":""}" style="--c:#888" onclick="app.set('scalesCompare',null)">Off</button>` +
+      Object.entries(SCALES).filter(([k]) => k !== state.scalesType).map(([k,v]) => btn(v.label, state.scalesCompare===k, v.color, `app.set('scalesCompare','${k}')`)).join("");
+
+    const playArg = JSON.stringify(scaleDef.intervals);
+    const formulaHtml = `<div class="card" style="margin-bottom:14px;border-left:3px solid ${color}">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px">
+        <span style="font-size:20px;color:var(--text-bright)">${esc(spell(root))} ${esc(scaleDef.label)}</span>
+        <button type="button" class="play-btn" onclick='app.playScaleRun("${root}",${playArg})'>Play scale</button>
+        ${cmpDef?`<span class="info-text" style="margin-left:auto">vs <span style="color:${cmpDef.color}">${esc(cmpDef.label)}</span></span>`:""}
+      </div>
+      <div class="row" style="margin-bottom:10px">${notePills}</div>
+      <div class="info-text">Step pattern: <span style="color:var(--muted);font-family:ui-monospace,monospace">${esc(scaleFormula(scaleDef.intervals))}</span> &nbsp;·&nbsp; ${scaleDef.intervals.length} notes &nbsp;·&nbsp; W = whole step, H = half step</div>
+    </div>`;
+
+    return `<div class="card" style="margin-bottom:14px"><div class="section-label">Scale</div>
+        <div class="mini-label">Root</div><div class="row" style="margin-bottom:10px">${keyRow}</div>
+        <div class="mini-label">Type</div><div class="row">${typeButtons}</div>
+      </div>
+      ${formulaHtml}
+      <div class="card" style="margin-bottom:14px">
+        <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start">
+          <div style="flex:1 1 260px"><div class="mini-label">Position</div><div class="row">${posButtons}</div></div>
+          <div style="flex:1 1 200px"><div class="mini-label">Labels</div><div class="row">${btn("Degrees", state.scalesShowDegrees, color, "app.set('scalesShowDegrees',true)")}${btn("Note names", !state.scalesShowDegrees, color, "app.set('scalesShowDegrees',false)")}</div></div>
+        </div>
+      </div>
+      ${fretboard}
+      <div class="legend"><div class="legend-title">Legend</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--root-fill);border:2px solid ${color}"><span style="color:${color}">1</span></div><span class="legend-text">Root (1)</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:${color}"><span style="color:var(--dot-text)">3</span></div><span class="legend-text">Scale degree</span></div>
+        <div class="legend-item"><div class="scale-dot" style="--c:${color};position:static;opacity:0.4"></div><span class="legend-text">Same scale, other position</span></div>
+        <span class="legend-text" style="margin-left:auto;align-self:center">Tap any note to hear it</span>
+      </div>
+      ${scaleUseHtml}
+      ${diatonicHtml}
+      <div class="card" style="margin-bottom:14px">
+        <div class="section-label">Compare with another scale</div>
+        <div class="info-text" style="margin-bottom:10px">Overlay a second scale (shown as rings) to see what notes they share and where they differ.</div>
+        <div class="row">${cmpButtons}</div>
+      </div>`;
   }
 
   // ── Modes Explorer ──
@@ -2110,6 +2399,7 @@
       case "progression": content = renderProgression(); break;
       case "interval": content = renderIntervalTrainer(); break;
       case "identify": content = renderIdentify(); break;
+      case "scales": content = renderScales(); break;
       case "finder": content = renderFinder(); break;
       case "modes": content = renderModes(); break;
       case "suggest": content = renderSuggest(); break;
@@ -2125,7 +2415,7 @@
     const exportButtons = showsExport ? `<button type="button" class="util-btn" onclick="app.sharePNG()">Share</button><button type="button" class="util-btn" onclick="app.savePNG()">PNG</button><button type="button" class="util-btn" onclick="app.downloadSVG()">SVG</button><button type="button" class="util-btn" onclick="app.copyStateLink()">Link</button><button type="button" class="util-btn" onclick="app.printChart()">Print</button>` : "";
 
     // Primary tabs (most-used) + grouped "More" select for the rest
-    const primary = [["single","Single"],["progression","Progression"],["interval","Intervals"],["identify","Identify"]];
+    const primary = [["single","Single"],["progression","Progression"],["scales","Scales"],["interval","Intervals"],["identify","Identify"]];
     const moreModes = [["finder","Key Finder"],["modes","Modes Explorer"],["suggest","Progression Suggester"],["quiz","Chord-Tone Quiz"],["ear","Ear Training"],["trainer","Fretboard Trainer"],["tuner","Tuner"]];
     const primaryTabs = primary.map(([m,l]) => `<button type="button" role="tab" aria-selected="${state.mode===m?"true":"false"}" tabindex="${state.mode===m?"0":"-1"}" class="tab ${state.mode===m?"active":""}" onclick="app.setMode('${m}')">${l}</button>`).join("");
     const inMore = moreModes.some(([m]) => m === state.mode);
@@ -2160,6 +2450,24 @@
     setSelectedKey(k) { state.selectedKey = k; render(); },
     setSelectedType(k) { state.selectedType = k; render(); },
     setScaleKey(k) { state.scaleKey = k; render(); },
+    setScalesKey(k) { state.scalesKey = k; state.scalesPosition = null; state.scalesHighlightChord = null; render(); },
+    setScalesType(k) { state.scalesType = k; state.scalesPosition = null; state.scalesHighlightChord = null; render(); },
+    setScaleChordMode(mode) { state.scalesChordMode = mode === "triad" ? "triad" : "seventh"; state.scalesHighlightChord = null; render(); },
+    toggleScaleChord(i) { state.scalesHighlightChord = state.scalesHighlightChord === i ? null : i; render(); },
+    playScaleRun(root, intervals) {
+      // Play the scale ascending then descending, at the user's tempo, at real-ish register.
+      const up = intervals.map(iv => transpose(root, iv));
+      const seq = [...up, transpose(root, 12), ...up.slice().reverse()];
+      const step = Math.max(0.18, (Number(state.progTempo) || 800) / 1000 * 0.4);
+      let oct = 3, prevIdx = -1;
+      seq.forEach((n, i) => {
+        const idx = CHROMATIC.indexOf(n);
+        if (i > 0 && idx <= prevIdx && i <= up.length) oct++;
+        if (i > up.length && idx >= prevIdx) oct = Math.max(3, oct - (idx > prevIdx ? 1 : 0));
+        prevIdx = idx;
+        audio.playNote(n, i <= up.length ? 4 : 4, 0.45, i * step);
+      });
+    },
     setFretRange(a,b) { state.fretRange = [a,b]; render(); },
     loadDiatonic(root, type) { state.selectedKey = root; state.selectedType = type; render(); },
     playNote(note) { audio.playNote(note); },
