@@ -15,16 +15,16 @@
     --bg: #0c0c0c;
     --surface: #121212;
     --surface-2: #0f0f0f;
-    --border: #242424;
+    --border: #32302c;
     --text: #e4ded2;
     --text-bright: #f4ecdc;
-    --muted: #9a9082;
-    --dim: #6f665a;
-    --faint: #4a443c;
+    --muted: #ada391;
+    --dim: #8d8272;
+    --faint: #746b5f;
     --gold: #e8c547;
-    --wire: #3a3a3a;
-    --fret: #2a2a2a;
-    --nut: #4a4a4a;
+    --wire: #57514a;
+    --fret: #423c35;
+    --nut: #6b6256;
     --accent-blue: #a8c4e8;
     --shadow: rgba(0,0,0,0.4);
     --root-fill: #ffffff;
@@ -34,19 +34,19 @@
     --bg: #f4eee2;
     --surface: #fffdf8;
     --surface-2: #ece4d4;
-    --border: #cabfa9;
+    --border: #aa9d86;
     --text: #2a2620;
     --text-bright: #14110b;
-    --muted: #5c5346;
-    --dim: #7a7060;
-    --faint: #a89c88;
-    --gold: #8a6500;
-    --wire: #b3a690;
-    --fret: #c4b8a2;
-    --nut: #897c66;
+    --muted: #4f473b;
+    --dim: #625846;
+    --faint: #766b59;
+    --gold: #7a5700;
+    --wire: #8d806d;
+    --fret: #9b8e78;
+    --nut: #6d5f4e;
     --accent-blue: #3a6491;
     --shadow: rgba(120,100,60,0.18);
-    --root-fill: #ffffff;
+    --root-fill: #fffaf0;
     --dot-text: #14110b;
   }
 
@@ -75,11 +75,11 @@
 
   .toolbar { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; align-items: stretch; }
   .segmented { display: flex; flex: 1 1 auto; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; min-width: 260px; }
-  .tab { flex: 1; padding: 11px 8px; border: none; cursor: pointer; font-size: 12px; letter-spacing: 0.04em; background: transparent; color: var(--muted); transition: all 0.15s; }
+  .tab { flex: 1; min-height: 42px; padding: 11px 8px; border: none; cursor: pointer; font-size: 12px; letter-spacing: 0.04em; background: transparent; color: var(--muted); transition: all 0.15s; }
   .tab:hover { color: var(--text); background: color-mix(in srgb, var(--gold) 6%, transparent); }
   .tab.active { background: var(--fret); color: var(--text-bright); }
 
-  .util-btn { padding: 9px 14px; border-radius: 6px; background: var(--surface); border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 12px; white-space: nowrap; transition: all 0.15s; }
+  .util-btn { min-height: 38px; padding: 9px 14px; border-radius: 6px; background: var(--surface); border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 12px; white-space: nowrap; transition: all 0.15s; }
   .util-btn:hover { border-color: var(--gold); color: var(--gold); }
 
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 14px 16px; box-shadow: 0 1px 3px var(--shadow); }
@@ -93,16 +93,16 @@
 
   .pill {
     --c: var(--muted);
-    padding: 6px 13px; border-radius: 5px; cursor: pointer; font-size: 12px;
+    min-height: 34px; padding: 6px 13px; border-radius: 5px; cursor: pointer; font-size: 12px;
     transition: all 0.12s; border: none; outline: 1.5px solid var(--border);
     background: transparent; color: var(--muted); white-space: nowrap;
   }
   .pill:hover { color: var(--c); outline-color: color-mix(in srgb, var(--c) 50%, var(--border)); }
   .pill.active { outline-color: var(--c); background: color-mix(in srgb, var(--c) 14%, transparent); color: var(--c); }
 
-  .accent-btn { padding: 8px 16px; border-radius: 6px; background: color-mix(in srgb, var(--gold) 15%, transparent); border: 1px solid color-mix(in srgb, var(--gold) 40%, transparent); color: var(--gold); cursor: pointer; font-size: 12px; white-space: nowrap; transition: all 0.15s; }
+  .accent-btn { min-height: 38px; padding: 8px 16px; border-radius: 6px; background: color-mix(in srgb, var(--gold) 15%, transparent); border: 1px solid color-mix(in srgb, var(--gold) 40%, transparent); color: var(--gold); cursor: pointer; font-size: 12px; white-space: nowrap; transition: all 0.15s; }
   .accent-btn:hover { background: color-mix(in srgb, var(--gold) 25%, transparent); }
-  .play-btn { padding: 6px 13px; border-radius: 5px; background: color-mix(in srgb, var(--gold) 15%, transparent); border: 1px solid color-mix(in srgb, var(--gold) 35%, transparent); color: var(--gold); cursor: pointer; font-size: 12px; }
+  .play-btn { min-height: 34px; padding: 6px 13px; border-radius: 5px; background: color-mix(in srgb, var(--gold) 15%, transparent); border: 1px solid color-mix(in srgb, var(--gold) 35%, transparent); color: var(--gold); cursor: pointer; font-size: 12px; }
 
   .summary { padding: 14px 18px; background: var(--surface); border-left: 3px solid var(--c, var(--gold)); border-radius: 0 6px 6px 0; margin-bottom: 16px; box-shadow: 0 1px 3px var(--shadow); }
   .summary-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
@@ -127,12 +127,12 @@
   .fret-wire { position: absolute; left: 0; top: 8%; bottom: 8%; width: 1px; background: var(--fret); }
   .dot { --c: var(--gold); position: relative; z-index: 3; width: 26px; height: 26px; border-radius: 50%; background: var(--c); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 8px color-mix(in srgb, var(--c) 50%, transparent); transition: transform 0.1s; }
   .dot:hover { transform: scale(1.12); }
-  .dot.root { width: 30px; height: 30px; background: var(--root-fill); border: 2px solid var(--c); box-shadow: 0 0 14px color-mix(in srgb, var(--c) 55%, transparent); }
+  .dot.root { width: 30px; height: 30px; background: var(--root-fill); border: 2px solid var(--c); box-shadow: 0 0 14px color-mix(in srgb, var(--c) 55%, transparent), 0 0 0 1px var(--border); }
   .dot span { font-size: 9px; font-weight: bold; font-family: ui-monospace, monospace; color: var(--dot-text); }
   .dot.root span { color: var(--c); }
   .dot.shared { outline: 2px solid var(--text-bright); outline-offset: 2px; }
   .multi { position: absolute; top: -3px; right: -3px; width: 8px; height: 8px; border-radius: 50%; background: var(--text-bright); border: 1px solid var(--bg); }
-  .scale-dot { position: relative; z-index: 2; width: 18px; height: 18px; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--c) 45%, transparent); background: color-mix(in srgb, var(--c) 14%, transparent); }
+  .scale-dot { position: relative; z-index: 2; width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid color-mix(in srgb, var(--c) 62%, transparent); background: color-mix(in srgb, var(--c) 18%, transparent); }
   .faded-note { position: relative; z-index: 1; font-size: 9px; color: var(--faint); font-family: ui-monospace, monospace; }
   .markers { display: flex; margin-left: 52px; margin-top: 3px; }
   .marker-cell { width: 46px; display: flex; justify-content: center; height: 12px; align-items: center; flex-shrink: 0; }
@@ -157,7 +157,7 @@
   .chord-inner .ch-name { font-size: 15px; color: var(--c); margin-bottom: 2px; }
   .chord-inner .ch-roman { font-size: 10px; color: var(--dim); font-style: italic; }
   .chord-inner .ch-tones { font-size: 9px; color: var(--faint); margin-top: 2px; }
-  .delete-x { position: absolute; top: -7px; right: -7px; width: 17px; height: 17px; border-radius: 50%; background: var(--fret); border: 1px solid var(--border); color: var(--muted); font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; line-height: 1; }
+  .delete-x { position: absolute; top: -9px; right: -9px; width: 24px; height: 24px; border-radius: 50%; background: var(--fret); border: 1px solid var(--border); color: var(--muted); font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; line-height: 1; }
   .delete-x:hover { color: #e87a7a; border-color: #e87a7a; }
 
   .voice-box { background: var(--surface-2); border-radius: 6px; padding: 16px; border: 1px solid var(--border); }
@@ -201,6 +201,14 @@
   .quiz-answer { min-height: 44px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .saved-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 8px; }
   .saved-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; padding: 10px; }
+  .suggest-current { background: linear-gradient(180deg, color-mix(in srgb, var(--gold) 7%, var(--surface)), var(--surface)); border: 1px solid var(--border); border-left: 3px solid var(--gold); border-radius: 6px; padding: 13px 15px; margin-bottom: 14px; }
+  .suggest-strip { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 10px 0 12px; }
+  .suggest-chip { display: inline-flex; align-items: center; gap: 7px; padding: 6px 9px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text-bright); font-size: 12px; }
+  .suggest-chip .roman { color: var(--dim); font-style: italic; font-size: 10px; }
+  .suggest-chip button { min-width: 22px; min-height: 22px; border-radius: 50%; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; line-height: 1; }
+  .suggest-chip button:hover { color: #e87a7a; border-color: #e87a7a; }
+  .beat-dot { width: 22px; height: 22px; border-radius: 50%; background: var(--surface-2); border: 2px solid var(--border); transition: background 0.06s, box-shadow 0.06s; }
+  .beat-dot.accent { border-color: var(--gold); }
 
   .toast { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); background: var(--text-bright); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-size: 12px; z-index: 1000; box-shadow: 0 8px 28px var(--shadow); opacity: 0; pointer-events: none; transition: opacity .2s, bottom .2s; }
   .toast.show { opacity: 1; bottom: 28px; }
@@ -873,6 +881,7 @@
     showVoicings: false,
     showScalePanel: false,
     showDiatonic: false,
+    diatonicKey: "G",
     diatonicMode: "major",
     diatonicSevenths: false,
     fretRange: [0, 12],
@@ -912,7 +921,18 @@
     trainerTime: null,
     // Progression suggester
     suggestKey: "C",
-    suggestMood: "bright"
+    suggestMood: "bright",
+    suggestRandom: null,    // last randomly-generated progression (array of romans)
+    suggestRandomLen: 4,    // desired length for the randomizer
+    suggestShowBorrowed: false,
+    // Metronome
+    metroBpm: 100,
+    metroSig: "4/4",
+    metroRunning: false,
+    metroCurrentBeat: -1,
+    metroTrainer: false,    // "guess the time signature" mode
+    metroTrainerSig: null,  // the hidden signature being played
+    metroTrainerReveal: false
   };
 
   function getOpenStrings() { return (state.openStrings && state.openStrings.length >= 4 && state.openStrings.length <= 6) ? state.openStrings : ["C","G","D","A"]; }
@@ -949,6 +969,19 @@
     const offsets = [0];
     for (let i = 1; i < strings.length; i++) offsets[i] = offsets[i-1] + semiBetweenDir(strings[i-1], strings[i]);
     return offsets;
+  }
+
+  // True if every adjacent pair of strings is the same interval apart (e.g. all 4ths or
+  // all 5ths). On such tunings interval SHAPES repeat identically across the whole neck;
+  // on mixed tunings like standard guitar (a major 3rd between G and B) they don't.
+  function uniformTuning() {
+    const strings = getOpenStrings();
+    if (strings.length < 2) return true;
+    const first = semiBetweenDir(strings[0], strings[1]);
+    for (let i = 2; i < strings.length; i++) {
+      if (semiBetweenDir(strings[i-1], strings[i]) !== first) return false;
+    }
+    return true;
   }
 
   function toast(message) {
@@ -1181,7 +1214,63 @@
       schedule();
     }
 
-    return { unlock, installUnlockHandlers, playNote, playAt, playInterval, playChord, playVoicingFrets, playProgression, stopProgression, getCtx };
+    // ── Metronome (clock-accurate, accent on beat 1) ────────────────────────────
+    let metroRunning = false;
+    let metroTimer = null;
+    let metroBeat = 0;
+    let metroOnBeat = null; // optional callback(beatIndexInBar, isAccent)
+    function clickAt(time, accent) {
+      const c = getCtx();
+      if (!c) return;
+      // Short filtered noise/sine blip; accent is higher and louder.
+      const osc = c.createOscillator();
+      const g = c.createGain();
+      osc.connect(g); g.connect(c.destination);
+      osc.type = "square";
+      osc.frequency.value = accent ? 2000 : 1200;
+      const vol = (accent ? 0.5 : 0.28) * (Number(state.audioVolume) || 0.16) / 0.16 * 0.5;
+      g.gain.setValueAtTime(0.0001, time);
+      g.gain.linearRampToValueAtTime(vol, time + 0.002);
+      g.gain.exponentialRampToValueAtTime(0.0005, time + 0.05);
+      osc.start(time); osc.stop(time + 0.06);
+    }
+    function stopMetronome() {
+      metroRunning = false;
+      if (metroTimer) { clearTimeout(metroTimer); metroTimer = null; }
+      metroBeat = 0;
+    }
+    function startMetronome(bpm, beatsPerBar, beatUnit, onBeat) {
+      stopMetronome();
+      const c = getCtx();
+      if (!c) return;
+      if (c.state === "suspended" && c.resume) { c.resume().catch(() => {}); }
+      metroRunning = true;
+      metroOnBeat = onBeat || null;
+      metroBeat = 0;
+      // For compound meters (8th-note unit), the pulse is the eighth note.
+      const beatSec = 60 / (Number(bpm) || 100) * (beatUnit === 8 ? 0.5 : 1);
+      let nextTime = c.currentTime + 0.1;
+      const lookAhead = 0.12, tick = 25;
+      const schedule = () => {
+        if (!metroRunning) return;
+        while (nextTime < c.currentTime + lookAhead) {
+          const posInBar = metroBeat % beatsPerBar;
+          const accent = posInBar === 0;
+          clickAt(nextTime, accent);
+          if (metroOnBeat) {
+            const beatSnapshot = posInBar;
+            const delayMs = Math.max(0, (nextTime - c.currentTime) * 1000);
+            setTimeout(() => { if (metroRunning && metroOnBeat) metroOnBeat(beatSnapshot, accent); }, delayMs);
+          }
+          nextTime += beatSec;
+          metroBeat++;
+        }
+        metroTimer = setTimeout(schedule, tick);
+      };
+      schedule();
+    }
+
+    return { unlock, installUnlockHandlers, playNote, playAt, playInterval, playChord, playVoicingFrets, playProgression, stopProgression, startMetronome, stopMetronome, getCtx };
   })();
 
   function current() {
@@ -1546,7 +1635,7 @@
           const idx = singleTones.indexOf(note);
           if (idx >= 0) dot = { color: chordColor, isRoot: idx === 0, label: dotLabel(chordDef.intLabels?.[idx] || "?", note), multi: false };
         } else {
-          if (state.progMapMode === "selected") {
+          if (state.progMapMode === "selected" && state.progChords.length) {
             const ai = Math.min(state.editingIdx, state.progChords.length - 1);
             const ch = state.progChords[ai];
             const tones = buildTones(ch.key, CHORD_TYPES[ch.type]?.intervals || []);
@@ -1662,18 +1751,22 @@
     if (!state.showDiatonic) {
       return `<div class="card" style="margin-bottom:14px"><div style="display:flex;align-items:center;justify-content:space-between"><div class="section-label" style="margin:0">Diatonic Chords in Key</div>${headBtn}</div></div>`;
     }
+    const diaKey = state.diatonicKey || state.selectedKey;
     const dia = DIATONIC[state.diatonicMode];
     const useSeventh = state.diatonicSevenths;
+    const keyRow = keyButtons(diaKey, "#6dd4a8", "app.setDiatonicKey");
     const chips = dia.degrees.map((deg,i) => {
-      const root = transpose(state.selectedKey, deg);
+      const root = transpose(diaKey, deg);
       const type = useSeventh ? dia.sevenths[i] : dia.triads[i];
       const def = CHORD_TYPES[type] || CHORD_TYPES.maj;
-      return `<div class="diatonic-chip" onclick="app.loadDiatonic('${root}','${type}')"><div class="dia-roman">${esc(dia.romans[i])}</div><div class="dia-name">${esc(root)} ${esc(def.label.replace(' ',''))}</div></div>`;
+      return `<div class="diatonic-chip" onclick="app.loadDiatonic('${root}','${type}')"><div class="dia-roman">${esc(dia.romans[i])}</div><div class="dia-name">${esc(spell(root))} ${esc(def.label.replace(' ',''))}</div></div>`;
     }).join("");
-    return `<div class="card" style="margin-bottom:14px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><div class="section-label" style="margin:0">Diatonic Chords in ${esc(state.selectedKey)} ${state.diatonicMode}</div>${headBtn}</div>
+    return `<div class="card" style="margin-bottom:14px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><div class="section-label" style="margin:0">Diatonic Chords in ${esc(spell(diaKey))} ${state.diatonicMode}</div>${headBtn}</div>
+      <div class="mini-label">Diatonic key</div>
+      <div class="row" style="margin-bottom:10px">${keyRow}</div>
       <div class="row" style="margin-bottom:10px">${btn("Major key", state.diatonicMode==="major", "#e8c547", "app.set('diatonicMode','major')")}${btn("Minor key", state.diatonicMode==="minor", "#7eb8d4", "app.set('diatonicMode','minor')")}${btn(useSeventh?"7th chords":"Triads", true, "#6dd4a8", "app.toggle('diatonicSevenths')")}</div>
       <div class="diatonic-wrap">${chips}</div>
-      <div class="info-text" style="margin-top:10px">These seven chords are built from the ${esc(state.selectedKey)} ${state.diatonicMode} scale. Tap any to load it on the fretboard.</div></div>`;
+      <div class="info-text" style="margin-top:10px">These seven chords are built from the ${esc(spell(diaKey))} ${state.diatonicMode} scale. Tap any to load it on the fretboard without changing this diatonic key.</div></div>`;
   }
 
   function renderVoicingCard(voicing, idx, chordColor, strings) {
@@ -1837,7 +1930,10 @@
     }
     const itDef = itInt !== null ? INTERVALS[itInt] : null;
 
-    const top = `<div class="card" style="margin-bottom:16px"><div class="section-label">Interval Trainer</div><div class="interval-status"><div style="display:flex;gap:8px;align-items:center"><div class="badge ${state.itStep>=1?"activeA":""}">A</div><span style="font-size:12px;color:${state.itStep===1?"var(--gold)":state.itNote1?"var(--text)":"var(--dim)"}">${state.itStep===1?"Tap note A on the fretboard":state.itNote1?`Note A: ${esc(state.itNote1)}`:"—"}</span></div><div style="font-size:16px;color:var(--dim)">→</div><div style="display:flex;gap:8px;align-items:center"><div class="badge ${state.itStep===2?"activeB":""}">B</div><span style="font-size:12px;color:${state.itStep===2?"var(--accent-blue)":state.itNote2?"var(--text)":"var(--dim)"}">${state.itStep===2?"Tap note B on the fretboard":state.itNote2?`Note B: ${esc(state.itNote2)}`:"—"}</span></div>${state.itStep===3?`<button type="button" class="pill" style="--c:#e87a3a;margin-left:auto" onclick="app.resetInterval()">Reset</button>`:""}</div><div class="info-text" style="margin-top:8px">Tap any two notes to measure the interval between them. The shapes you learn carry across the neck because the strings are tuned a consistent distance apart.</div></div>`;
+    const tuningNote = uniformTuning()
+      ? "Tap any two notes to measure the interval between them. Because every string is tuned the same distance apart on this tuning, the shapes you learn repeat identically all over the neck."
+      : "Tap any two notes to measure the interval between them. On this tuning the string intervals aren't all the same, so a shape can shift when it crosses certain strings — use the highlighted positions below as your guide.";
+    const top = `<div class="card" style="margin-bottom:16px"><div class="section-label">Interval Trainer</div><div class="interval-status"><div style="display:flex;gap:8px;align-items:center"><div class="badge ${state.itStep>=1?"activeA":""}">A</div><span style="font-size:12px;color:${state.itStep===1?"var(--gold)":state.itNote1?"var(--text)":"var(--dim)"}">${state.itStep===1?"Tap note A on the fretboard":state.itNote1?`Note A: ${esc(state.itNote1)}`:"—"}</span></div><div style="font-size:16px;color:var(--dim)">→</div><div style="display:flex;gap:8px;align-items:center"><div class="badge ${state.itStep===2?"activeB":""}">B</div><span style="font-size:12px;color:${state.itStep===2?"var(--accent-blue)":state.itNote2?"var(--text)":"var(--dim)"}">${state.itStep===2?"Tap note B on the fretboard":state.itNote2?`Note B: ${esc(state.itNote2)}`:"—"}</span></div>${state.itStep===3?`<button type="button" class="pill" style="--c:#e87a3a;margin-left:auto" onclick="app.resetInterval()">Reset</button>`:""}</div><div class="info-text" style="margin-top:8px">${tuningNote}</div></div>`;
 
     const result = state.itStep === 3 && itDef ? `<div style="margin-top:16px"><div class="interval-result" style="--c:${itDef.color}"><div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:10px"><span class="interval-title">${esc(itDef.name)}</span><span style="font-size:13px;color:var(--muted);font-family:monospace">${esc(itDef.abbr)}</span><span class="interval-meta">${raw} semitone${raw!==1?"s":""}</span><span style="font-size:11px;padding:3px 10px;border-radius:4px;background:var(--surface-2);color:var(--muted)">${esc(itDef.quality)}</span><button type="button" class="pill" style="--c:${itDef.color};margin-left:auto" onclick="app.playCurrentInterval()">Play interval</button></div><div class="info-text">${esc(IT_DESC[itInt])}</div></div>${renderIntervalOccurrences(itDef)}</div>` : "";
 
@@ -1860,7 +1956,10 @@
       return `<div class="string-row" style="margin-bottom:3px"><div class="string-label" style="font-size:12px">${esc(open)}</div>${cells}</div>`;
     }).join("");
     const minW = 52 + displayFrets.length * 46;
-    return `<div class="card"><div class="section-label">Every occurrence on this tuning</div><div class="info-text" style="margin-bottom:12px">Both <span style="color:${itDef.color}">${esc(state.itNote1)}</span> and <span style="color:${itDef.color}">${esc(state.itNote2)}</span> are highlighted across the neck. Notice how the shape repeats — that consistency is what makes the fretboard learnable.</div><div class="fret-scroll"><div class="fretboard" style="min-width:${minW}px">${rows}</div></div></div>`;
+    const occNote = uniformTuning()
+      ? `Notice how the shape repeats identically — that consistency is what makes this tuning so learnable.`
+      : `On this tuning the pattern shifts where the string intervals change (for example across the B string on a guitar), so use the highlighted positions rather than a single repeating shape.`;
+    return `<div class="card"><div class="section-label">Every occurrence on this tuning</div><div class="info-text" style="margin-bottom:12px">Both <span style="color:${itDef.color}">${esc(spell(state.itNote1))}</span> and <span style="color:${itDef.color}">${esc(spell(state.itNote2))}</span> are highlighted across the neck. ${occNote}</div><div class="fret-scroll"><div class="fretboard" style="min-width:${minW}px">${rows}</div></div></div>`;
   }
 
   // ── Key Finder (reverse lookup) ──
@@ -1936,78 +2035,82 @@
 
     let body = "";
     if (state.helpSection === "start") {
-      body = `<div class="help-hero"><h2>Welcome to Open Strings</h2><p>Open Strings is a visual music-theory and practice studio for fretted instruments — tenor guitar, guitar, bass, mandolin, ukulele, banjo, and any custom tuning. It shows you where notes live on the neck, how chords and scales are built, and how to connect them, with everything you see playable as sound. It runs entirely offline in your browser; nothing is uploaded.</p></div>
+      body = `<div class="help-hero"><h2>Welcome to Open Strings</h2><p>Open Strings is a visual music-theory and practice studio for fretted instruments — tenor guitar, guitar, bass, mandolin, ukulele, banjo, and any custom tuning. It maps chords, scales, intervals, voicings, progressions, and practice tools directly onto your neck. Everything you see is playable as sound, and the app runs entirely in your browser.</p></div>
       <div class="help-section"><h3>First five minutes</h3><div class="sub">A quick path to your first useful chart.</div>
         <ol class="help-steps">
-          <li><strong>Pick your instrument and tuning</strong> at the top of the page. Everything — fretboard, chords, voicings, intervals — instantly recalculates for that tuning.</li>
-          <li>On the <strong>Single</strong> tab, choose a <strong>root note</strong> and a <strong>chord type</strong>. The fretboard lights up every place that chord's notes appear. The white dot is the root.</li>
-          <li><strong>Tap any dot</strong> to hear that note, or press <strong>Play</strong> to hear the whole chord. (Audio unlocks on your first tap — if it's ever silent, just tap the screen once.)</li>
-          <li>Open <strong>Playable Voicings</strong> to see real fingerings for that chord on your tuning, each with a <strong>Hear</strong> button.</li>
-          <li>Want it on paper? Use <strong>Print</strong>, <strong>PNG</strong>, or <strong>SVG</strong> to export exactly the chart you see, or <strong>Save</strong> it to recall later.</li>
+          <li><strong>Pick your instrument and tuning</strong> at the top of the page. All notes, voicings, intervals, tuner tones, and fretboard drills recalculate for that setup.</li>
+          <li>On the <strong>Single</strong> tab, choose a <strong>root note</strong> and a <strong>chord type</strong>. The fretboard shows every place those chord tones appear. The white dot is the root.</li>
+          <li><strong>Tap any dot</strong> to hear that note, or press <strong>Play</strong> to hear the whole chord. Audio unlocks on your first tap, which is normal on phones and browsers.</li>
+          <li>Open <strong>Playable Voicings</strong> to see practical grips for the current tuning. Use the <strong>Hear</strong> buttons to compare shapes instead of only looking at them.</li>
+          <li>Use <strong>Scales</strong>, <strong>Progression</strong>, and <strong>More tools</strong> when you want to move from one chord chart into actual practice, songwriting, ear training, or timing work.</li>
         </ol></div>
-      <div class="help-section"><h3>What it's great for</h3><div class="sub">Where Open Strings shines.</div>
+      <div class="help-section"><h3>What the dots mean</h3><div class="sub">A quick visual legend for the fretboard.</div>
         <div class="feature-grid">
-          <div class="feature-item"><h4>Seeing the whole neck</h4><p>Instead of memorizing isolated chord shapes, see every place a chord or scale lives, and how those positions connect.</p></div>
-          <div class="feature-item"><h4>Unusual tunings</h4><p>Fifths-tuned tenor, DADGAD, open tunings, drop tunings — the theory is computed live, so it's correct anywhere, not just standard guitar.</p></div>
-          <div class="feature-item"><h4>Writing & arranging</h4><p>Build progressions, see shared tones and voice leading between chords, and find the smoothest melodic paths.</p></div>
-          <div class="feature-item"><h4>Learning by ear and sight</h4><p>Quiz, ear training, and a fretboard note trainer turn passive looking into active practice.</p></div>
+          <div class="feature-item"><h4>Root dots</h4><p>White-filled dots mark the root of the selected chord or scale. They are your strongest visual anchor when learning a shape.</p></div>
+          <div class="feature-item"><h4>Colored dots</h4><p>Solid colored dots are active chord or scale tones. Dot labels can show either interval names like R, 3, 5 or actual note names.</p></div>
+          <div class="feature-item"><h4>Scale rings</h4><p>In Single mode, a scale overlay shows non-chord scale tones as smaller rings, so you can see passing tones around the chord.</p></div>
+          <div class="feature-item"><h4>Shared outlines</h4><p>In Progression mode, shared-tone highlighting outlines notes that appear in more than one chord, which helps with smooth melodies and voice leading.</p></div>
         </div></div>`;
     } else if (state.helpSection === "modes") {
       const f = (name, chip, color, desc, good) => `<div class="feature-item" style="--c:${color}"><h4>${esc(name)} <span class="chip">${esc(chip)}</span></h4><p>${desc}</p><div class="good"><b>Good for:</b> ${good}</div></div>`;
       body = `<div class="help-section"><h3>Core tools</h3><div class="sub">The five main tabs.</div><div class="feature-grid">
-        ${f("Single","tab","#e8c547","Pick a root and chord type to map every chord tone across the neck. Expand the Diatonic panel to see all seven chords that belong to a key, or overlay a scale to see which notes are chord tones and which are passing tones.","learning a chord's shapes, seeing a key's chords, connecting chords to scales.")}
-        ${f("Progression","tab","#7eb8d4","Build a chord progression by hand or load one from the genre library. See all chords mapped together by color, highlight tones shared between chords, and open the Voice Leading view to see how each note moves from one chord to the next. Play it back, loop it, and adjust the tempo.","songwriting, understanding why a progression works, finding melody notes.")}
-        ${f("Scales","tab","#6dd4a8","Put a scale front and center. See it mapped across the whole neck with each note labeled by its scale degree, focus on one position box at a time to practise shapes, view the step-pattern formula, see every chord the scale produces (tap one to highlight its tones), and overlay a second scale to compare. Hit Play scale to hear it run up and down.","learning scales and modes, practising positions, soloing, understanding scale-to-chord relationships.")}
-        ${f("Intervals","tab","#6dd4a8","Tap any two notes and Open Strings names the interval between them, explains how it sounds and where it's used, and shows every other place that same interval shape appears on your tuning.","ear training, understanding chord construction, learning the fretboard geometry.")}
-        ${f("Identify","tab","#c47ed4","The reverse of Single: tap notes on the neck and it tells you what chord you've built. Tap a note again to remove it.","naming a shape you stumbled onto, checking your own voicings.")}
+        ${f("Single","tab","#e8c547","Pick a root and chord type to map every chord tone across the neck. Expand the Diatonic panel to see all seven chords in a key, or add a scale overlay to separate chord tones from passing tones.","learning chord shapes, seeing a key's chords, connecting chords to scales.")}
+        ${f("Progression","tab","#7eb8d4","Build a progression by hand, load one from the library, or open one from the Progression Suggester. See chords together by color, highlight shared tones, inspect voice leading, loop playback, and adjust tempo.","songwriting, arranging, finding melody targets, understanding why a progression works.")}
+        ${f("Scales","tab","#6dd4a8","Put a scale front and center. Map it across the neck, switch through position boxes, label notes by degree, see the step formula, highlight generated diatonic chords, compare against another scale, and play the scale up and down.","learning scales and modes, practising positions, soloing, chord-scale study.")}
+        ${f("Intervals","tab","#6dd4a8","Tap any two notes and Open Strings names the interval, explains its sound, and shows other places the same interval appears on your tuning.","ear training, understanding chord construction, learning fretboard geometry.")}
+        ${f("Identify","tab","#c47ed4","The reverse of Single: tap notes on the neck and the app identifies the closest chord name. Tap a note again to remove it.","naming shapes you discover, checking your own voicings.")}
       </div></div>
       <div class="help-section"><h3>More tools</h3><div class="sub">Found in the “More tools” dropdown.</div><div class="feature-grid">
-        ${f("Key Finder","tool","#6dd4a8","Enter the chords from a song and it ranks the most likely keys, showing how many of your chords fit each one and listing that key's diatonic chords.","figuring out what key a song is in, transposing, understanding borrowed chords.")}
-        ${f("Modes Explorer","tool","#c47ed4","Pick a parent scale (major, melodic minor, harmonic minor) and a key to see all seven modes, their notes, and how each is just the parent scale started from a different degree.","understanding modes, finding the right scale over a chord.")}
-        ${f("Progression Suggester","tool","#6dd4a8","Choose a key and a mood — bright, melancholy, tense, gospel, dreamy — and get curated progressions you can hear instantly or load into Progression mode.","beating writer's block, finding a starting point for a song.")}
-        ${f("Chord-Tone Quiz","tool","#e8c547","Drills you on the notes inside chords — for example, “which note is the third of A7?”","building fast recall of chord construction.")}
-        ${f("Ear Training","tool","#e8823a","Plays a chord with a random root and asks you to identify its quality — major, minor, dominant, and so on.","learning to recognize chord colors by ear.")}
-        ${f("Fretboard Trainer","tool","#6dd4a8","Asks you to find every instance of a note across the neck, and times you. Especially useful when learning a new tuning.","memorizing the fretboard, learning a new instrument or tuning.")}
-        ${f("Tuner","tool","#a8c4e8","Plays a clean reference tone for each open string of your current tuning so you can tune by ear.","quick tuning without a separate app.")}
+        ${f("Key Finder","tool","#6dd4a8","Enter the chords from a song and it ranks likely keys. It shows how many chords fit each key and lists the matching diatonic chords. Treat the result as a ranked clue, not a guarantee — real songs borrow chords all the time.","finding a song's key, transposing, spotting borrowed chords.")}
+        ${f("Modes Explorer","tool","#c47ed4","Pick a parent scale and key to see all seven modes, their notes, and how each mode is the same parent scale started from a different degree.","understanding modes, finding scale choices over chords.")}
+        ${f("Progression Suggester","tool","#6dd4a8","Choose a key and mood, hear curated progressions, generate theory-aware random progressions, and add borrowed chords from outside the key. The built-in Current Progression strip lets you keep building without leaving the Suggester.","beating writer's block, testing substitutions, adding color to a progression.")}
+        ${f("Chord-Tone Quiz","tool","#e8c547","Drills chord construction directly — for example, identifying which note is the third, fifth, seventh, or altered tone of a chord.","fast recall of chord tones and intervals.")}
+        ${f("Ear Training","tool","#e8823a","Plays a chord with a random root and asks you to identify its quality — major, minor, dominant, diminished, and more.","recognizing chord colors by ear.")}
+        ${f("Fretboard Trainer","tool","#6dd4a8","Gives you a target note and asks you to find every instance across the visible neck, then times your result.","memorizing the fretboard, especially in a new tuning.")}
+        ${f("Metronome","tool","#e8c547","A steady click with visual beat dots, BPM controls, time signatures, accented downbeats, and a meter-identification trainer.","timing practice, odd-meter practice, learning to feel time signatures.")}
+        ${f("Tuner","tool","#a8c4e8","Plays a reference tone for each open string using your current tuning and capo setup.","quick tuning by ear without leaving the app.")}
       </div></div>`;
     } else if (state.helpSection === "workflows") {
-      body = `<div class="help-section"><h3>Example workflows</h3><div class="sub">Practical ways people use Open Strings.</div>
-        <div class="workflow"><div class="w-title">Learn a song you like</div><div class="w-body">Use <strong>Key Finder</strong> to enter the song's chords and confirm its key. Switch to <strong>Single</strong> to learn each chord's shapes, then to <strong>Progression</strong> to load the sequence, hear it, and see how the chords connect.</div></div>
-        <div class="workflow"><div class="w-title">Write your own progression</div><div class="w-body">Start in <strong>Progression Suggester</strong> with a key and mood, load a suggestion you like, then refine it in <strong>Progression</strong> mode. Turn on <strong>Voice Leading</strong> and <strong>Shared tones</strong> to find melody notes that move smoothly between chords.</div></div>
-        <div class="workflow"><div class="w-title">Write a melody or solo</div><div class="w-body">Open <strong>Scales</strong>, pick your key and scale, and learn it one position at a time. Tap the diatonic chords to see which scale notes are chord tones for each chord — land phrases on those, and pass through the rest. Use <strong>Intervals</strong> to understand the leaps you're hearing. For chord-by-chord soloing, <strong>Single</strong> with a scale overlay shows chord tones (solid) versus passing tones (rings).</div></div>
-        <div class="workflow"><div class="w-title">Learn scales and modes</div><div class="w-body">In <strong>Scales</strong>, switch between positions to drill each shape, turn on degree labels to learn the scale's structure, and use Compare to see how two scales differ (for example Dorian vs Natural Minor). The <strong>Modes Explorer</strong> shows how all seven modes come from one parent scale.</div></div>
-        <div class="workflow"><div class="w-title">Learn a new instrument or tuning</div><div class="w-body">Set your <strong>instrument and tuning</strong>, then use the <strong>Fretboard Trainer</strong> to memorize where notes fall. The <strong>Tuner</strong> gets you in tune; <strong>Single</strong> shows you the new chord shapes.</div></div>
-        <div class="workflow"><div class="w-title">Make a practice sheet</div><div class="w-body">Configure any chart — chord, scale overlay, fret range, capo — then <strong>Print</strong> or export a <strong>PNG/SVG</strong>. Set a fret range like 0–5 first to zoom in. Use <strong>Save</strong> to keep charts in the app, or <strong>Link</strong> to copy a shareable URL of the exact view.</div></div>
+      body = `<div class="help-section"><h3>Example workflows</h3><div class="sub">Practical ways to use Open Strings.</div>
+        <div class="workflow"><div class="w-title">Learn a song you like</div><div class="w-body">Use <strong>Key Finder</strong> to enter the song's chords and estimate the key. Switch to <strong>Single</strong> to learn each chord, then <strong>Progression</strong> to hear the sequence and see how the chords connect.</div></div>
+        <div class="workflow"><div class="w-title">Write your own progression</div><div class="w-body">Start in <strong>Progression Suggester</strong> with a key and mood. Use <strong>Load here</strong> to preview a progression in the Suggester, add one or two <strong>Borrowed chords</strong>, then tap <strong>Open in Progression</strong> when you want the full fretboard and voice-leading view.</div></div>
+        <div class="workflow"><div class="w-title">Use borrowed chords without getting lost</div><div class="w-body">In the Suggester, open <strong>Borrowed chords</strong> and tap <strong>Add</strong>. The chord is appended to the Current Progression strip without jumping screens. Use <strong>Hear current</strong> to audition it, remove anything that doesn't work, then open the full Progression panel only when you're ready.</div></div>
+        <div class="workflow"><div class="w-title">Write a melody or solo</div><div class="w-body">Open <strong>Scales</strong>, pick your key and scale, and learn one position at a time. Tap generated chords to see which scale notes are chord tones for each harmony — land phrases there, then pass through the others.</div></div>
+        <div class="workflow"><div class="w-title">Build timing into theory practice</div><div class="w-body">Use the <strong>Metronome</strong> while drilling scales, chord changes, or fretboard notes. Try the meter trainer to practise hearing where beat 1 lands before you look at the answer.</div></div>
+        <div class="workflow"><div class="w-title">Learn a new instrument or tuning</div><div class="w-body">Set your <strong>instrument and tuning</strong>, use the <strong>Tuner</strong> to hear the open strings, then use <strong>Fretboard Trainer</strong>, <strong>Single</strong>, and <strong>Scales</strong> to learn the new layout.</div></div>
+        <div class="workflow"><div class="w-title">Make a practice sheet</div><div class="w-body">Configure any chart — chord, scale overlay, fret range, capo, or progression — then <strong>Print</strong> or export a <strong>PNG/SVG</strong>. Use <strong>Save</strong> for in-app recall or <strong>Link</strong> to copy the exact view.</div></div>
       </div>`;
     } else if (state.helpSection === "controls") {
-      body = `<div class="help-section"><h3>Top controls</h3><div class="sub">Settings that apply across the whole app.</div>
+      body = `<div class="help-section"><h3>Top controls</h3><div class="sub">Settings that apply across the app.</div>
         <ul style="margin:0;padding-left:18px">
           <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Instrument & Tuning</strong> — switches the entire fretboard and all calculations. Choose a preset or enter a custom tuning of 4–6 notes.</li>
-          <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Capo</strong> — shifts the open-string pitches up; the labels show the sounding notes.</li>
-          <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Scale Overlay</strong> — shows a scale behind the chord tones. Solid dots are chord tones; rings are other scale notes.</li>
-          <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Fret range</strong> — zoom the neck to a window like 0–5, handy on phones and for focused practice.</li>
+          <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Capo</strong> — shifts the open-string pitches up; fretboard labels show the sounding notes.</li>
+          <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Scale Overlay</strong> — in Single mode, shows a scale behind the chord. Solid dots are chord tones; rings are other scale notes.</li>
+          <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Fret range</strong> — zooms the neck to a window like 0–5, useful on phones and for focused practice.</li>
+          <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Current Progression strip</strong> — in the Suggester, shows the progression you are building and gives quick controls to hear it, clear it, remove chords, or open the full Progression view.</li>
         </ul></div>
       <div class="help-section"><h3>Preferences</h3><div class="sub">Open the Preferences button in the toolbar.</div>
         <ul style="margin:0;padding-left:18px">
-          <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Dot labels</strong> — show interval names (R, 3, 5) or actual note names on the dots.</li>
-          <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Accidentals</strong> — spell notes with sharps or flats.</li>
+          <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Dot labels</strong> — show interval names like R, 3, 5 or actual note names on the dots.</li>
+          <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Accidentals</strong> — choose sharps, flats, or automatic spelling.</li>
           <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Handedness</strong> — mirror the neck for left-handed players.</li>
           <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Tone, Volume, Tempo</strong> — shape the built-in sound and set progression playback speed.</li>
         </ul></div>
       <div class="help-section"><h3>Saving & sharing</h3><div class="sub">Getting charts out of the app.</div>
         <ul style="margin:0;padding-left:18px">
           <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Save</strong> stores a chart in your browser to reload later. <strong>Link</strong> copies a URL that reopens the exact view.</li>
-          <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Print / PNG / SVG</strong> export exactly the chart shown — not the whole screen. For printing, choose landscape and press <span class="kbd">Cmd/Ctrl</span> + <span class="kbd">P</span> if it doesn't appear automatically.</li>
+          <li style="font-size:13px;color:var(--muted);line-height:1.8"><strong style="color:var(--text-bright)">Print / PNG / SVG</strong> export exactly the chart shown. For printing, choose landscape and use <span class="kbd">Cmd/Ctrl</span> + <span class="kbd">P</span> if the print window does not appear automatically.</li>
         </ul></div>`;
     } else {
       body = `<div class="help-section"><h3>Frequently asked</h3><dl class="help-faq">
-        <dt>There's no sound.</dt><dd>Browsers only allow audio after you interact with the page. Tap any note or button once and sound will start. Check your device isn't muted, and raise the Volume in Preferences.</dd>
-        <dt>Do I need an internet connection?</dt><dd>No. Everything runs in the page itself. Once it's loaded you can use it fully offline.</dd>
-        <dt>Is my data saved anywhere?</dt><dd>Saved charts and your theme live only in your own browser's local storage. Nothing is sent anywhere.</dd>
-        <dt>The voicings aren't the exact shapes I know.</dt><dd>Voicings are generated to be correct and playable for your tuning — every note shown belongs to the chord and the root is always included. For common open chords they match the familiar shapes; for dense chords they find a reachable subset rather than a single "official" grip.</dd>
-        <dt>Why do some chords have no voicing?</dt><dd>A few very dense chords can't be fully fingered on four strings within reach. The app shows the best reachable version, or a note if none fits.</dd>
-        <dt>Can I use it on my phone?</dt><dd>Yes. The neck scrolls sideways; use the Fret range buttons to zoom in. Add it to your home screen for an app-like experience.</dd>
-        <dt>How do I put a chart on paper?</dt><dd>Configure the view, then Print (choose landscape) or export a PNG/SVG. The export shows exactly what's on screen, including any scale overlay and fret range.</dd>
+        <dt>There's no sound.</dt><dd>Browsers only allow audio after you interact with the page. Tap any note or button once and sound will start. Check your device isn't muted, and raise Volume in Preferences.</dd>
+        <dt>Do I need an internet connection?</dt><dd>No. Everything runs in the page itself. Once the file is loaded, you can use it offline.</dd>
+        <dt>Is my data saved anywhere?</dt><dd>Saved charts and theme preference live only in your browser's local storage. Nothing is sent anywhere.</dd>
+        <dt>Why did a borrowed chord appear outside the key?</dt><dd>That is the point of borrowed chords. They intentionally pull from parallel minor, modal mixture, or dominant color to add contrast. Use Key Finder and Progression mode to see how they relate to the home key.</dd>
+        <dt>The voicings aren't the exact shapes I know.</dt><dd>Voicings are generated to be correct and playable for your tuning. Common open chords use familiar shapes where available; dense chords may use a reachable subset rather than a single official grip.</dd>
+        <dt>Why do some chords have no voicing?</dt><dd>A few dense chords cannot be fully fingered on four strings within the selected range. The app shows the best reachable version, or a note if none fits.</dd>
+        <dt>Can I use it on my phone?</dt><dd>Yes. The neck scrolls sideways; use Fret range buttons to zoom in. The larger tap targets are designed for phone use.</dd>
+        <dt>How do I put a chart on paper?</dt><dd>Configure the view, then Print or export a PNG/SVG. The export shows the active chart, including scale overlays and fret range.</dd>
       </dl></div>`;
     }
 
@@ -2315,16 +2418,86 @@
 
   // ── Progression Suggester ──
   const SUGGEST_MOODS = {
-    "bright":     { label: "Bright & uplifting", progs: [["I","V","vi","IV"],["I","IV","V"],["I","V","IV"],["IV","I","V","vi"]] },
-    "melancholy": { label: "Melancholy", progs: [["vi","IV","I","V"],["i","bVI","bIII","bVII"],["vi","V","IV","V"],["i","iv","bVII","bIII"]] },
-    "tense":      { label: "Tense & dramatic", progs: [["i","bVI","bVII","i"],["i","bII","i"],["i","V","i"],["i","iv","V"]] },
-    "gospel":     { label: "Gospel & soulful", progs: [["I","iii","IV","iv"],["I","I7","IV","iv"],["vi","ii","V","I"],["IV","iv","I"]] },
-    "dreamy":     { label: "Dreamy & floating", progs: [["Imaj7","IVmaj7"],["Imaj7","iii","IV","V"],["ii","IV","I"],["Imaj7","vi","ii","V"]] }
+    "bright":     { label: "Bright & uplifting", progs: [
+      ["I","V","vi","IV"],["I","IV","V"],["I","V","IV"],["IV","I","V","vi"],
+      ["I","vi","IV","V"],["I","IV","vi","V"],["I","iii","IV","V"],["I","V","vi","iii","IV","I","IV","V"],
+      ["IV","V","I","vi"],["I","ii","IV","V"]
+    ] },
+    "melancholy": { label: "Melancholy", progs: [
+      ["vi","IV","I","V"],["i","bVI","bIII","bVII"],["vi","V","IV","V"],["i","iv","bVII","bIII"],
+      ["vi","IV","ii","V"],["i","bVII","bVI","V"],["vi","iii","IV","I"],["i","bVI","bVII","i"],
+      ["vi","ii","V","I"],["i","v","bVI","bVII"]
+    ] },
+    "tense":      { label: "Tense & dramatic", progs: [
+      ["i","bVI","bVII","i"],["i","bII","i"],["i","V","i"],["i","iv","V"],
+      ["i","bVI","V","i"],["i","bVII","bVI","V"],["i","iv","bII","V"],["i","V","bVI","iv"],
+      ["i","bII","bVII","i"],["i","iv","i","V"]
+    ] },
+    "gospel":     { label: "Gospel & soulful", progs: [
+      ["I","iii","IV","iv"],["I","I7","IV","iv"],["vi","ii","V","I"],["IV","iv","I"],
+      ["I","vi","ii","V"],["IV","V","iii","vi"],["I","III","IV","I"],["ii","V","I","vi"],
+      ["I","I7","IV","V"],["vi","II","ii","V"]
+    ] },
+    "dreamy":     { label: "Dreamy & floating", progs: [
+      ["Imaj7","IVmaj7"],["Imaj7","iii","IV","V"],["ii","IV","I"],["Imaj7","vi","ii","V"],
+      ["Imaj7","iii7","vi","IVmaj7"],["IVmaj7","V","iii","vi"],["Imaj7","IVmaj7","iii7","vi"],["ii7","V","Imaj7","vi"],
+      ["Imaj7","II","IVmaj7","IV"],["vi","IVmaj7","Imaj7","V"]
+    ] },
+    "jazz":       { label: "Jazz", progs: [
+      ["ii7","V7","Imaj7"],["Imaj7","vi7","ii7","V7"],["iii7","vi7","ii7","V7"],["Imaj7","I7","IVmaj7","iv"],
+      ["ii7","V7","iii7","vi7"],["Imaj7","VI7","ii7","V7"],["IVmaj7","iv","iii7","vi7"],["ii7","V7","Imaj7","VI7"],
+      ["iii7","VI7","ii7","V7"],["Imaj7","bIII","ii7","V7"]
+    ] },
+    "blues":      { label: "Blues", progs: [
+      ["I7","IV7","I7","I7"],["IV7","IV7","I7","I7"],["V7","IV7","I7","V7"],["I7","I7","I7","I7","IV7","IV7","I7","I7","V7","IV7","I7","V7"],
+      ["I7","IV7","V7"],["i","iv","V7"],["I7","V7","IV7","I7"],["i7","iv7","i7","V7"]
+    ] },
+    "neosoul":    { label: "Neo-soul", progs: [
+      ["Imaj7","iii7","vi7","ii7"],["ii7","bIII","ii7","V7"],["Imaj7","IVmaj7","iii7","bIII"],["vi7","ii7","V7","Imaj7"],
+      ["IVmaj7","iii7","ii7","I"],["Imaj7","vi7","IVmaj7","V"],["ii7","V7","iii7","bIII"],["Imaj7","bVII","IVmaj7","IV"]
+    ] },
+    "modal":      { label: "Modal", progs: [
+      ["i","bVII","i"],["i","IV","i"],["i","bVII","bVI","bVII"],["I","bVII","IV","I"],
+      ["i","bII","i"],["i","bIII","bVII","i"],["I","II","I"],["i","v","bVII","IV"]
+    ] }
   };
+  // Roman → [semitone offset from key, chord type]. Covers diatonic, borrowed, and common 7ths.
   const ROMAN_MAP = { "I":[0,"maj"],"II":[2,"maj"],"III":[4,"maj"],"IV":[5,"maj"],"V":[7,"maj"],"VI":[9,"maj"],"VII":[11,"maj"],
     "i":[0,"min"],"ii":[2,"min"],"iii":[4,"min"],"iv":[5,"min"],"v":[7,"min"],"vi":[9,"min"],"vii":[11,"min"],
     "bII":[1,"maj"],"bIII":[3,"maj"],"bVI":[8,"maj"],"bVII":[10,"maj"],
-    "I7":[0,"7"],"Imaj7":[0,"maj7"],"IVmaj7":[5,"maj7"],"ii7":[2,"min7"] };
+    "I7":[0,"7"],"II7":[2,"7"],"III7":[4,"7"],"IV7":[5,"7"],"V7":[7,"7"],"VI7":[9,"7"],
+    "i7":[0,"min7"],"ii7":[2,"min7"],"iii7":[4,"min7"],"iv7":[5,"min7"],"vi7":[9,"min7"],
+    "Imaj7":[0,"maj7"],"IVmaj7":[5,"maj7"],"viio":[11,"dim"],"viio7":[11,"dim7"] };
+
+  // Functional-harmony tables for the randomizer (major-key model).
+  const RAND_DIATONIC = { "I":"T","ii":"SD","iii":"T","IV":"SD","V":"D","vi":"T","viio":"D" };
+  const RAND_NEXT = { "T":["SD","D","T"], "SD":["D","SD"], "D":["T"] };
+  // Borrowed chords that reliably sound good in a major key, with a short rationale.
+  const BORROWED_CHORDS = [
+    { roman:"bVII", why:"Mixolydian/rock flavor; strong plagal pull back to I." },
+    { roman:"iv",   why:"Borrowed minor iv; bittersweet, classic on the way to I." },
+    { roman:"bVI",  why:"From parallel minor; cinematic lift, often pairs with bVII." },
+    { roman:"bIII", why:"From parallel minor; surprising bright-to-dark turn." },
+    { roman:"bII",  why:"Neapolitan; dramatic pre-dominant, resolves to V or I." },
+    { roman:"V7",   why:"Secondary dominant feel; sharpens the pull to I." },
+    { roman:"I7",   why:"Dominant 7 on the tonic; sets up a move to IV." }
+  ];
+
+  function randomProgression(len) {
+    len = len || 4;
+    const prog = ["I"];
+    let func = "T";
+    for (let i = 1; i < len - 1; i++) {
+      const want = RAND_NEXT[func];
+      const cands = Object.entries(RAND_DIATONIC).filter(([r, fn]) => want.includes(fn) && r !== prog[prog.length-1]);
+      const pick = cands[Math.floor(Math.random() * cands.length)];
+      prog.push(pick[0]); func = pick[1];
+    }
+    if (len >= 3) prog.push(func !== "D" ? (Math.random() < 0.7 ? "V" : "IV") : "V");
+    if (len >= 2) prog.push(Math.random() < 0.8 ? "I" : "vi");
+    return prog.slice(0, len);
+  }
+
   function romanToChord(roman, key) {
     let token = roman;
     let type = "maj";
@@ -2338,14 +2511,45 @@
     const moodBtns = Object.entries(SUGGEST_MOODS).map(([k,v]) => btn(v.label, state.suggestMood===k, "#6dd4a8", `app.set('suggestMood','${k}')`)).join("");
     const keyRow = keyButtons(state.suggestKey, "#6dd4a8", "app.setSuggestKey");
     const mood = SUGGEST_MOODS[state.suggestMood];
-    const cards = mood.progs.map((prog, i) => {
+
+    const chordLabel = (c) => `${spell(c.key)} ${CHORD_TYPES[c.type]?.label.replace(' ','') || c.type}`;
+    const currentChips = state.progChords.length
+      ? state.progChords.map((c,i) => `<span class="suggest-chip"><span>${esc(chordLabel(c))}</span><span class="roman">${i+1}</span><button type="button" aria-label="Remove ${esc(chordLabel(c))}" onclick="app.removeChord(${i})">×</button></span>`).join("")
+      : `<div class="info-text">No current progression yet. Load a suggestion or add borrowed chords to start building one here.</div>`;
+    const currentControls = state.progChords.length
+      ? `<div class="row"><button type="button" class="accent-btn" onclick="app.playCurrentProgressionOnce()">Hear current</button><button type="button" class="pill" style="--c:#7eb8d4" onclick="app.setMode('progression')">Open in Progression</button><button type="button" class="pill" style="--c:#e87a7a" onclick="app.clearProgression()">Clear</button></div>`
+      : `<div class="row"><button type="button" class="pill" style="--c:#7eb8d4" onclick="app.setMode('progression')">Open empty Progression panel</button></div>`;
+    const currentSection = `<div class="suggest-current"><div class="section-label" style="margin-bottom:6px">Current Progression</div><div class="info-text">Build here without leaving the Suggester. When it feels promising, open the full Progression view for fretboard mapping, shared tones, and voice leading.</div><div class="suggest-strip">${currentChips}</div>${currentControls}</div>`;
+
+    const cardFor = (prog) => {
       const chords = prog.map(r => romanToChord(r, state.suggestKey));
-      const display = chords.map(c => `${spell(c.key)} ${CHORD_TYPES[c.type]?.label.replace(' ','')}`).join("  →  ");
+      const display = chords.map(chordLabel).join("  →  ");
       const romans = prog.join(" – ");
       const enc = encodeURIComponent(JSON.stringify(chords));
-      return `<div class="saved-card"><div style="font-size:12px;color:var(--dim);font-style:italic;margin-bottom:3px">${esc(romans)}</div><div style="font-size:14px;color:var(--text-bright);margin-bottom:8px">${esc(display)}</div><div class="row"><button type="button" class="pill" style="--c:#6dd4a8;font-size:11px" onclick="app.loadSuggested('${enc}')">Load</button><button type="button" class="pill" style="--c:#e8c547;font-size:11px" onclick="app.playSuggested('${enc}')">Hear</button></div></div>`;
+      return `<div class="saved-card"><div style="font-size:12px;color:var(--dim);font-style:italic;margin-bottom:3px">${esc(romans)}</div><div style="font-size:14px;color:var(--text-bright);margin-bottom:8px">${esc(display)}</div><div class="row"><button type="button" class="pill" style="--c:#6dd4a8;font-size:11px" onclick="app.loadSuggestedHere('${enc}')">Load here</button><button type="button" class="pill" style="--c:#7eb8d4;font-size:11px" onclick="app.loadSuggested('${enc}')">Load & open</button><button type="button" class="pill" style="--c:#e8c547;font-size:11px" onclick="app.playSuggested('${enc}')">Hear</button></div></div>`;
+    };
+    const cards = mood.progs.map(cardFor).join("");
+
+    // Randomizer section
+    const randomCard = state.suggestRandom
+      ? cardFor(state.suggestRandom)
+      : `<div class="info-text">Tap “Generate” for a fresh progression that follows real functional-harmony rules (tonic → subdominant → dominant → resolution).</div>`;
+    const lenBtns = [3,4,6,8].map(n => btn(String(n)+" chords", state.suggestRandomLen===n, "#e8c547", `app.set('suggestRandomLen',${n})`)).join("");
+    const randomSection = `<div class="card" style="margin-bottom:14px"><div class="section-label">Randomizer</div>
+      <div class="info-text" style="margin-bottom:10px">Generates a theory-valid progression in ${esc(spell(state.suggestKey))} major. Use <strong>Load here</strong> to audition it in the Current Progression strip without leaving this panel.</div>
+      <div class="mini-label">Length</div><div class="row" style="margin-bottom:10px">${lenBtns}</div>
+      <div class="row" style="margin-bottom:12px"><button type="button" class="accent-btn" onclick="app.generateRandomProg()">Generate</button></div>
+      ${randomCard}</div>`;
+
+    // Borrowed chords section
+    const borrowedChips = BORROWED_CHORDS.map(bc => {
+      const c = romanToChord(bc.roman, state.suggestKey);
+      const enc = encodeURIComponent(JSON.stringify([c]));
+      return `<div class="saved-card"><div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px"><span style="font-size:14px;color:var(--text-bright)">${esc(bc.roman)}</span><span style="font-size:12px;color:var(--muted)">${esc(chordLabel(c))}</span></div><div class="info-text" style="margin-bottom:8px">${esc(bc.why)}</div><button type="button" class="pill" style="--c:#c47ed4;font-size:11px" onclick="app.appendChordToProg('${enc}')">Add</button></div>`;
     }).join("");
-    return `<div class="card" style="margin-bottom:14px"><div class="section-label">Progression Suggester</div><div class="info-text" style="margin-bottom:12px">Pick a key and a mood to get curated progressions. Load one into Progression mode to explore its voice leading, or hear it right away.</div><div class="mini-label">Key</div><div class="row" style="margin-bottom:10px">${keyRow}</div><div class="mini-label">Mood</div><div class="row">${moodBtns}</div></div><div class="saved-list">${cards}</div>`;
+    const borrowedSection = `<div class="card" style="margin-bottom:14px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:10px"><div class="section-label" style="margin:0">Borrowed chords for ${esc(spell(state.suggestKey))} major</div><button type="button" class="pill" style="--c:#c47ed4;font-size:11px;padding:3px 9px" onclick="app.toggle('suggestShowBorrowed')">${state.suggestShowBorrowed?"hide":"show"}</button></div>${state.suggestShowBorrowed ? `<div class="info-text" style="margin-bottom:10px">Borrowed chords intentionally step outside the key for color. Tap <strong>Add</strong> to append one to the Current Progression strip without leaving this panel.</div><div class="saved-list">${borrowedChips}</div>` : `<div class="info-text">Common outside-the-key chords that add color and surprise. Tap show to explore and append them without losing your place.</div>`}</div>`;
+
+    return `<div class="card" style="margin-bottom:14px"><div class="section-label">Progression Suggester</div><div class="info-text" style="margin-bottom:12px">Pick a key and mood for curated progressions, generate a random one, or borrow chords from outside the key. Build in the Current Progression strip, then jump to Progression mode only when you want the full fretboard map.</div><div class="mini-label">Key</div><div class="row" style="margin-bottom:10px">${keyRow}</div><div class="mini-label">Mood</div><div class="row">${moodBtns}</div></div>${currentSection}${randomSection}${borrowedSection}<div class="section-label" style="margin:0 0 10px 2px">${esc(mood.label)} progressions</div><div class="saved-list">${cards}</div>`;
   }
 
   // ── Fretboard Note Trainer ──
@@ -2382,6 +2586,68 @@
     return `<div class="card" style="margin-bottom:14px"><div class="section-label">Fretboard Note Trainer</div>${statusHtml}<div class="row" style="margin-top:10px"><button type="button" class="accent-btn" onclick="app.newTrainerTarget()">New target</button></div><div class="info-text" style="margin-top:8px">Great for learning a new tuning — the positions change with every instrument and capo setting.</div></div><div class="fret-scroll"><div class="fretboard" style="min-width:${minW}px"><div class="fret-numbers">${numberRow}</div>${rows}</div></div>`;
   }
 
+  // ── Metronome ──
+  const TIME_SIGS = {
+    "2/4": { beats: 2, unit: 4, feel: "March, polka — strong-weak." },
+    "3/4": { beats: 3, unit: 4, feel: "Waltz — strong-weak-weak." },
+    "4/4": { beats: 4, unit: 4, feel: "Common time — most pop, rock, and folk." },
+    "5/4": { beats: 5, unit: 4, feel: "Asymmetric — count 3+2 or 2+3 (e.g. “Take Five”)." },
+    "6/8": { beats: 6, unit: 8, feel: "Compound duple — two groups of three; lilting, 6 eighth-note pulses." },
+    "7/8": { beats: 7, unit: 8, feel: "Asymmetric compound — often 2+2+3; common in Balkan and prog." }
+  };
+  function renderMetronome() {
+    const sig = TIME_SIGS[state.metroSig] || TIME_SIGS["4/4"];
+    const bpm = state.metroBpm;
+    const sigButtons = Object.keys(TIME_SIGS).map(s => btn(s, state.metroSig===s, "#e8c547", `app.setMetroSig('${s}')`)).join("");
+    const bpmDown = `<button type="button" class="util-btn" onclick="app.nudgeBpm(-5)">−5</button>`;
+    const bpmUp = `<button type="button" class="util-btn" onclick="app.nudgeBpm(5)">+5</button>`;
+    const bpmDown1 = `<button type="button" class="util-btn" onclick="app.nudgeBpm(-1)">−1</button>`;
+    const bpmUp1 = `<button type="button" class="util-btn" onclick="app.nudgeBpm(1)">+1</button>`;
+
+    // Visual beat dots
+    const beats = sig.beats;
+    const dots = Array.from({length: beats}, (_, i) => {
+      const active = state.metroRunning && state.metroCurrentBeat === i;
+      const isAccent = i === 0;
+      return `<div class="beat-dot ${active?"active":""} ${isAccent?"accent":""}" style="${active?`background:${isAccent?"#e8c547":"#6dd4a8"};box-shadow:0 0 16px ${isAccent?"#e8c547":"#6dd4a8"}`:""}"></div>`;
+    }).join("");
+
+    const startStop = state.metroRunning
+      ? `<button type="button" class="accent-btn" style="background:#e8675a;border-color:#e8675a" onclick="app.stopMetronome()">Stop</button>`
+      : `<button type="button" class="accent-btn" onclick="app.startMetronome()">Start</button>`;
+
+    const tempoMarks = [[60,"Largo"],[76,"Adagio"],[108,"Moderato"],[120,"Allegro"],[168,"Presto"]];
+    const mark = tempoMarks.reduce((acc,[b,n]) => bpm>=b ? n : acc, "Grave");
+
+    // Trainer mode
+    let trainerHtml = "";
+    if (state.metroTrainer) {
+      const revealBtn = state.metroTrainerReveal
+        ? `<div class="info-text" style="margin-top:10px">It's <strong style="color:#e8c547;font-size:16px">${esc(state.metroTrainerSig||"?")}</strong> — ${esc(state.metroTrainerSig?TIME_SIGS[state.metroTrainerSig].feel:"")}</div><button type="button" class="accent-btn" style="margin-top:10px" onclick="app.newMetroChallenge()">Next challenge</button>`
+        : `<div class="row" style="margin-top:10px;flex-wrap:wrap">${Object.keys(TIME_SIGS).map(s => `<button type="button" class="pill" style="--c:#6dd4a8" onclick="app.guessMetroSig('${s}')">${s}</button>`).join("")}</div>`;
+      trainerHtml = `<div class="card" style="margin-bottom:14px;border-left:3px solid #6dd4a8">
+        <div class="section-label">Guess the time signature</div>
+        <div class="info-text" style="margin-bottom:10px">A pattern is playing with an accent on beat 1. Count the beats between accents, then pick the meter. ${state.metroRunning?"":"Tap “Play challenge” to start."}</div>
+        <div class="row">${state.metroRunning?`<button type="button" class="accent-btn" style="background:#e8675a;border-color:#e8675a" onclick="app.stopMetronome()">Stop</button>`:`<button type="button" class="accent-btn" onclick="app.newMetroChallenge()">Play challenge</button>`}</div>
+        ${state.metroRunning||state.metroTrainerReveal?revealBtn:""}
+      </div>`;
+    }
+
+    return `<div class="card" style="margin-bottom:14px"><div style="display:flex;align-items:center;justify-content:space-between"><div class="section-label" style="margin:0">Metronome</div><button type="button" class="pill" style="--c:#6dd4a8;font-size:11px;padding:3px 9px" onclick="app.toggleMetroTrainer()">${state.metroTrainer?"practice mode":"train my ear"}</button></div>
+      <div class="info-text" style="margin:8px 0 14px">A steady click with an accented downbeat. Use it to practise timing, or switch to ear-training to learn to identify meters by feel.</div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:16px">
+        <div style="font-size:46px;font-weight:300;color:var(--text-bright);line-height:1">${bpm}<span style="font-size:16px;color:var(--dim)"> BPM</span></div>
+        <div style="font-size:12px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase">${esc(mark)}</div>
+        <div class="row" style="justify-content:center">${bpmDown}${bpmDown1}${bpmUp1}${bpmUp}</div>
+        <input type="range" min="40" max="240" value="${bpm}" oninput="app.setBpm(this.value)" style="width:100%;max-width:340px" aria-label="Tempo BPM" />
+        <div class="beat-row" style="display:flex;gap:12px;justify-content:center;margin:6px 0">${dots}</div>
+        <div style="font-size:22px;color:var(--text-bright);letter-spacing:0.05em">${esc(state.metroSig)}</div>
+        <div>${startStop}</div>
+      </div>
+    </div>
+    ${state.metroTrainer ? trainerHtml : `<div class="card" style="margin-bottom:14px"><div class="section-label">Time signature</div><div class="row" style="margin-bottom:10px">${sigButtons}</div><div class="info-text">${esc(sig.feel)}</div></div>`}`;
+  }
+
   // ── Tuner reference tones ──
   function renderTuner() {
     const strings = getOpenStrings();
@@ -2406,6 +2672,7 @@
       case "quiz": content = renderQuiz(); break;
       case "ear": content = renderEar(); break;
       case "trainer": content = renderTrainer(); break;
+      case "metronome": content = renderMetronome(); break;
       case "tuner": content = renderTuner(); break;
       default: content = renderSingle();
     }
@@ -2416,7 +2683,7 @@
 
     // Primary tabs (most-used) + grouped "More" select for the rest
     const primary = [["single","Single"],["progression","Progression"],["scales","Scales"],["interval","Intervals"],["identify","Identify"]];
-    const moreModes = [["finder","Key Finder"],["modes","Modes Explorer"],["suggest","Progression Suggester"],["quiz","Chord-Tone Quiz"],["ear","Ear Training"],["trainer","Fretboard Trainer"],["tuner","Tuner"]];
+    const moreModes = [["finder","Key Finder"],["modes","Modes Explorer"],["suggest","Progression Suggester"],["quiz","Chord-Tone Quiz"],["ear","Ear Training"],["trainer","Fretboard Trainer"],["metronome","Metronome"],["tuner","Tuner"]];
     const primaryTabs = primary.map(([m,l]) => `<button type="button" role="tab" aria-selected="${state.mode===m?"true":"false"}" tabindex="${state.mode===m?"0":"-1"}" class="tab ${state.mode===m?"active":""}" onclick="app.setMode('${m}')">${l}</button>`).join("");
     const inMore = moreModes.some(([m]) => m === state.mode);
     const moreLabel = inMore ? (moreModes.find(([m]) => m === state.mode)[1]) : "More tools";
@@ -2426,7 +2693,7 @@
       <div class="header"><div class="eyebrow">${esc(instrumentLabel())} · ${esc(getOpenStrings().map(spell).join(" "))}</div><h1>Open Strings</h1><div class="tagline">A theory &amp; practice studio for stringed instruments</div></div>
       <div class="toolbar">
         <div class="segmented" role="tablist">${primaryTabs}</div>
-        <select class="util-btn ${inMore?"active-more":""}" onchange="if(this.value)app.setMode(this.value)" aria-label="More tools" style="${inMore?"border-color:var(--gold);color:var(--gold)":""}">${moreOptions}</select>
+        <select class="util-btn ${inMore?"active-more":""}" onchange="if(this.value)app.setMode(this.value)" aria-label="More tools and practice modes" style="${inMore?"border-color:var(--gold);color:var(--gold)":""}">${moreOptions}</select>
         <button type="button" class="util-btn" onclick="app.toggleTheme()" aria-label="Toggle theme">${themeLabel}</button>
         <button type="button" class="util-btn" onclick="app.toggle('showHelp')">${state.showHelp?"Hide help":"Help"}</button>
         <button type="button" class="util-btn" onclick="app.toggle('showPrefs')">${state.showPrefs?"Hide prefs":"Preferences"}</button>
@@ -2439,6 +2706,37 @@
       ${content}
       <div class="footer">Open Strings · single-file offline app · works on GitHub Pages<br>${esc(getOpenStrings().map(spell).join(" "))} · ${esc(tuningLabel())}</div>
     </div>`;
+
+    // Preserve horizontal scroll position of fretboards across re-renders, so tapping a
+    // high-fret note (e.g. in the Chord Identifier) doesn't snap the neck back to fret 0.
+    const target = document.getElementById("app");
+    if (render._scrollLeft != null) {
+      const scroller = target.querySelector(".fret-scroll");
+      if (scroller) scroller.scrollLeft = render._scrollLeft;
+    }
+    // Capture scroll position on any future scroll so the next render can restore it.
+    const liveScroller = target.querySelector(".fret-scroll");
+    if (liveScroller && !liveScroller._osBound) {
+      liveScroller._osBound = true;
+      liveScroller.addEventListener("scroll", () => { render._scrollLeft = liveScroller.scrollLeft; }, { passive: true });
+    }
+  }
+
+  // Lightweight visual update for the metronome beat indicator, avoiding a full re-render
+  // on every tick (which would be heavy and could disturb the audio scheduler).
+  function updateBeatDots(beat) {
+    const dots = document.querySelectorAll(".beat-dot");
+    if (!dots || !dots.length) return;
+    dots.forEach((d, i) => {
+      const accent = d.classList.contains("accent");
+      if (i === beat) {
+        d.style.background = accent ? "#e8c547" : "#6dd4a8";
+        d.style.boxShadow = `0 0 16px ${accent ? "#e8c547" : "#6dd4a8"}`;
+      } else {
+        d.style.background = "";
+        d.style.boxShadow = "";
+      }
+    });
   }
 
   // ── App handlers ──
@@ -2446,8 +2744,12 @@
     set(key, value) { state[key] = value; render(); },
     toggle(key) { state[key] = !state[key]; render(); },
     toggleTheme() { state.theme = state.theme === "dark" ? "light" : "dark"; try { localStorage.setItem("os-theme", state.theme); } catch (e) {} render(); },
-    setMode(mode) { state.mode = mode; render(); },
-    setSelectedKey(k) { state.selectedKey = k; render(); },
+    setMode(mode) {
+      if (state.mode === "metronome" && mode !== "metronome") { audio.stopMetronome(); state.metroRunning = false; state.metroCurrentBeat = -1; }
+      if (state.mode === "progression" && mode !== "progression") { audio.stopProgression(); }
+      state.mode = mode; render._scrollLeft = null; render();
+    },
+    setSelectedKey(k) { state.selectedKey = k; state.diatonicKey = k; render(); },
     setSelectedType(k) { state.selectedType = k; render(); },
     setScaleKey(k) { state.scaleKey = k; render(); },
     setScalesKey(k) { state.scalesKey = k; state.scalesPosition = null; state.scalesHighlightChord = null; render(); },
@@ -2470,6 +2772,7 @@
     },
     setFretRange(a,b) { state.fretRange = [a,b]; render(); },
     loadDiatonic(root, type) { state.selectedKey = root; state.selectedType = type; render(); },
+    setDiatonicKey(k) { state.diatonicKey = k; render(); },
     playNote(note) { audio.playNote(note); },
     playAt(stringIndex, fret) { audio.playAt(stringIndex, fret); },
     cellKey(ev, stringIndex, fret) {
@@ -2486,6 +2789,44 @@
     playProgression() { audio.playProgression(state.progChords, state.progLoop); },
     toggleLoop() { state.progLoop = !state.progLoop; if (!state.progLoop) audio.stopProgression(); render(); },
     stopAudio() { audio.stopProgression(); },
+    // Metronome
+    setBpm(v) { state.metroBpm = Math.max(40, Math.min(240, Math.round(Number(v)))); if (state.metroRunning) app._restartMetro(); render(); },
+    nudgeBpm(d) { state.metroBpm = Math.max(40, Math.min(240, state.metroBpm + d)); if (state.metroRunning) app._restartMetro(); render(); },
+    setMetroSig(s) { state.metroSig = s; if (state.metroRunning) app._restartMetro(); render(); },
+    _restartMetro() {
+      const sig = TIME_SIGS[state.metroSig] || TIME_SIGS["4/4"];
+      audio.startMetronome(state.metroBpm, sig.beats, sig.unit, (beat) => { state.metroCurrentBeat = beat; const el = document.querySelectorAll(".beat-dot"); /* lightweight visual update */ updateBeatDots(beat); });
+    },
+    startMetronome() {
+      state.metroRunning = true;
+      state.metroCurrentBeat = -1;
+      app._restartMetro();
+      render();
+    },
+    stopMetronome() { audio.stopMetronome(); state.metroRunning = false; state.metroCurrentBeat = -1; render(); },
+    toggleMetroTrainer() {
+      audio.stopMetronome();
+      state.metroRunning = false; state.metroCurrentBeat = -1;
+      state.metroTrainer = !state.metroTrainer;
+      state.metroTrainerReveal = false; state.metroTrainerSig = null;
+      render();
+    },
+    newMetroChallenge() {
+      const sigs = Object.keys(TIME_SIGS);
+      state.metroTrainerSig = sigs[Math.floor(Math.random() * sigs.length)];
+      state.metroTrainerReveal = false;
+      state.metroRunning = true;
+      state.metroCurrentBeat = -1;
+      const sig = TIME_SIGS[state.metroTrainerSig];
+      audio.startMetronome(state.metroBpm, sig.beats, sig.unit, (beat) => { state.metroCurrentBeat = beat; updateBeatDots(beat); });
+      render();
+    },
+    guessMetroSig(s) {
+      state.metroTrainerReveal = true;
+      const correct = s === state.metroTrainerSig;
+      toast(correct ? "Correct!" : `Not quite — listen again`);
+      render();
+    },
     // Chord identifier
     toggleIdNote(string, fret, note) {
       const i = state.idNotes.findIndex(p => p.string === string && p.fret === fret);
@@ -2500,8 +2841,30 @@
     playScale(root, intervals) { intervals.forEach((iv, i) => audio.playNote(transpose(root, iv), 4, 0.5, i * 0.18)); },
     // Suggester
     setSuggestKey(k) { state.suggestKey = k; render(); },
+    generateRandomProg() { state.suggestRandom = randomProgression(state.suggestRandomLen); render(); },
+    appendChordToProg(enc) {
+      try {
+        const chords = JSON.parse(decodeURIComponent(enc));
+        if (!Array.isArray(state.progChords)) state.progChords = [];
+        state.progChords = [...state.progChords, ...chords].slice(0, 8);
+        state.editingIdx = state.progChords.length - 1;
+        toast("Added to current progression");
+        render();
+      } catch (e) {}
+    },
+    loadSuggestedHere(enc) {
+      try {
+        const chords = JSON.parse(decodeURIComponent(enc));
+        state.progChords = chords.slice(0, 8);
+        state.editingIdx = 0;
+        toast("Loaded into current progression");
+        render();
+      } catch (e) {}
+    },
     loadSuggested(enc) { try { const chords = JSON.parse(decodeURIComponent(enc)); state.progChords = chords.slice(0, 8); state.editingIdx = 0; state.mode = "progression"; toast("Loaded into Progression"); render(); } catch (e) {} },
     playSuggested(enc) { try { const chords = JSON.parse(decodeURIComponent(enc)); audio.playProgression(chords, false); } catch (e) {} },
+    playCurrentProgressionOnce() { if (state.progChords && state.progChords.length) audio.playProgression(state.progChords, false); },
+    clearProgression() { state.progChords = []; state.editingIdx = 0; state.progMapMode = "combined"; audio.stopProgression(); toast("Current progression cleared"); render(); },
     // Trainer
     newTrainerTarget() {
       const strings = getOpenStrings();
@@ -2537,7 +2900,7 @@
     // Tuner
     playTunerNote(note, i) { audio.playAt(i, 0); },
     addChord() { if (state.progChords.length < 8) { state.progChords.push({ key: "C", type: "maj" }); state.editingIdx = state.progChords.length - 1; render(); } },
-    removeChord(i) { state.progChords = state.progChords.filter((_, idx) => idx !== i); state.editingIdx = Math.max(0, Math.min(state.editingIdx, state.progChords.length - 1)); render(); },
+    removeChord(i) { state.progChords = state.progChords.filter((_, idx) => idx !== i); state.editingIdx = Math.max(0, Math.min(state.editingIdx, state.progChords.length - 1)); if (!state.progChords.length) state.progMapMode = "combined"; render(); },
     setProgChord(i, field, value) { state.progChords = state.progChords.map((c, idx) => idx === i ? { ...c, [field]: value } : c); render(); },
     applyPreset(i) {
       const prog = PROGRESSION_LIBRARY[state.activeGenre][i];
