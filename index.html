@@ -130,8 +130,6 @@
   .dot.root { width: 30px; height: 30px; background: var(--root-fill); border: 2px solid var(--c); box-shadow: 0 0 14px color-mix(in srgb, var(--c) 55%, transparent), 0 0 0 1px var(--border); }
   .dot span { font-size: 9px; font-weight: bold; font-family: ui-monospace, monospace; color: var(--dot-text); }
   .dot.root span { color: var(--c); }
-  .dot.bass-note { width: 26px; height: 26px; background: var(--root-fill); border: 2px solid var(--c); box-shadow: 0 0 8px color-mix(in srgb, var(--c) 40%, transparent); }
-  .dot.bass-note span { color: var(--c); }
   .dot.shared { outline: 2px solid var(--text-bright); outline-offset: 2px; }
   .multi { position: absolute; top: -3px; right: -3px; width: 8px; height: 8px; border-radius: 50%; background: var(--text-bright); border: 1px solid var(--bg); }
   .scale-dot { position: relative; z-index: 2; width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid color-mix(in srgb, var(--c) 62%, transparent); background: color-mix(in srgb, var(--c) 18%, transparent); }
@@ -335,6 +333,7 @@
   .workbar-head { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap; }
   .workbar-actions { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
   .workbar-strip { display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; }
+  .workbar-bass { margin-top:10px; padding-top:10px; border-top:1px solid color-mix(in srgb, var(--gold) 18%, var(--border)); }
   .workbar-chip { --c: var(--gold); display:inline-flex; align-items:center; gap:6px; border:1px solid color-mix(in srgb, var(--c) 35%, var(--border)); color:var(--c); background:color-mix(in srgb, var(--c) 10%, transparent); border-radius:999px; padding:6px 8px; font-size:12px; cursor:pointer; }
   .workbar-chip.active { background:color-mix(in srgb, var(--c) 20%, transparent); box-shadow:0 0 0 2px color-mix(in srgb, var(--c) 24%, transparent) inset; }
   .workbar-chip .idx { opacity:.7; font-family:ui-monospace, monospace; font-size:10px; }
@@ -932,6 +931,7 @@
   function noteAtFret(open, fret) { return CHROMATIC[(CHROMATIC.indexOf(open) + fret) % 12]; }
   function buildTones(root, intervals) { const ri = CHROMATIC.indexOf(root); return intervals.map(iv => CHROMATIC[(ri + iv) % 12]); }
   function semiBetweenDir(a, b) { return (CHROMATIC.indexOf(b) - CHROMATIC.indexOf(a) + 12) % 12; }
+  function trueDist(a, b) { const d = semiBetweenDir(a, b); return Math.min(d, 12 - d); }
   function transpose(root, semis) { return CHROMATIC[(CHROMATIC.indexOf(root) + ((semis % 12) + 12) % 12) % 12]; }
 
   function esc(value) {
@@ -1037,8 +1037,12 @@
     // Progression suggester
     suggestKey: "C",
     suggestMood: "bright",
-    suggestRandom: null,    // last randomly-generated progression (array of romans)
+    suggestRandom: null,    // last randomly-generated progression (array of romans OR chord objects)
     suggestRandomLen: 4,    // desired length for the randomizer
+    suggestRandomBassExpl: null, // bass-motion explanation for the random card
+    suggestBassStyle: "none",    // none|smooth|descend|pedal|chromatic (randomizer + surprise)
+    studyBassApplied: false,     // whether Study's "Shape bass" has been applied
+    studyBassExpl: null,         // explanation text for the applied bass shape
     suggestShowBorrowed: false,
     suggestShowAllIdeas: false,  // reveal all mood ideas instead of the featured row
     suggestIdeaOffset: 0,        // rotates the featured idea row
@@ -1650,7 +1654,12 @@
     const romanRow = analysis.items.map((it, i) => `<span class="analysis-roman" style="--c:${it.color}"><strong>${i+1}. ${esc(chordLabel(it.chord))}</strong><span>${esc(it.roman)}</span><span class="role">${esc(it.role)}</span></span>`).join("");
     const safe = targets.safe.length ? targets.safe.map(n => `<span onclick="app.playNote('${n}')">${esc(spell(n))}</span>`).join("") : `<span>Use chord roots first</span>`;
     const strongLines = targets.strong.slice(0, compact ? 3 : 6).map(g => `<div class="analysis-line"><strong>${esc(g.idx + '. ' + g.label)}:</strong> aim for ${g.targets.map(t => `${esc(spell(t.note))} (${esc(t.label)})`).join(", ")}</div>`).join("");
-    const bassLines = bassIdeas.length ? bassIdeas.map(x => `<div class="analysis-line">${esc(x)}</div>`).join("") : `<div class="analysis-line">Root movement already looks clear. For smoother motion, try holding shared tones or using chord tones as passing bass notes.</div>`;
+    const hasBassNotes = chords.some(c => c.bass && c.bass !== c.key);
+    const bassPathLine = hasBassNotes ? (() => {
+      const path = chords.map(c => spell(c.bass || c.key)).join(" → ");
+      return `<div class="analysis-line" style="color:var(--text-bright)"><strong>Bass line:</strong> ${esc(path)}</div>`;
+    })() : "";
+    const bassLines = (bassPathLine ? bassPathLine : "") + (bassIdeas.length ? bassIdeas.map(x => `<div class="analysis-line">${esc(x)}</div>`).join("") : `<div class="analysis-line">Root movement already looks clear. For smoother motion, try holding shared tones or using chord tones as passing bass notes.</div>`);
     let deep = "";
     if (state.theoryDepth === "useful" || state.theoryDepth === "theory") {
       deep += `<div class="analysis-roman-row">${romanRow}</div>`;
@@ -2101,18 +2110,7 @@
         const isShared = sharedTones.has(note);
         if (fbMode === "single") {
           const idx = singleTones.indexOf(note);
-          if (idx >= 0) {
-            const isBass = !!(state.selectedBass
-              && state.selectedBass !== state.selectedKey
-              && note === state.selectedBass);
-            dot = {
-              color: chordColor,
-              isRoot: idx === 0,
-              isBass,
-              label: dotLabel(chordDef.intLabels?.[idx] || "?", note),
-              multi: false
-            };
-          }
+          if (idx >= 0) dot = { color: chordColor, isRoot: idx === 0, label: dotLabel(chordDef.intLabels?.[idx] || "?", note), multi: false };
         } else {
           if (state.progMapMode === "selected" && state.progChords.length) {
             const ai = Math.min(state.editingIdx, state.progChords.length - 1);
@@ -2128,7 +2126,7 @@
 
         let inner = "";
         if (dot) {
-          inner = `<div class="dot ${dot.isRoot ? "root" : dot.isBass ? "bass-note" : ""} ${isShared ? "shared" : ""}" style="--c:${cssColor(dot.color)}"><span>${esc(dot.label)}</span>${dot.multi ? `<div class="multi"></div>` : ""}</div>`;
+          inner = `<div class="dot ${dot.isRoot ? "root" : ""} ${isShared ? "shared" : ""}" style="--c:${cssColor(dot.color)}"><span>${esc(dot.label)}</span>${dot.multi ? `<div class="multi"></div>` : ""}</div>`;
         } else if (isSN && scaleDef) {
           inner = `<div class="scale-dot" style="--c:${cssColor(scaleDef.color)}"></div>`;
         } else {
@@ -2306,15 +2304,12 @@
       } else {
         const note = noteAtFret(strings[stringIndex], fp);
         const isRoot = note === root;
-        const targetBass = state.selectedBass || null;
-        const isLowestSounding = voicing.slice(0, stringIndex).every(f => f === null);
-        const isBass = !!(targetBass && targetBass !== root && note === targetBass && isLowestSounding);
         const fi = drawFrets.indexOf(fp);
         const pos = fi >= 0 ? fi * colW + colW / 2 - 7 : -100;
         if (fp === 0) {
-          cell = `<div style="position:absolute;${lefty?"right":"left"}:-13px;top:-6px;width:11px;height:11px;border-radius:50%;border:2px solid ${isRoot ? "var(--text-bright)" : isBass ? "var(--text-bright)" : chordColor};background:transparent" title="${esc(note)} (open${isBass ? " · bass" : ""})">${isBass ? `<span style="font-size:6px;font-weight:bold;color:${chordColor};font-family:monospace;position:absolute;bottom:-10px;left:50%;transform:translateX(-50%)">B</span>` : ""}</div>`;
+          cell = `<div style="position:absolute;${lefty?"right":"left"}:-13px;top:-6px;width:11px;height:11px;border-radius:50%;border:2px solid ${isRoot ? "var(--text-bright)" : chordColor};background:transparent" title="${esc(note)} (open)"></div>`;
         } else {
-          cell = `<div style="position:absolute;left:${pos}px;top:-7px;width:15px;height:15px;border-radius:50%;background:${isRoot ? "var(--root-fill)" : isBass ? "var(--root-fill)" : chordColor};border:2px solid ${isRoot || isBass ? chordColor : "transparent"};z-index:2;display:flex;align-items:center;justify-content:center" title="${esc(note)}${isBass ? " (bass)" : ""}"><span style="font-size:7px;font-weight:bold;color:${isRoot || isBass ? chordColor : "var(--dot-text)"};font-family:monospace">${isRoot ? "R" : isBass ? "B" : ""}</span></div>`;
+          cell = `<div style="position:absolute;left:${pos}px;top:-7px;width:15px;height:15px;border-radius:50%;background:${isRoot ? "var(--root-fill)" : chordColor};border:${isRoot ? `2px solid ${chordColor}` : "none"};z-index:2;display:flex;align-items:center;justify-content:center" title="${esc(note)}"><span style="font-size:7px;font-weight:bold;color:${isRoot ? chordColor : "var(--dot-text)"};font-family:monospace">${isRoot ? "R" : ""}</span></div>`;
         }
       }
       const label = `<div style="width:16px;text-align:${lefty?"left":"right"};font-size:9px;color:var(--muted)">${esc(spell(strings[stringIndex]))}</div>`;
@@ -2336,13 +2331,9 @@
 
   function renderLegend(chordColor) {
     const { scaleDef } = current();
-    const bassItem = (state.selectedBass && state.selectedBass !== state.selectedKey)
-      ? `<div class="legend-item"><div class="legend-dot" style="background:var(--root-fill);border:2px solid ${chordColor}"><span style="color:${chordColor}">B</span></div><span class="legend-text">Bass note (${esc(spell(state.selectedBass))})</span></div>`
-      : "";
     const scaleItem = scaleDef ? `<div class="legend-item"><div class="scale-dot" style="--c:${scaleDef.color};position:static"></div><span class="legend-text">Scale tone</span></div>` : "";
     return `<div class="legend"><div class="legend-title">Legend</div>
       <div class="legend-item"><div class="legend-dot" style="background:var(--root-fill);border:2px solid ${chordColor}"><span style="color:${chordColor}">R</span></div><span class="legend-text">Root</span></div>
-      ${bassItem}
       <div class="legend-item"><div class="legend-dot" style="background:${chordColor}"><span style="color:var(--dot-text)">3</span></div><span class="legend-text">Chord tone</span></div>
       ${scaleItem}
       <span class="legend-text" style="margin-left:auto;align-self:center">Tap any dot to hear the note</span></div>`;
@@ -2364,7 +2355,8 @@
       ${hasChords ? `<button type="button" class="util-btn" onclick="app.printChart()">Print</button>` : ""}
       ${hasChords ? `<button type="button" class="util-btn danger" onclick="app.clearProgression()">Clear</button>` : ""}
     </div>`;
-    const workbar = `<div class="progression-workbar"><div class="workbar-head"><div><div class="section-label">Current Progression</div><div class="info-text">Tap a chord to edit it. Use ‹ › to reorder. Everything below follows this order.</div></div>${topActions}</div><div class="workbar-strip">${chipRow}</div></div>`;
+    const bassShapeRow = (hasChords && state.progChords.length >= 2) ? `<div class="workbar-bass"><div class="mini-label" style="margin-bottom:4px">Shape the bass line</div><div class="row">${[["smooth","Smooth"],["descend","Walk down"],["pedal","Pedal"],["chromatic","Chromatic pull"]].map(([s,l]) => `<button type="button" class="util-btn" onclick="app.applyBassStyle('${s}')">${l}</button>`).join("")}${state.studyBassApplied ? `<button type="button" class="util-btn danger" onclick="app.removeBassStyle()">Reset bass</button>` : ""}</div>${state.studyBassExpl ? `<div class="info-text" style="font-style:italic;margin-top:6px">♩ ${esc(state.studyBassExpl)}</div>` : ""}</div>` : "";
+    const workbar = `<div class="progression-workbar"><div class="workbar-head"><div><div class="section-label">Current Progression</div><div class="info-text">Tap a chord to edit it. Use ‹ › to reorder. Everything below follows this order.</div></div>${topActions}</div><div class="workbar-strip">${chipRow}</div>${bassShapeRow}</div>`;
     const tabs = [["fretboard","Fretboard"],["edit","Edit chords"],["voice","Voice leading"],["notes","Songwriter notes"],["charts","Charts"],["library","Library"]].map(([k,l]) => btn(l, state.progTab===k, k==="fretboard"?"#e8c547":k==="edit"?"#7eb8d4":k==="voice"?"#c47ed4":k==="notes"?"#6dd4a8":k==="charts"?"#e8823a":"#a8c4e8", `app.set('progTab','${k}')`)).join("");
 
     const genreTabs = Object.keys(PROGRESSION_LIBRARY).map(g => btn(g, state.activeGenre===g, "#6dd4a8", `app.set('activeGenre','${g.replace(/'/g,"\\'")}')`)).join("");
@@ -2939,45 +2931,45 @@
 
   // ── Progression Suggester ──
   const SUGGEST_MOODS = {
-    "bright":     { label: "Bright & uplifting", progs: [
+    "bright":     { label: "Bright & uplifting", bassStyle: "none", progs: [
       ["I","V","vi","IV"],["I","IV","V"],["I","V","IV"],["IV","I","V","vi"],
       ["I","vi","IV","V"],["I","IV","vi","V"],["I","iii","IV","V"],["I","V","vi","iii","IV","I","IV","V"],
       ["IV","V","I","vi"],["I","ii","IV","V"]
     ] },
-    "melancholy": { label: "Melancholy", progs: [
+    "melancholy": { label: "Melancholy", bassStyle: "smooth", progs: [
       ["vi","IV","I","V"],["i","bVI","bIII","bVII"],["vi","V","IV","V"],["i","iv","bVII","bIII"],
       ["vi","IV","ii","V"],["i","bVII","bVI","V"],["vi","iii","IV","I"],["i","bVI","bVII","i"],
       ["vi","ii","V","I"],["i","v","bVI","bVII"]
     ] },
-    "tense":      { label: "Tense & dramatic", progs: [
+    "tense":      { label: "Tense & dramatic", bassStyle: "descend", progs: [
       ["i","bVI","bVII","i"],["i","bII","i"],["i","V","i"],["i","iv","V"],
       ["i","bVI","V","i"],["i","bVII","bVI","V"],["i","iv","bII","V"],["i","V","bVI","iv"],
       ["i","bII","bVII","i"],["i","iv","i","V"]
     ] },
-    "gospel":     { label: "Gospel & soulful", progs: [
+    "gospel":     { label: "Gospel & soulful", bassStyle: "smooth", progs: [
       ["I","iii","IV","iv"],["I","I7","IV","iv"],["vi","ii","V","I"],["IV","iv","I"],
       ["I","vi","ii","V"],["IV","V","iii","vi"],["I","III","IV","I"],["ii","V","I","vi"],
       ["I","I7","IV","V"],["vi","II","ii","V"]
     ] },
-    "dreamy":     { label: "Dreamy & floating", progs: [
+    "dreamy":     { label: "Dreamy & floating", bassStyle: "pedal", progs: [
       ["Imaj7","IVmaj7"],["Imaj7","iii","IV","V"],["ii","IV","I"],["Imaj7","vi","ii","V"],
       ["Imaj7","iii7","vi","IVmaj7"],["IVmaj7","V","iii","vi"],["Imaj7","IVmaj7","iii7","vi"],["ii7","V","Imaj7","vi"],
       ["Imaj7","II","IVmaj7","IV"],["vi","IVmaj7","Imaj7","V"]
     ] },
-    "jazz":       { label: "Jazz", progs: [
+    "jazz":       { label: "Jazz", bassStyle: "chromatic", progs: [
       ["ii7","V7","Imaj7"],["Imaj7","vi7","ii7","V7"],["iii7","vi7","ii7","V7"],["Imaj7","I7","IVmaj7","iv"],
       ["ii7","V7","iii7","vi7"],["Imaj7","VI7","ii7","V7"],["IVmaj7","iv","iii7","vi7"],["ii7","V7","Imaj7","VI7"],
       ["iii7","VI7","ii7","V7"],["Imaj7","bIII","ii7","V7"]
     ] },
-    "blues":      { label: "Blues", progs: [
+    "blues":      { label: "Blues", bassStyle: "none", progs: [
       ["I7","IV7","I7","I7"],["IV7","IV7","I7","I7"],["V7","IV7","I7","V7"],["I7","I7","I7","I7","IV7","IV7","I7","I7","V7","IV7","I7","V7"],
       ["I7","IV7","V7"],["i","iv","V7"],["I7","V7","IV7","I7"],["i7","iv7","i7","V7"]
     ] },
-    "neosoul":    { label: "Neo-soul", progs: [
+    "neosoul":    { label: "Neo-soul", bassStyle: "smooth", progs: [
       ["Imaj7","iii7","vi7","ii7"],["ii7","bIII","ii7","V7"],["Imaj7","IVmaj7","iii7","bIII"],["vi7","ii7","V7","Imaj7"],
       ["IVmaj7","iii7","ii7","I"],["Imaj7","vi7","IVmaj7","V"],["ii7","V7","iii7","bIII"],["Imaj7","bVII","IVmaj7","IV"]
     ] },
-    "modal":      { label: "Modal", progs: [
+    "modal":      { label: "Modal", bassStyle: "pedal", progs: [
       ["i","bVII","i"],["i","IV","i"],["i","bVII","bVI","bVII"],["I","bVII","IV","I"],
       ["i","bII","i"],["i","bIII","bVII","i"],["I","II","I"],["i","v","bVII","IV"]
     ] }
@@ -3034,6 +3026,126 @@
     if (m && ROMAN_MAP[m[1]]) { const [off] = ROMAN_MAP[m[1]]; const isMin = m[1] === m[1].toLowerCase(); return { key: transpose(key, off), type: m[2] || (isMin?"min":"maj") }; }
     return { key, type: "maj" };
   }
+
+  // ═══ Bass Line Optimizer ═══════════════════════════════════════════════════
+  // Treats slash chords as bass-motion tools. Given a progression and a style,
+  // finds inversions that shape the bass line. Uses only existing helpers:
+  // semiBetweenDir, trueDist, buildTones, CHORD_TYPES, spell.
+  function inversionsFor(chord) {
+    const def = CHORD_TYPES[chord.type] || CHORD_TYPES.maj;
+    const tones = buildTones(chord.key, def.intervals);
+    return [
+      { ...chord, bass: undefined },
+      ...tones.slice(1).map(n => ({ ...chord, bass: n }))
+    ];
+  }
+
+  function scoreBassPath(bassNotes, style, nextRoots) {
+    let score = 0, descCount = 0, ascCount = 0;
+    for (let i = 1; i < bassNotes.length; i++) {
+      const a = bassNotes[i-1], b = bassNotes[i];
+      const up = semiBetweenDir(a, b);
+      const dist = Math.min(up, 12 - up);
+      const isDesc = up > 6;
+      if (style === "smooth") {
+        if (b === a) { score -= 2; continue; }
+        score -= dist;
+        if (dist <= 2) score += 2;
+        if (isDesc && dist <= 2) score += 1;
+        if (isDesc) descCount++; else ascCount++;
+      }
+      if (style === "descend") {
+        if (isDesc && dist === 1) score += 6;
+        else if (isDesc && dist === 2) score += 4;
+        else if (isDesc && dist <= 4) score += 1;
+        else if (!isDesc) score -= up * 2;
+      }
+      if (style === "chromatic") {
+        if (nextRoots && i < nextRoots.length) {
+          const toRoot = trueDist(b, nextRoots[i]);
+          if (toRoot === 1) score += 4;
+          else if (toRoot === 0) score += 1;
+        }
+        if (dist === 1) score += 3;
+        else if (dist === 2) score += 1;
+        else score -= 1;
+      }
+    }
+    if (style === "smooth") {
+      score += Math.abs(descCount - ascCount) * 1.5;
+      score += descCount * 0.8;
+    }
+    return score;
+  }
+
+  function pedalVariant(chords, key) {
+    const pedalNote = key;
+    return chords.map(ch => {
+      const def = CHORD_TYPES[ch.type] || CHORD_TYPES.maj;
+      const tones = buildTones(ch.key, def.intervals);
+      if (tones.includes(pedalNote) && ch.key !== pedalNote) return { ...ch, bass: pedalNote };
+      return { ...ch, bass: undefined };
+    });
+  }
+
+  function cadenceBonus(combo) {
+    const last = combo[combo.length - 1];
+    return (!last.bass || last.bass === last.key) ? 1 : 0;
+  }
+
+  function optimizeBassLine(chords, key, style) {
+    if (style === "none" || !chords || !chords.length) return { chords, explanation: null, changed: false };
+    if (style === "pedal") {
+      const result = pedalVariant(chords, key);
+      const changed = result.some((c, i) => (c.bass || null) !== (chords[i].bass || null));
+      return { chords: result, explanation: changed ? explainBassPath(result, key, "pedal") : null, changed };
+    }
+    const candidates = chords.map(ch => inversionsFor(ch));
+    const nextRoots = chords.map(c => c.key);
+    let bestScore = -Infinity;
+    let bestCombo = candidates.map(c => c[0]);
+    function recurse(idx, current) {
+      if (idx === chords.length) {
+        const slashCount = current.filter(c => c.bass && c.bass !== c.key).length;
+        if (slashCount > Math.ceil(chords.length * 0.6)) return;
+        let consec = 0;
+        for (const c of current) {
+          if (c.bass && c.bass !== c.key) { consec++; if (consec >= 3) return; }
+          else consec = 0;
+        }
+        const bassNotes = current.map(c => c.bass || c.key);
+        const score = scoreBassPath(bassNotes, style, nextRoots) + cadenceBonus(current);
+        if (score > bestScore) { bestScore = score; bestCombo = [...current]; }
+        return;
+      }
+      for (const v of candidates[idx]) recurse(idx + 1, [...current, v]);
+    }
+    recurse(0, []);
+    const changed = bestCombo.some((c, i) => (c.bass || null) !== (chords[i].bass || null));
+    const explanation = changed ? explainBassPath(bestCombo, key, style) : null;
+    return { chords: bestCombo, explanation, changed };
+  }
+
+  function explainBassPath(chords, key, style) {
+    const bassNotes = chords.map(c => c.bass || c.key);
+    const pathStr = bassNotes.map(spell).join(" → ");
+    const dists = [];
+    for (let i = 1; i < bassNotes.length; i++) dists.push(trueDist(bassNotes[i-1], bassNotes[i]));
+    const allDesc = bassNotes.slice(1).every((_, i) => semiBetweenDir(bassNotes[i], bassNotes[i+1]) > 6);
+    const allStep = dists.every(d => d <= 2);
+    const pedalNote = bassNotes[0];
+    const pedalCount = bassNotes.filter(n => n === pedalNote).length;
+    const isPedal = style === "pedal" && pedalCount >= Math.ceil(bassNotes.length * 0.6);
+    const mostDesc = bassNotes.slice(1).filter((_, i) => semiBetweenDir(bassNotes[i], bassNotes[i+1]) > 6).length >= Math.ceil((bassNotes.length - 1) * 0.6);
+    if (isPedal) return `The harmony moves over a held ${spell(pedalNote)} bass — grounded and suspended.`;
+    if (allDesc && allStep) return `The bass walks down by step: ${pathStr} — smooth and song-like.`;
+    if (allDesc) return `The bass descends: ${pathStr}.`;
+    if (allStep && style === "smooth") return `Smooth bass motion: ${pathStr} — no big jumps between chords.`;
+    if (mostDesc) return `The bass mostly descends: ${pathStr}.`;
+    if (style === "chromatic") return `Chromatic approach tones pull each chord forward: ${pathStr}.`;
+    return `Shaped bass line: ${pathStr}.`;
+  }
+
   function renderSuggest() {
     const moodBtns = Object.entries(SUGGEST_MOODS).map(([k,v]) => btn(v.label, state.suggestMood===k, "#6dd4a8", `app.setSuggestMood('${k}')`)).join("");
     const keyRow = keyButtons(state.suggestKey, "#6dd4a8", "app.setSuggestKey");
@@ -3076,12 +3188,15 @@
       return "A usable starting point for a verse, chorus, or bridge.";
     }
     function cardFor(prog, idxLabel="") {
-      const chords = romanListToChords(prog);
+      // prog may be an array of roman strings (curated ideas) or chord objects (optimized/random).
+      const isChordObjects = prog.length > 0 && typeof prog[0] === "object";
+      const chords = isChordObjects ? prog : romanListToChords(prog);
       const display = chords.map(chordLabel).join("  →  ");
-      const romans = prog.join(" – ");
+      const romans = isChordObjects ? chords.map(chordSymbol).join(" – ") : prog.join(" – ");
       const enc = encodeURIComponent(JSON.stringify(chords));
-      const tags = ideaTags(prog).map(t => `<span class="tag-chip">${esc(tagLabel(t))}</span>`).join("");
-      return `<div class="idea-card"><div style="font-size:11px;color:var(--dim);font-style:italic;margin-bottom:3px">${idxLabel ? esc(idxLabel + " · ") : ""}${esc(romans)}</div><div class="progression">${esc(display)}</div><div class="info-text">${esc(oneLineUse(prog))}</div><div class="tags">${tags}</div><div class="row"><button type="button" class="pill" style="--c:#e8c547;font-size:11px" onclick="app.playSuggested('${enc}')">Preview</button><button type="button" class="pill" style="--c:#6dd4a8;font-size:11px" onclick="app.loadSuggestedHere('${enc}')">Use this</button><button type="button" class="pill" style="--c:#7eb8d4;font-size:11px" onclick="app.loadSuggested('${enc}')">Study</button></div></div>`;
+      const tagProg = isChordObjects ? chords.map(c => c.key) : prog;
+      const tags = ideaTags(tagProg).map(t => `<span class="tag-chip">${esc(tagLabel(t))}</span>`).join("");
+      return `<div class="idea-card"><div style="font-size:11px;color:var(--dim);font-style:italic;margin-bottom:3px">${idxLabel ? esc(idxLabel + " · ") : ""}${esc(romans)}</div><div class="progression">${esc(display)}</div><div class="info-text">${esc(oneLineUse(tagProg))}</div><div class="tags">${tags}</div><div class="row"><button type="button" class="pill" style="--c:#e8c547;font-size:11px" onclick="app.playSuggested('${enc}')">Preview</button><button type="button" class="pill" style="--c:#6dd4a8;font-size:11px" onclick="app.loadSuggestedHere('${enc}')">Use this</button><button type="button" class="pill" style="--c:#7eb8d4;font-size:11px" onclick="app.loadSuggested('${enc}')">Study</button></div></div>`;
     }
 
     const filtered = mood.progs.filter(matchesFilter);
@@ -3094,9 +3209,10 @@
       ["all","All"],["simple","Simple"],["classic","Classic"],["darker","Darker"],["loopable","Loopable"],["chorus","Big chorus"]
     ].map(([k,l]) => btn(l, state.suggestFilter===k, "#6dd4a8", `app.setSuggestFilter('${k}')`)).join("");
 
-    const randomCard = state.suggestRandom ? `<div style="margin-top:10px">${cardFor(state.suggestRandom, "Random")}</div>` : "";
+    const randomCard = state.suggestRandom ? `<div style="margin-top:10px">${cardFor(state.suggestRandom, "Random")}${state.suggestRandomBassExpl ? `<div class="info-text" style="margin-top:6px;color:var(--muted);font-style:italic">♩ ${esc(state.suggestRandomBassExpl)}</div>` : ""}</div>` : "";
     const lenBtns = [3,4,6,8].map(n => btn(String(n)+" chords", state.suggestRandomLen===n, "#e8c547", `app.set('suggestRandomLen',${n})`)).join("");
-    const ideaPanel = `<div class="idea-panel"><div class="idea-head"><div><div class="section-label">Try a progression</div><div class="info-text">Start here: preview a mood idea, tap <strong>Use this</strong> to make it your current progression, or <strong>Study</strong> when you want the full fretboard view.</div></div><div class="row"><button type="button" class="pill" style="--c:#6dd4a8" onclick="app.refreshIdeas()">Refresh ideas</button><button type="button" class="accent-btn" onclick="app.surpriseSuggestion()">Surprise me</button></div></div><div class="mini-label">Filter ideas</div><div class="row" style="margin-bottom:10px">${filterBtns}</div><div class="idea-row">${ideaCards}</div>${pool.length > 3 ? `<button type="button" class="muted-link" onclick="app.toggle('suggestShowAllIdeas')">${esc(showMoreText)}</button>` : ""}<div class="card" style="margin-top:10px;padding:11px 12px;background:var(--surface-2)"><div class="section-label" style="margin-bottom:6px">Randomizer</div><div class="info-text" style="margin-bottom:8px">Need a fresh shape? Choose a length, generate an idea, then preview or use it like any other card.</div><div class="row" style="margin-bottom:8px">${lenBtns}</div><button type="button" class="pill" style="--c:#e8c547" onclick="app.generateRandomProg()">Generate random idea</button>${randomCard}</div></div>`;
+    const bassStyleBtns = [["none","Simple roots"],["smooth","Smooth bass"],["descend","Walk down"],["pedal","Pedal tone"],["chromatic","Chromatic pull"]].map(([k,l]) => btn(l, state.suggestBassStyle===k, "#6dd4a8", `app.set('suggestBassStyle','${k}')`)).join("");
+    const ideaPanel = `<div class="idea-panel"><div class="idea-head"><div><div class="section-label">Try a progression</div><div class="info-text">Start here: preview a mood idea, tap <strong>Use this</strong> to make it your current progression, or <strong>Study</strong> when you want the full fretboard view.</div></div><div class="row"><button type="button" class="pill" style="--c:#6dd4a8" onclick="app.refreshIdeas()">Refresh ideas</button><button type="button" class="accent-btn" onclick="app.surpriseSuggestion()">Surprise me</button></div></div><div class="mini-label">Filter ideas</div><div class="row" style="margin-bottom:10px">${filterBtns}</div><div class="idea-row">${ideaCards}</div>${pool.length > 3 ? `<button type="button" class="muted-link" onclick="app.toggle('suggestShowAllIdeas')">${esc(showMoreText)}</button>` : ""}<div class="card" style="margin-top:10px;padding:11px 12px;background:var(--surface-2)"><div class="section-label" style="margin-bottom:6px">Randomizer</div><div class="info-text" style="margin-bottom:8px">Need a fresh shape? Choose a length and a bass motion, generate an idea, then preview or use it like any other card.</div><div class="row" style="margin-bottom:8px">${lenBtns}</div><div class="mini-label">Shape the bass line</div><div class="row" style="margin-bottom:8px">${bassStyleBtns}</div><button type="button" class="pill" style="--c:#e8c547" onclick="app.generateRandomProg()">Generate random idea</button>${randomCard}</div></div>`;
 
     const borrowedChips = BORROWED_CHORDS.map(bc => {
       const c = romanToChord(bc.roman, state.suggestKey);
@@ -3503,26 +3619,64 @@
     playScale(root, intervals) { intervals.forEach((iv, i) => audio.playNote(transpose(root, iv), 4, 0.5, i * 0.18)); },
     // Suggester
     setSuggestKey(k) { state.suggestKey = k; state.suggestIdeaOffset = 0; state.suggestShowAllIdeas = false; render(); },
-    setSuggestMood(k) { state.suggestMood = k; state.suggestIdeaOffset = 0; state.suggestShowAllIdeas = false; state.suggestRandom = null; render(); },
+    setSuggestMood(k) { state.suggestMood = k; state.suggestIdeaOffset = 0; state.suggestShowAllIdeas = false; state.suggestRandom = null; state.suggestRandomBassExpl = null; render(); },
     setSuggestFilter(k) { state.suggestFilter = k; state.suggestIdeaOffset = 0; state.suggestShowAllIdeas = false; render(); },
     refreshIdeas() { const mood = SUGGEST_MOODS[state.suggestMood]; const total = mood && mood.progs ? mood.progs.length : 1; state.suggestIdeaOffset = ((state.suggestIdeaOffset || 0) + 3) % Math.max(total, 1); state.suggestShowAllIdeas = false; render(); },
     surpriseSuggestion() {
       const mood = SUGGEST_MOODS[state.suggestMood];
       if (!mood || !mood.progs || !mood.progs.length) return;
       const prog = mood.progs[Math.floor(Math.random() * mood.progs.length)];
-      const chords = prog.map(r => romanToChord(r, state.suggestKey));
+      let chords = prog.map(r => romanToChord(r, state.suggestKey));
+      const bassStyle = state.suggestBassStyle !== "none" ? state.suggestBassStyle : (mood.bassStyle || "none");
+      const opt = optimizeBassLine(chords, state.suggestKey, bassStyle);
+      if (opt.changed) chords = opt.chords;
       app._rememberProgression();
       state.progChords = chords.slice(0, 8);
       state.editingIdx = 0;
       state.suggestInsertIdx = null;
       state.suggestFlashIdx = state.progChords.length - 1;
-      toast("Surprise progression loaded");
+      toast(opt.changed && opt.explanation ? opt.explanation : "Surprise progression loaded");
       audio.playProgression(state.progChords, false);
       render();
     },
-    generateRandomProg() { state.suggestRandom = randomProgression(state.suggestRandomLen); render(); },
+    applyBassStyle(style) {
+      if (!state.progChords || state.progChords.length < 2) return;
+      const key = state.suggestKey || state.selectedKey || state.progChords[0].key;
+      app._rememberProgression();
+      const result = optimizeBassLine(state.progChords, key, style);
+      if (result.changed) {
+        state.progChords = result.chords;
+        state.studyBassApplied = true;
+        state.studyBassExpl = result.explanation;
+        toast(result.explanation || "Bass line shaped");
+      } else {
+        toast("No smoother bass voicing found for this style");
+      }
+      render();
+    },
+    removeBassStyle() {
+      state.progChords = (state.progChords || []).map(c => { const n = { ...c }; delete n.bass; return n; });
+      state.studyBassApplied = false;
+      state.studyBassExpl = null;
+      toast("Bass reset to root position");
+      render();
+    },
+    generateRandomProg() {
+      const romans = randomProgression(state.suggestRandomLen);
+      let chords = romans.map(r => romanToChord(r, state.suggestKey));
+      const mood = SUGGEST_MOODS[state.suggestMood];
+      const bassStyle = state.suggestBassStyle !== "none" ? state.suggestBassStyle : (mood && mood.bassStyle ? mood.bassStyle : "none");
+      const opt = optimizeBassLine(chords, state.suggestKey, bassStyle);
+      state.suggestRandom = opt.changed ? opt.chords : chords;
+      state.suggestRandomBassExpl = opt.changed ? opt.explanation : null;
+      render();
+    },
     _rememberProgression() {
       state.suggestUndo = { chords: (state.progChords || []).map(c => ({...c})), editingIdx: state.editingIdx, insertIdx: state.suggestInsertIdx };
+      // A new edit invalidates any prior "shape bass" explanation, unless it's the
+      // applyBassStyle call itself (which sets the flag again immediately after).
+      state.studyBassApplied = false;
+      state.studyBassExpl = null;
     },
     _cleanProgSelection() {
       if (!Array.isArray(state.progChords)) state.progChords = [];
