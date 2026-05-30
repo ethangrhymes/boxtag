@@ -130,6 +130,8 @@
   .dot.root { width: 30px; height: 30px; background: var(--root-fill); border: 2px solid var(--c); box-shadow: 0 0 14px color-mix(in srgb, var(--c) 55%, transparent), 0 0 0 1px var(--border); }
   .dot span { font-size: 9px; font-weight: bold; font-family: ui-monospace, monospace; color: var(--dot-text); }
   .dot.root span { color: var(--c); }
+  .dot.bass-note { width: 26px; height: 26px; background: var(--root-fill); border: 2px solid var(--c); box-shadow: 0 0 8px color-mix(in srgb, var(--c) 40%, transparent); }
+  .dot.bass-note span { color: var(--c); }
   .dot.shared { outline: 2px solid var(--text-bright); outline-offset: 2px; }
   .multi { position: absolute; top: -3px; right: -3px; width: 8px; height: 8px; border-radius: 50%; background: var(--text-bright); border: 1px solid var(--bg); }
   .scale-dot { position: relative; z-index: 2; width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid color-mix(in srgb, var(--c) 62%, transparent); background: color-mix(in srgb, var(--c) 18%, transparent); }
@@ -1569,7 +1571,7 @@
   function romanInfoForChord(ch, key) {
     const result = _romanInfoForChord(ch, key);
     if (result && ch && ch.bass && ch.bass !== ch.key) {
-      const bassOff = semiBetweenDir(key, ch.bass);
+      const bassOff = semiBetweenDir(ch.key, ch.bass);
       const bassLabel = ["1","b2","2","b3","3","4","b5","5","b6","6","b7","7"][bassOff] || "?";
       return { ...result, roman: `${result.roman}/${bassLabel}`, plain: `${result.plain} (${spell(ch.bass)} in bass)` };
     }
@@ -2099,7 +2101,18 @@
         const isShared = sharedTones.has(note);
         if (fbMode === "single") {
           const idx = singleTones.indexOf(note);
-          if (idx >= 0) dot = { color: chordColor, isRoot: idx === 0, label: dotLabel(chordDef.intLabels?.[idx] || "?", note), multi: false };
+          if (idx >= 0) {
+            const isBass = !!(state.selectedBass
+              && state.selectedBass !== state.selectedKey
+              && note === state.selectedBass);
+            dot = {
+              color: chordColor,
+              isRoot: idx === 0,
+              isBass,
+              label: dotLabel(chordDef.intLabels?.[idx] || "?", note),
+              multi: false
+            };
+          }
         } else {
           if (state.progMapMode === "selected" && state.progChords.length) {
             const ai = Math.min(state.editingIdx, state.progChords.length - 1);
@@ -2115,7 +2128,7 @@
 
         let inner = "";
         if (dot) {
-          inner = `<div class="dot ${dot.isRoot ? "root" : ""} ${isShared ? "shared" : ""}" style="--c:${cssColor(dot.color)}"><span>${esc(dot.label)}</span>${dot.multi ? `<div class="multi"></div>` : ""}</div>`;
+          inner = `<div class="dot ${dot.isRoot ? "root" : dot.isBass ? "bass-note" : ""} ${isShared ? "shared" : ""}" style="--c:${cssColor(dot.color)}"><span>${esc(dot.label)}</span>${dot.multi ? `<div class="multi"></div>` : ""}</div>`;
         } else if (isSN && scaleDef) {
           inner = `<div class="scale-dot" style="--c:${cssColor(scaleDef.color)}"></div>`;
         } else {
@@ -2293,12 +2306,15 @@
       } else {
         const note = noteAtFret(strings[stringIndex], fp);
         const isRoot = note === root;
+        const targetBass = state.selectedBass || null;
+        const isLowestSounding = voicing.slice(0, stringIndex).every(f => f === null);
+        const isBass = !!(targetBass && targetBass !== root && note === targetBass && isLowestSounding);
         const fi = drawFrets.indexOf(fp);
         const pos = fi >= 0 ? fi * colW + colW / 2 - 7 : -100;
         if (fp === 0) {
-          cell = `<div style="position:absolute;${lefty?"right":"left"}:-13px;top:-6px;width:11px;height:11px;border-radius:50%;border:2px solid ${isRoot ? "var(--text-bright)" : chordColor};background:transparent" title="${esc(note)} (open)"></div>`;
+          cell = `<div style="position:absolute;${lefty?"right":"left"}:-13px;top:-6px;width:11px;height:11px;border-radius:50%;border:2px solid ${isRoot ? "var(--text-bright)" : isBass ? "var(--text-bright)" : chordColor};background:transparent" title="${esc(note)} (open${isBass ? " · bass" : ""})">${isBass ? `<span style="font-size:6px;font-weight:bold;color:${chordColor};font-family:monospace;position:absolute;bottom:-10px;left:50%;transform:translateX(-50%)">B</span>` : ""}</div>`;
         } else {
-          cell = `<div style="position:absolute;left:${pos}px;top:-7px;width:15px;height:15px;border-radius:50%;background:${isRoot ? "var(--root-fill)" : chordColor};border:${isRoot ? `2px solid ${chordColor}` : "none"};z-index:2;display:flex;align-items:center;justify-content:center" title="${esc(note)}"><span style="font-size:7px;font-weight:bold;color:${isRoot ? chordColor : "var(--dot-text)"};font-family:monospace">${isRoot ? "R" : ""}</span></div>`;
+          cell = `<div style="position:absolute;left:${pos}px;top:-7px;width:15px;height:15px;border-radius:50%;background:${isRoot ? "var(--root-fill)" : isBass ? "var(--root-fill)" : chordColor};border:2px solid ${isRoot || isBass ? chordColor : "transparent"};z-index:2;display:flex;align-items:center;justify-content:center" title="${esc(note)}${isBass ? " (bass)" : ""}"><span style="font-size:7px;font-weight:bold;color:${isRoot || isBass ? chordColor : "var(--dot-text)"};font-family:monospace">${isRoot ? "R" : isBass ? "B" : ""}</span></div>`;
         }
       }
       const label = `<div style="width:16px;text-align:${lefty?"left":"right"};font-size:9px;color:var(--muted)">${esc(spell(strings[stringIndex]))}</div>`;
@@ -2320,9 +2336,13 @@
 
   function renderLegend(chordColor) {
     const { scaleDef } = current();
+    const bassItem = (state.selectedBass && state.selectedBass !== state.selectedKey)
+      ? `<div class="legend-item"><div class="legend-dot" style="background:var(--root-fill);border:2px solid ${chordColor}"><span style="color:${chordColor}">B</span></div><span class="legend-text">Bass note (${esc(spell(state.selectedBass))})</span></div>`
+      : "";
     const scaleItem = scaleDef ? `<div class="legend-item"><div class="scale-dot" style="--c:${scaleDef.color};position:static"></div><span class="legend-text">Scale tone</span></div>` : "";
     return `<div class="legend"><div class="legend-title">Legend</div>
       <div class="legend-item"><div class="legend-dot" style="background:var(--root-fill);border:2px solid ${chordColor}"><span style="color:${chordColor}">R</span></div><span class="legend-text">Root</span></div>
+      ${bassItem}
       <div class="legend-item"><div class="legend-dot" style="background:${chordColor}"><span style="color:var(--dot-text)">3</span></div><span class="legend-text">Chord tone</span></div>
       ${scaleItem}
       <span class="legend-text" style="margin-left:auto;align-self:center">Tap any dot to hear the note</span></div>`;
