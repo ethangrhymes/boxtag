@@ -1078,7 +1078,7 @@
     suggestShowAllIdeas: false,  // reveal all mood ideas instead of the featured row
     suggestIdeaOffset: 0,        // rotates the featured idea row
     suggestFilter: "all",       // all, simple, classic, darker, loopable, chorus
-    suggestTab: "color",        // color, landings, notes
+    suggestTab: "color",        // color, landings, next, scenarios, notes
     showSetup: false,            // compact global setup panel
     progTab: "fretboard",       // progression study tabs: fretboard, edit, voice, notes, charts, library
     suggestUndo: null,           // last Suggester edit that can be undone
@@ -1591,7 +1591,19 @@
     if (firstQ === "minor") return true;
     // Secondary heuristic: majority minor-quality chords
     const minorCount = chords.filter(c => baseQuality(c.type) === "minor").length;
-    return minorCount > chords.length / 2;
+    if (minorCount > chords.length / 2) return true;
+    // Tertiary heuristic: progressions that start on the relative major (VI) or III
+    // but contain a minor chord that's clearly the tonic (most common minor root).
+    // e.g. F–G–Am–C in A minor: first chord is major but Am is clearly tonic.
+    if (minorCount > 0) {
+      const minorRoots = chords.filter(c => baseQuality(c.type) === "minor").map(c => c.key);
+      const freq = {};
+      minorRoots.forEach(r => { freq[r] = (freq[r] || 0) + 1; });
+      const mostCommonMinor = Object.entries(freq).sort((a,b) => b[1]-a[1])[0];
+      // If the same minor root appears more than once, it's likely the tonic
+      if (mostCommonMinor && mostCommonMinor[1] >= 2) return true;
+    }
+    return false;
   }
 
   // Roman numeral analysis for a minor-key context (natural minor / Aeolian default,
@@ -1857,7 +1869,7 @@
       <div class="analysis-item"><h4>Melody targets</h4><p>Safe notes appear in multiple chords. Strong notes are 3rds and 7ths.</p><div class="mini-targets">${safe}</div></div>
       <div class="analysis-item"><h4>Bass motion</h4><div class="analysis-list">${bassLines}</div></div>
     </div>${strongLines ? `<div class="analysis-item" style="margin-top:10px"><h4>Strong note targets</h4><div class="analysis-list">${strongLines}</div></div>` : ""}`;
-    return `<div class="analysis-card"><div class="section-label">Songwriter Notes in ${esc(spell(key))}</div>${renderTheoryDepthControls()}<div class="analysis-topline">${esc(analysis.headline)}</div><div class="analysis-subline"><strong>Movement:</strong> ${esc(analysis.movement)} · <strong>Ending:</strong> ${esc(analysis.ending)}</div>${deep}${fullGrid}</div>`;
+    return `<div class="analysis-card"><div class="section-label">Songwriter Notes in ${esc(spell(key))} ${analysis.isMinor ? "minor" : "major"}</div>${renderTheoryDepthControls()}<div class="analysis-topline">${esc(analysis.headline)}</div><div class="analysis-subline"><strong>Movement:</strong> ${esc(analysis.movement)} · <strong>Ending:</strong> ${esc(analysis.ending)}</div>${deep}${fullGrid}</div>`;
   }
 
   // Chord identifier — given a set of pitch classes, find best matching chord
@@ -2294,7 +2306,13 @@
         const isShared = sharedTones.has(note);
         if (fbMode === "single") {
           const idx = singleTones.indexOf(note);
-          if (idx >= 0) dot = { color: chordColor, isRoot: idx === 0, label: dotLabel(chordDef.intLabels?.[idx] || "?", note), multi: false };
+          const isBassNote = !!(state.selectedBass && state.selectedBass !== state.selectedKey && note === state.selectedBass);
+          if (idx >= 0) {
+            dot = { color: chordColor, isRoot: idx === 0, isBass: isBassNote && idx !== 0, label: dotLabel(chordDef.intLabels?.[idx] || "?", note), multi: false };
+          } else if (isBassNote) {
+            // Non-chord-tone bass (pedal/passing) — show it as a special dot
+            dot = { color: chordColor, isRoot: false, isBass: true, label: dotLabel(spell(note), note), multi: false };
+          }
         } else {
           if (state.progMapMode === "selected" && state.progChords.length) {
             const ai = Math.min(state.editingIdx, state.progChords.length - 1);
@@ -2322,6 +2340,8 @@
         if (dot) {
           if (dot.isSharedMulti) {
             inner = `<div class="dot ${dot.isRoot ? "root-shared" : ""} ${dot.isAnchor ? "anchor-note" : ""}" style="background:${dot.color}${dot.isRoot ? ";box-shadow:0 0 0 2.5px var(--text-bright)" : ""}"><span style="color:#fff;text-shadow:0 0 3px rgba(0,0,0,0.75)">${esc(dot.label)}</span></div>`;
+          } else if (dot.isBass) {
+            inner = `<div class="dot bass-note" style="--c:${cssColor(dot.color)}"><span>${esc(dot.label)}</span></div>`;
           } else {
             inner = `<div class="dot ${dot.isRoot ? "root" : ""} ${isShared ? "shared" : ""}" style="--c:${cssColor(dot.color)}"><span>${esc(dot.label)}</span>${dot.multi ? `<div class="multi"></div>` : ""}</div>`;
           }
@@ -2541,10 +2561,11 @@
   function renderProgression() {
     const hasChords = Array.isArray(state.progChords) && state.progChords.length;
     const analysisKey = state.suggestKey || state.selectedKey || (hasChords ? state.progChords[0].key : "C");
+    const analysisMode = hasChords ? (detectMinorKey(state.progChords) ? "minor" : "major") : "major";
     const chipRow = hasChords ? state.progChords.map((ch, i) => {
       const col = PROG_COLORS[i % PROG_COLORS.length];
       const active = state.editingIdx === i ? "active" : "";
-      const info = romanInfoForChord(ch, analysisKey);
+      const info = romanInfoForChord(ch, analysisKey, analysisMode);
       const roman = info ? info.roman : "";
       const sym = chordSymbol(ch);
       return `<span class="workbar-chip ${active}" style="--c:${col}" onclick="app.selectProgressionChord(${i})" title="${esc(roman ? roman + ' — ' + info.role : sym)}"><span class="chip-roman">${esc(roman)}</span><span class="chip-name">${esc(sym)}</span><span class="chip-moves"><button type="button" aria-label="Move left" onclick="event.stopPropagation();app.moveChordLeft(${i})">‹</button><button type="button" aria-label="Move right" onclick="event.stopPropagation();app.moveChordRight(${i})">›</button></span></span>`;
@@ -2569,7 +2590,7 @@
       const col = PROG_COLORS[ci % PROG_COLORS.length];
       const tones = buildTones(ch.key, CHORD_TYPES[ch.type]?.intervals || []);
       const label = chordSymbol(ch);
-      const info = romanInfoForChord(ch, analysisKey);
+      const info = romanInfoForChord(ch, analysisKey, analysisMode);
       const romanBadge = info ? `<div style="font-size:9px;color:${info.color || "var(--muted)"};margin-top:3px;font-family:ui-monospace,monospace">${esc(info.roman)} · ${esc(info.role)}</div>` : "";
       const del = state.progChords.length > 1 ? `<button type="button" class="delete-x" onclick="event.stopPropagation();app.removeChord(${ci})" aria-label="Remove chord">×</button>` : "";
       return `<div class="chord-card"><div class="chord-inner ${state.editingIdx===ci?"active":""}" style="--c:${col}" onclick="app.selectProgressionChord(${ci})"><div class="ch-name">${ci+1}. ${esc(label)}</div><div class="ch-tones">${esc(tones.join(" "))}</div>${romanBadge}<button type="button" class="play-btn" style="margin-top:5px;font-size:10px;padding:1px 7px" onclick="event.stopPropagation();app.playChordByIndex(${ci})">Preview</button><div class="reorder-row"><button type="button" class="chord-move-btn" onclick="event.stopPropagation();app.moveChordLeft(${ci})" aria-label="Move ${esc(label)} left">‹</button><span class="mini-label" style="margin:0">move</span><button type="button" class="chord-move-btn" onclick="event.stopPropagation();app.moveChordRight(${ci})" aria-label="Move ${esc(label)} right">›</button></div></div>${del}</div>`;
@@ -3352,6 +3373,189 @@
     return `Shaped bass line: ${pathStr}.`;
   }
 
+  // ── Direction 1: Targeted "What to try next" mutation advice ─────────────────
+  // Analyzes the current progression and produces specific, actionable suggestions
+  // for single-chord changes. Each suggestion has a type, plain label, and apply action.
+  function buildNextSuggestions(chords, key) {
+    if (!chords || chords.length < 2) return [];
+    const isMinor = detectMinorKey(chords);
+    const mode = isMinor ? "minor" : "major";
+    const analysis = analyzeProgression(chords, key);
+    const suggestions = [];
+
+    // 1. Swap the V chord to V7 (add dominant tension if V exists without 7th)
+    chords.forEach((ch, i) => {
+      const info = romanInfoForChord(ch, key, mode);
+      if (info.roman === "V" && ch.type === "maj") {
+        const ch7 = { ...ch, type: "7" };
+        suggestions.push({
+          type: "swap", icon: "↗", color: "#e87a3a",
+          label: `Make ${spell(ch.key)} a dominant 7 (${spell(ch.key)}7)`,
+          detail: "Adds the b7 — sharpens the pull toward " + (isMinor ? "i" : "I") + " and gives the progression more forward motion.",
+          apply: () => { const n=[...chords]; n[i]=ch7; return n; }
+        });
+      }
+    });
+
+    // 2. Add smooth bass motion via inversion (if not already using slash chords)
+    const hasSlash = chords.some(c => c.bass && c.bass !== c.key);
+    if (!hasSlash && chords.length >= 3) {
+      const smooth = optimizeBassLine(chords, key, "smooth");
+      if (smooth.changed) {
+        suggestions.push({
+          type: "bassline", icon: "↓", color: "#6dd4a8",
+          label: "Smooth the bass line with inversions",
+          detail: smooth.explanation || "Add chord inversions so the bass moves by step instead of leaping.",
+          apply: () => smooth.chords
+        });
+      }
+    }
+
+    // 3. Swap last chord with a deceptive cadence (V→vi instead of V→I or i)
+    if (chords.length >= 3) {
+      const prev = chords[chords.length - 2];
+      const last = chords[chords.length - 1];
+      const prevInfo = romanInfoForChord(prev, key, mode);
+      const lastInfo = romanInfoForChord(last, key, mode);
+      if ((prevInfo.roman === "V" || prevInfo.roman === "V7") && (lastInfo.roman === "I" || lastInfo.roman === "i")) {
+        const deceptive = romanToChord(isMinor ? "VI" : "vi", key);
+        suggestions.push({
+          type: "swap", icon: "↻", color: "#c47ed4",
+          label: `Deceptive ending: ${spell(prev.key)}${prev.type==="7"?"7":""} → ${spell(deceptive.key)}${deceptive.type==="min"?"m":""}`,
+          detail: "Instead of resolving home, land on the " + (isMinor ? "major VI" : "relative minor vi") + " — emotional, unresolved, keeps the ear wanting more.",
+          apply: () => { const n=[...chords]; n[n.length-1]=deceptive; return n; }
+        });
+      }
+    }
+
+    // 4. Suggest borrowed iv/IV swap (major IV→minor iv or vice versa for color)
+    chords.forEach((ch, i) => {
+      const info = romanInfoForChord(ch, key, mode);
+      if (info.roman === "IV" && ch.type === "maj") {
+        const ivMin = { ...ch, type: "min" };
+        suggestions.push({
+          type: "swap", icon: "♭", color: "#7eb8d4",
+          label: `Darken ${spell(ch.key)} to minor (${spell(ch.key)}m)`,
+          detail: "The minor iv is one of the most beloved borrowed chords — bittersweet and immediately effective.",
+          apply: () => { const n=[...chords]; n[i]=ivMin; return n; }
+        });
+      }
+      if (info.roman === "iv" && ch.type === "min" && isMinor) {
+        const ivMaj = { ...ch, type: "maj" };
+        suggestions.push({
+          type: "swap", icon: "♮", color: "#e8c547",
+          label: `Brighten ${spell(ch.key)}m to major (Dorian IV)`,
+          detail: "The major IV in a minor key is a Dorian touch — gives a hopeful lift without leaving the minor world.",
+          apply: () => { const n=[...chords]; n[i]=ivMaj; return n; }
+        });
+      }
+    });
+
+    // 5. Add a passing secondary dominant before a strong chord target
+    chords.forEach((ch, i) => {
+      if (i === 0) return;
+      const info = romanInfoForChord(ch, key, mode);
+      // For vi/Am in major, suggest E7 before it
+      if (info.roman === "vi" || info.roman === "i") {
+        const secDomRoot = transpose(ch.key, 7); // V of this chord
+        const alreadyThere = i > 0 && chords[i-1].key === secDomRoot && isDominantLike(chords[i-1].type);
+        if (!alreadyThere) {
+          const secDom = { key: secDomRoot, type: "7" };
+          suggestions.push({
+            type: "insert", icon: "→", color: "#e87a3a",
+            label: `Add ${spell(secDomRoot)}7 before ${spell(ch.key)}${ch.type==="min"?"m":""}`,
+            detail: spell(secDomRoot) + "7 is the V of " + spell(ch.key) + " — creates a directed pull that makes the landing feel earned.",
+            insertBefore: i,
+            apply: () => { const n=[...chords]; n.splice(i, 0, secDom); return n.slice(0, 8); }
+          });
+        }
+      }
+    });
+
+    // 6. Parallel minor swap for the tonic (I→i or i→I)
+    if (chords.length >= 2) {
+      const firstInfo = romanInfoForChord(chords[0], key, mode);
+      if (firstInfo.roman === "I") {
+        const iMin = { key: chords[0].key, type: "min" };
+        suggestions.push({
+          type: "swap", icon: "↔", color: "#c47ed4",
+          label: `Try ${spell(chords[0].key)}m to open (parallel minor tonic)`,
+          detail: "Starting on the parallel minor tonic can make the whole progression feel darker and more dramatic.",
+          apply: () => { const n=[...chords]; n[0]=iMin; return n; }
+        });
+      }
+    }
+
+    return suggestions.slice(0, 6); // cap at 6 so the panel stays readable
+  }
+
+  // ── Direction 2: Scenario-based variations ────────────────────────────────────
+  // Takes the current progression and generates a scenario-shaped variation of it.
+  // Scenarios are higher-level moods: "make this a chorus", "darken it", etc.
+  const SCENARIOS = [
+    { id:"chorus",  label:"Make it a chorus",    icon:"🔊", desc:"Bolder resolution — ends on I/i, opens up harmonically." },
+    { id:"verse",   label:"Verse (builds tension)", icon:"🎵", desc:"Keeps some tension unresolved — good for building toward a chorus." },
+    { id:"bridge",  label:"Bridge (unexpected)",   icon:"↗", desc:"Goes somewhere surprising — a borrowed chord or key area shift." },
+    { id:"dark",    label:"Darken it",             icon:"🌑", desc:"Minor color, borrowed chords, or a move to the parallel minor." },
+    { id:"lift",    label:"Give it a lift",        icon:"☀", desc:"Add a major IV, bVII, or bright borrowed color chord." },
+    { id:"loop",    label:"Loop-friendly",         icon:"🔁", desc:"Ends in a way that flows naturally back to the start." },
+  ];
+
+  function buildScenarioVariation(chords, key, scenarioId) {
+    if (!chords || !chords.length) return null;
+    const isMinor = detectMinorKey(chords);
+    let result = [...chords];
+
+    if (scenarioId === "chorus") {
+      // End on the tonic, make sure it has a strong pre-cadential chord
+      const home = romanToChord(isMinor ? "i" : "I", key);
+      const dom = romanToChord("V", key);
+      result = result.slice(0, result.length > 3 ? result.length - 1 : result.length);
+      // Ensure second-to-last is dominant-ish
+      if (result.length > 1) {
+        const prevInfo = romanInfoForChord(result[result.length-1], key, isMinor?"minor":"major");
+        if (prevInfo.role !== "tension") result[result.length-1] = dom;
+      }
+      result.push(home);
+    }
+    else if (scenarioId === "verse") {
+      // End on V or V7 to keep tension
+      const dom7 = romanToChord("V7", key);
+      result = result.map(c => c); // copy
+      result[result.length - 1] = dom7;
+    }
+    else if (scenarioId === "bridge") {
+      // Insert a borrowed chord in the middle and end somewhere unexpected
+      const borrowed = isMinor ? romanToChord("VI", key) : romanToChord("bVII", key);
+      const mid = Math.floor(result.length / 2);
+      result.splice(mid, 0, borrowed);
+      result = result.slice(0, 8);
+    }
+    else if (scenarioId === "dark") {
+      // Swap the tonic to minor if major, add iv or bVI
+      result = result.map(c => {
+        const info = romanInfoForChord(c, key, isMinor?"minor":"major");
+        if (info.roman === "I") return { ...c, type: "min" };
+        if (info.roman === "IV") return { ...c, type: "min" };
+        return c;
+      });
+    }
+    else if (scenarioId === "lift") {
+      // Add a bVII or major VI before the end
+      const lift = isMinor ? romanToChord("III", key) : romanToChord("bVII", key);
+      const insertAt = Math.max(result.length - 1, 1);
+      result.splice(insertAt, 0, lift);
+      result = result.slice(0, 8);
+    }
+    else if (scenarioId === "loop") {
+      // End on V so it snaps back to the start nicely
+      const dom = romanToChord("V", key);
+      result[result.length - 1] = dom;
+    }
+
+    return result;
+  }
+
   function renderSuggest() {
     const moodBtns = Object.entries(SUGGEST_MOODS).map(([k,v]) => btn(v.label, state.suggestMood===k, "#6dd4a8", `app.setSuggestMood('${k}')`)).join("");
     const keyRow = keyButtons(state.suggestKey, "#6dd4a8", "app.setSuggestKey");
@@ -3439,8 +3643,60 @@
     }).join("");
     const landingsPanel = `<div class="suggest-tab-panel"><div class="section-label">Add a stronger landing</div><div class="info-text" style="margin-bottom:6px">These two-chord moves create pull, then land somewhere clear. Use them when you want the next chord to feel more important.</div><div class="reorder-tip" style="margin-bottom:10px">${esc(insertHint())}</div><div class="saved-list">${landingCards}</div></div>`;
     const notesPanel = `<div>${renderSongwriterAnalysis(state.suggestKey, false)}</div>`;
-    const tabs = [["color","Color chords"],["landings","Stronger landings"],["notes","Songwriter notes"]].map(([k,l]) => btn(l, state.suggestTab===k, k==="color"?"#c47ed4":k==="landings"?"#e8c547":"#7eb8d4", `app.set('suggestTab','${k}')`)).join("");
-    const tabPanel = `<div class="suggest-tabs">${tabs}</div>${state.suggestTab === "landings" ? landingsPanel : state.suggestTab === "notes" ? notesPanel : colorPanel}`;
+
+    // Direction 1: What to try next
+    const hasProg = state.progChords && state.progChords.length >= 2;
+    const nextSuggestions = hasProg ? buildNextSuggestions(state.progChords, state.suggestKey) : [];
+    const nextCards = nextSuggestions.map((s, si) => {
+      const enc = encodeURIComponent(JSON.stringify(s.apply()));
+      return `<div class="idea-card" style="border-left:3px solid ${s.color}">
+        <div style="display:flex;align-items:baseline;gap:7px;margin-bottom:4px">
+          <span style="font-size:16px;line-height:1">${s.icon}</span>
+          <span style="font-size:13px;font-weight:600;color:var(--text-bright)">${esc(s.label)}</span>
+        </div>
+        <div class="info-text" style="margin-bottom:8px">${esc(s.detail)}</div>
+        <div class="row">
+          <button type="button" class="pill" style="--c:#e8c547;font-size:11px" onclick="app.previewNextSuggestion('${enc}')">Preview</button>
+          <button type="button" class="pill" style="--c:#6dd4a8;font-size:11px" onclick="app.applyNextSuggestion('${enc}')">Apply</button>
+        </div>
+      </div>`;
+    }).join("");
+    const nextPanel = `<div class="suggest-tab-panel">
+      <div class="section-label">What to try next</div>
+      <div class="info-text" style="margin-bottom:10px">${hasProg ? "Targeted suggestions for your specific progression — each one is a single-chord change or addition." : "Build or load a progression first, then come back here for targeted suggestions."}</div>
+      ${hasProg && nextCards ? `<div class="saved-list">${nextCards}</div>` : `<div class="info-text">${hasProg ? "Your progression looks pretty complete — try Color chords or Stronger landings for more ideas." : ""}</div>`}
+    </div>`;
+
+    // Direction 2: Scenarios
+    const scenarioCards = SCENARIOS.map(sc => {
+      if (!hasProg) {
+        return `<div class="idea-card" style="opacity:0.5"><div class="progression">${sc.icon} ${esc(sc.label)}</div><div class="info-text">${esc(sc.desc)}</div></div>`;
+      }
+      const variation = buildScenarioVariation(state.progChords, state.suggestKey, sc.id);
+      if (!variation) return "";
+      const enc = encodeURIComponent(JSON.stringify(variation));
+      const display = variation.map(chordSymbol).join("  →  ");
+      return `<div class="idea-card">
+        <div style="display:flex;align-items:baseline;gap:7px;margin-bottom:3px">
+          <span style="font-size:15px">${sc.icon}</span>
+          <span style="font-size:13px;font-weight:600;color:var(--text-bright)">${esc(sc.label)}</span>
+        </div>
+        <div class="info-text" style="margin-bottom:3px">${esc(sc.desc)}</div>
+        <div class="progression" style="margin-bottom:8px">${esc(display)}</div>
+        <div class="row">
+          <button type="button" class="pill" style="--c:#e8c547;font-size:11px" onclick="app.playSuggested('${enc}')">Preview</button>
+          <button type="button" class="pill" style="--c:#6dd4a8;font-size:11px" onclick="app.loadSuggestedHere('${enc}')">Use this</button>
+        </div>
+      </div>`;
+    }).join("");
+    const scenariosPanel = `<div class="suggest-tab-panel">
+      <div class="section-label">Scenarios</div>
+      <div class="info-text" style="margin-bottom:10px">${hasProg ? "Shape your progression for a specific section — each scenario is a variation of what you have." : "Build or load a progression first, then shape it for a verse, chorus, bridge, or mood."}</div>
+      <div class="saved-list">${scenarioCards}</div>
+    </div>`;
+
+    const tabs = [["color","Color chords"],["landings","Stronger landings"],["next","What to try next"],["scenarios","Scenarios"],["notes","Songwriter notes"]].map(([k,l]) => btn(l, state.suggestTab===k, k==="color"?"#c47ed4":k==="landings"?"#e8c547":k==="next"?"#6dd4a8":k==="scenarios"?"#e8823a":"#7eb8d4", `app.set('suggestTab','${k}')`)).join("");
+    const tabPanel = `<div class="suggest-tabs">${tabs}</div>${state.suggestTab === "landings" ? landingsPanel : state.suggestTab === "notes" ? notesPanel : state.suggestTab === "next" ? nextPanel : state.suggestTab === "scenarios" ? scenariosPanel : colorPanel}`;
 
     const currentChips = state.progChords.length
       ? state.progChords.map((c,i) => {
@@ -3872,6 +4128,17 @@
     playScale(root, intervals) { intervals.forEach((iv, i) => audio.playNote(transpose(root, iv), 4, 0.5, i * 0.18)); },
     // Suggester
     setSuggestKey(k) { state.suggestKey = k; state.suggestIdeaOffset = 0; state.suggestShowAllIdeas = false; render(); },
+    previewNextSuggestion(enc) { try { const chords = JSON.parse(decodeURIComponent(enc)); audio.playProgression(chords, false); } catch(e) {} },
+    applyNextSuggestion(enc) {
+      try {
+        const chords = JSON.parse(decodeURIComponent(enc));
+        app._rememberProgression();
+        state.progChords = chords.slice(0, 8);
+        state.suggestFlashIdx = state.progChords.length - 1;
+        toast("Applied — tap Undo to go back");
+        render();
+      } catch(e) {}
+    },
     setSuggestMood(k) { state.suggestMood = k; state.suggestIdeaOffset = 0; state.suggestShowAllIdeas = false; state.suggestRandom = null; state.suggestRandomBassExpl = null; render(); },
     setSuggestFilter(k) { state.suggestFilter = k; state.suggestIdeaOffset = 0; state.suggestShowAllIdeas = false; render(); },
     refreshIdeas() { const mood = SUGGEST_MOODS[state.suggestMood]; const total = mood && mood.progs ? mood.progs.length : 1; state.suggestIdeaOffset = ((state.suggestIdeaOffset || 0) + 3) % Math.max(total, 1); state.suggestShowAllIdeas = false; render(); },
@@ -3895,13 +4162,16 @@
     applyBassStyle(style) {
       if (!state.progChords || state.progChords.length < 2) return;
       const key = state.suggestKey || state.selectedKey || state.progChords[0].key;
+      // In a minor key, pedal and smooth modes work the same but the tonic
+      // is minor — no theory change needed, just ensures the right key is used.
+      const isMinorCtx = detectMinorKey(state.progChords);
       app._rememberProgression();
       const result = optimizeBassLine(state.progChords, key, style);
       if (result.changed) {
         state.progChords = result.chords;
         state.studyBassApplied = true;
         state.studyBassExpl = result.explanation;
-        toast(result.explanation || "Bass line shaped");
+        toast(result.explanation || (isMinorCtx ? "Bass line shaped (minor key)" : "Bass line shaped"));
       } else {
         toast("No smoother bass voicing found for this style");
       }
