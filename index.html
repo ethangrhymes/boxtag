@@ -400,6 +400,7 @@
   const INSTRUMENTS = {
     "guitar": {
       label: "Guitar (6-string)",
+      maxFret: 15,
       tunings: {
         "EADGBE": { label: "EADGBE — standard", strings: ["E","A","D","G","B","E"], octaves: [2,2,3,3,3,4] },
         "DADGBE": { label: "Drop D", strings: ["D","A","D","G","B","E"], octaves: [2,2,3,3,3,4] },
@@ -411,6 +412,7 @@
     },
     "tenor": {
       label: "Tenor Guitar",
+      maxFret: 12,
       tunings: {
         "CGDA": { label: "CGDA — standard (fifths)", strings: ["C","G","D","A"], octaves: [3,3,4,4] },
         "GDAE": { label: "GDAE — Irish / octave mandolin", strings: ["G","D","A","E"], octaves: [2,3,3,4] },
@@ -420,6 +422,7 @@
     },
     "bass": {
       label: "Bass Guitar",
+      maxFret: 15,
       tunings: {
         "EADG": { label: "EADG — standard 4-string", strings: ["E","A","D","G"], octaves: [1,1,2,2] },
         "DADG": { label: "DADG — drop D", strings: ["D","A","D","G"], octaves: [1,1,2,2] },
@@ -429,10 +432,12 @@
     },
     "mandolin": {
       label: "Mandolin",
+      maxFret: 12,
       tunings: { "GDAE": { label: "GDAE — standard (fifths)", strings: ["G","D","A","E"], octaves: [3,4,4,5] } }
     },
     "ukulele": {
       label: "Ukulele",
+      maxFret: 12,
       tunings: {
         "GCEA": { label: "GCEA — standard (re-entrant)", strings: ["G","C","E","A"], octaves: [4,4,4,4] },
         "DGBE": { label: "DGBE — baritone", strings: ["D","G","B","E"], octaves: [3,3,3,4] }
@@ -440,6 +445,7 @@
     },
     "plectrum": {
       label: "Plectrum Banjo",
+      maxFret: 12,
       tunings: {
         "CGBD": { label: "CGBD — standard plectrum", strings: ["C","G","B","D"], octaves: [3,3,3,4] },
         "DGBD": { label: "DGBD — Chicago banjo", strings: ["D","G","B","D"], octaves: [3,3,3,4] }
@@ -447,9 +453,16 @@
     },
     "custom": {
       label: "Custom",
+      maxFret: 12,
       tunings: { "CUSTOM": { label: "Custom — enter notes (4–6)", strings: ["C","G","D","A"], octaves: [3,3,4,4] } }
     }
   };
+
+  // Returns the practical maximum fret for the current instrument.
+  // Uses the user-configured maxFrets setting when set; otherwise the instrument default.
+  function getMaxFret() {
+    return state.maxFrets || (INSTRUMENTS[state.instrument] || {}).maxFret || 12;
+  }
 
   // Intervals — semitone count 0..11 plus octave handling done at runtime
   const INTERVALS = {
@@ -1029,12 +1042,13 @@
     diatonicMode: "major",
     diatonicSevenths: false,
     fretRange: [0, 12],
+    maxFrets: 12,              // user-configurable total fret count (Setup panel)
+    scalesSmartPos: false,     // whether to show smart-scored position hints (★)
     progChords: [{key:"G",type:"maj"},{key:"D",type:"maj"},{key:"E",type:"min"},{key:"C",type:"maj"}],
     editingIdx: 0,
     progLibOpen: false,
     activeGenre: "Alt / Rock",
     showShared: false,
-    showVL: false,
     progMapMode: "combined",
     sharedDotMode: "single",   // "single" | "shared" — multicolor shared-tone dots in combined map
     dockCollapsed: false,       // whether the Studio mini-dock is collapsed to a thin tab
@@ -1074,7 +1088,6 @@
     suggestBassStyle: "none",    // none|smooth|descend|pedal|chromatic (randomizer + surprise)
     studyBassApplied: false,     // whether Study's "Shape bass" has been applied
     studyBassExpl: null,         // explanation text for the applied bass shape
-    suggestShowBorrowed: false,
     suggestShowAllIdeas: false,  // reveal all mood ideas instead of the featured row
     suggestIdeaOffset: 0,        // rotates the featured idea row
     suggestFilter: "all",       // all, simple, classic, darker, loopable, chorus
@@ -2066,8 +2079,11 @@
     const scaleTones = buildTones(root, scaleDef.intervals);
     const degLabels = degreeLabelsFor(scaleDef.intervals, state.scalesType);
     const positions = scalePositions(strings, scaleTones, root);
-    let winLo = 0, winHi = 12;
-    if (state.scalesPosition != null && positions[state.scalesPosition]) [winLo, winHi] = positions[state.scalesPosition];
+    let winLo = 0, winHi = getMaxFret();
+    if (state.scalesPosition != null && positions[state.scalesPosition]) {
+      winLo = positions[state.scalesPosition].start;
+      winHi = positions[state.scalesPosition].end;
+    }
     const displayFrets = Array.from({ length: winHi - winLo + 1 }, (_, i) => i + winLo);
     const lefty = state.leftHanded;
     const drawFrets = lefty ? [...displayFrets].reverse() : displayFrets;
@@ -2090,8 +2106,8 @@
     const labelAnchor = lefty ? "start" : "middle";
     const title = `${spell(root)} ${scaleDef.label}`;
     const posLabel = state.scalesPosition != null && positions[state.scalesPosition]
-      ? `position ${state.scalesPosition + 1}, frets ${winLo}–${winHi}`
-      : `whole neck, frets ${winLo}–${winHi}`;
+      ? positionLabel(positions[state.scalesPosition])
+      : `whole neck, frets 0–${getMaxFret()}`;
 
     let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="background:${cardThemeBg};font-family:Georgia,serif;">`;
     svg += `<rect width="${W}" height="${H}" fill="${cardThemeBg}"/>`;
@@ -2269,7 +2285,8 @@
     const chordColor = chordDef.color;
     const sharedTones = state.showShared ? getShared() : new Set();
     const strings = getOpenStrings();
-    const rangeButtons = [[0,12,"All"],[0,5,"0–5"],[3,8,"3–8"],[5,12,"5–12"],[7,12,"7–12"]]
+    const maxFret = getMaxFret();
+    const rangeButtons = [[0,maxFret,"All"],[0,5,"0–5"],[3,8,"3–8"],[5,10,"5–10"],[7,maxFret,`7–${maxFret}`]]
       .map(([a,b,l]) => btn(l, state.fretRange[0] === a && state.fretRange[1] === b, "#a8c4e8", `app.setFretRange(${a},${b})`)).join("");
     const numberRow = displayFrets.map(f => `<div class="fret-num ${[3,5,7,9,12].includes(f) ? "marked" : ""}">${f}</div>`).join("");
     const lefty = state.leftHanded;
@@ -2415,6 +2432,7 @@
         <div class="field"><label>Instrument</label><select onchange="app.setInstrument(this.value)" aria-label="Instrument">${instOptions}</select></div>
         <div class="field"><label>Tuning</label><select onchange="app.setTuning(this.value)" aria-label="Tuning">${tuningOptions}</select></div>
         <div class="field grow"><label>Capo</label><div class="row">${capoButtons}</div>${state.capo>0?`<div class="info-text" style="margin-top:8px">Sounding tuning: ${esc(getOpenStrings().map(s=>noteAtFret(s,state.capo)).join(" "))}</div>`:""}</div>
+        <div class="field"><label>Total frets <span style="font-size:10px;color:var(--muted);font-weight:normal">— for positions &amp; range</span></label><div style="display:flex;align-items:center;gap:8px"><input type="number" min="8" max="30" value="${state.maxFrets}" onchange="app.setMaxFrets(parseInt(this.value))" style="width:64px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:13px" aria-label="Total frets" /><span style="font-size:12px;color:var(--muted)">frets (8–30)</span></div><div class="info-text" style="margin-top:4px">Affects scale position boxes and the fretboard range. Default 12 covers most instruments.</div></div>
         ${customField}
       </div>
     </div>`;
@@ -2522,12 +2540,25 @@
       } else {
         const note = noteAtFret(strings[stringIndex], fp);
         const isRoot = note === root;
+        // isBass: this position is the lowest sounding string in this voicing
+        // AND the note matches state.selectedBass (slash chord target)
+        const targetBass = state.selectedBass || null;
+        const isLowestSounding = voicing.slice(0, stringIndex).every(f => f === null);
+        const isBass = !!(targetBass && targetBass !== root && note === targetBass && isLowestSounding);
         const fi = drawFrets.indexOf(fp);
         const pos = fi >= 0 ? fi * colW + colW / 2 - 7 : -100;
         if (fp === 0) {
-          cell = `<div style="position:absolute;${lefty?"right":"left"}:-13px;top:-6px;width:11px;height:11px;border-radius:50%;border:2px solid ${isRoot ? "var(--text-bright)" : chordColor};background:transparent" title="${esc(note)} (open)"></div>`;
+          // Open string circle — highlight bass note with stronger border and B label
+          cell = `<div style="position:absolute;${lefty?"right":"left"}:-13px;top:-6px;width:11px;height:11px;border-radius:50%;border:2px solid ${isRoot ? "var(--text-bright)" : isBass ? chordColor : chordColor};background:transparent" title="${esc(note)} (open${isBass?" · bass note":""})">
+            ${isBass ? `<span style="position:absolute;bottom:-10px;left:50%;transform:translateX(-50%);font-size:6px;font-weight:bold;color:${chordColor};font-family:monospace">B</span>` : ""}
+          </div>`;
         } else {
-          cell = `<div style="position:absolute;left:${pos}px;top:-7px;width:15px;height:15px;border-radius:50%;background:${isRoot ? "var(--root-fill)" : chordColor};border:${isRoot ? `2px solid ${chordColor}` : "none"};z-index:2;display:flex;align-items:center;justify-content:center" title="${esc(note)}"><span style="font-size:7px;font-weight:bold;color:${isRoot ? chordColor : "var(--dot-text)"};font-family:monospace">${isRoot ? "R" : ""}</span></div>`;
+          // Fretted dot — bass note gets white fill + colored border (like root but labeled B)
+          const bg = isRoot ? "var(--root-fill)" : isBass ? "var(--root-fill)" : chordColor;
+          const border = isRoot || isBass ? `2px solid ${chordColor}` : "none";
+          const label = isRoot ? "R" : isBass ? "B" : "";
+          const labelColor = isRoot || isBass ? chordColor : "var(--dot-text)";
+          cell = `<div style="position:absolute;left:${pos}px;top:-7px;width:15px;height:15px;border-radius:50%;background:${bg};border:${border};z-index:2;display:flex;align-items:center;justify-content:center" title="${esc(note)}${isBass?" (bass note)":""}"><span style="font-size:7px;font-weight:bold;color:${labelColor};font-family:monospace">${label}</span></div>`;
         }
       }
       const label = `<div style="width:16px;text-align:${lefty?"left":"right"};font-size:9px;color:var(--muted)">${esc(spell(strings[stringIndex]))}</div>`;
@@ -2817,6 +2848,8 @@
       </div></div>`;
     } else if (state.helpSection === "prefs") {
       body = `<div class="help-section"><h3>Settings &amp; preferences</h3><div class="sub">Open Preferences in the top bar.</div><dl class="help-faq">
+        <dt>Total frets</dt><dd>In <strong>⚙ Setup</strong>. Sets how many frets your instrument has (default 12). This controls how many scale position boxes appear, how far the Whole neck view extends, and which range buttons are available. Set it to 19 for a tenor guitar, 20 for a standard guitar, or whatever matches your actual instrument.</dd>
+        <dt>Scale positions — Smart mode (★)</dt><dd>In Fretboard → Scales, next to the Position label. By default the app shows traditional fixed position boxes (Open, 1st position, 2nd position, etc.) that match standard teaching method books. Turning Smart on adds a ★ to the position with the most scale tones on your specific tuning — useful when you want to know where the scale is most playable. It's purely a hint and never changes which positions exist.</dd>
         <dt>Appearance (dark / light)</dt><dd>The light and dark mode switch lives in Preferences. Your choice is saved on the device and remembered next time you open the app.</dd>
         <dt>Dot labels</dt><dd>Choose whether the fretboard dots show interval/degree labels (R, 3, 5) or the actual note names (C, E, G). Intervals help you see structure; note names help you learn the neck.</dd>
         <dt>Accidentals</dt><dd>How notes are spelled. <strong>Auto</strong> chooses sharps or flats to match the key (flat keys get flats). Or force <strong>Sharps</strong> or <strong>Flats</strong> everywhere.</dd>
@@ -2917,26 +2950,66 @@
   // ── Scales mode (dedicated scale studio) ────────────────────────────────────
   // Computes position "boxes": contiguous fret windows that contain a playable shape
   // of the scale, so players can practise one position at a time.
-  function scalePositions(strings, scaleTones, rootNote) {
-    // Build position windows anchored where the root falls on the lowest string,
-    // plus a root on the next string, giving practical mid-neck boxes. Each window is
-    // a 4-fret span clamped to 0–12.
-    const anchors = new Set();
-    // Roots on the lowest two strings make the most natural box anchors.
-    [0, 1].forEach(s => {
-      if (!strings[s]) return;
-      for (let f = 0; f <= 12; f++) {
-        if (noteAtFret(strings[s], f) === rootNote) anchors.add(Math.max(0, f - 1));
+  // Generates the fixed, predictable position windows for a given fret count.
+  // These match traditional teaching method positions — stable regardless of key or scale.
+  // Each window is 5 frets wide with overlapping boundaries so no position is stranded.
+  function getPositionWindows(maxFret) {
+    const m = maxFret || 12;
+    const windows = [];
+    // Open position is always first
+    windows.push({ start: 0, end: Math.min(4, m), label: "Open" });
+    // Build overlapping 5-fret boxes from fret 2 upward, stopping before the last box
+    // would be trivially short (< 3 frets remaining after the previous box end)
+    let pos = 2;
+    const posNames = ["1st","2nd","3rd","4th","5th","6th","7th","8th"];
+    let nameIdx = 0;
+    while (pos + 2 <= m) {
+      const end = Math.min(pos + 4, m);
+      const name = posNames[nameIdx] || `${pos}th`;
+      windows.push({ start: pos, end, label: `${name} position` });
+      nameIdx++;
+      pos += (end - pos >= 4) ? 4 : (m - pos); // advance 4 frets each step
+      if (pos >= m - 1) break;
+    }
+    // Add an Octave position at fret 12 only if:
+    // (a) fret 12 is within range, AND
+    // (b) no existing window already starts at or near fret 12 (within 1 fret), AND
+    // (c) there are enough frets for a meaningful window (at least 3 frets after 12)
+    if (m >= 14 && !windows.some(w => Math.abs(w.start - 12) <= 1)) {
+      windows.push({ start: 12, end: Math.min(16, m), label: "Octave" });
+    }
+    return windows;
+  }
+
+  // Score a position window by scale-tone density.
+  // Used as an optional hint (★) — never drives which positions exist.
+  function scorePositionWindow(w, strings, scaleTones, rootNote) {
+    let score = 0;
+    strings.forEach(open => {
+      for (let f = w.start; f <= w.end; f++) {
+        const note = noteAtFret(open, f);
+        if (scaleTones.includes(note)) score++;
+        if (note === rootNote) score += 2; // roots worth more
       }
     });
-    anchors.add(0); // always include open position
-    const windows = [...anchors]
-      .map(start => [Math.min(start, 9), Math.min(start + 3, 12)])
-      .filter(w => w[1] <= 12);
-    // Dedupe and sort by starting fret
-    const seen = new Set(), out = [];
-    windows.sort((a,b) => a[0] - b[0]).forEach(w => { const k = w.join("-"); if (!seen.has(k)) { seen.add(k); out.push(w); } });
-    return out.slice(0, 5);
+    return score;
+  }
+
+  // Returns the position windows for the current fret count, with scores attached.
+  // This is what renderScales and buildScaleSVG consume.
+  function scalePositions(strings, scaleTones, rootNote) {
+    const maxFret = getMaxFret();
+    const windows = getPositionWindows(maxFret);
+    return windows.map(w => ({
+      ...w,
+      score: scorePositionWindow(w, strings, scaleTones, rootNote)
+    }));
+  }
+
+  // Human-readable label for a position window.
+  // Uses the window's own label field — straightforward and traditional.
+  function positionLabel(w) {
+    return `${w.label} (frets ${w.start}–${w.end})`;
   }
 
   function renderScales() {
@@ -2955,12 +3028,13 @@
     const cmpTones = cmpDef ? buildTones(root, cmpDef.intervals) : [];
 
     const positions = scalePositions(strings, scaleTones, root);
-    let winLo = 0, winHi = 12;
+    let winLo = 0, winHi = getMaxFret();
     if (state.scalesPosition != null && positions[state.scalesPosition]) {
-      [winLo, winHi] = positions[state.scalesPosition];
+      winLo = positions[state.scalesPosition].start;
+      winHi = positions[state.scalesPosition].end;
     }
     const displayFrets = [];
-    for (let f = 0; f <= 12; f++) displayFrets.push(f);
+    for (let f = winLo; f <= winHi; f++) displayFrets.push(f);
 
     const keyRow = keyButtons(root, color, "app.setScalesKey");
     const typeButtons = Object.entries(SCALES).map(([k,v]) => btn(v.label, state.scalesType===k, v.color, `app.setScalesType('${k}')`)).join("");
@@ -2971,8 +3045,15 @@
       return `<span class="tone-pill ${isR?"root":""}" style="--c:${color}" onclick="app.playNote('${n}')">${esc(spell(n))} <span style="opacity:.6;font-size:10px">${esc(degLabels[iv])}</span></span>`;
     }).join("");
 
+    // Smart position: find highest-scoring window (optional hint only)
+    const bestPosIdx = positions.reduce((best, w, i) => w.score > positions[best].score ? i : best, 0);
     const posButtons = `<button type="button" class="pill ${state.scalesPosition===null?"active":""}" style="--c:${color}" onclick="app.set('scalesPosition',null)">Whole neck</button>` +
-      positions.map((w,i) => btn(`Pos ${i+1} (fr ${w[0]}–${w[1]})`, state.scalesPosition===i, color, `app.set('scalesPosition',${i})`)).join("");
+      positions.map((w, i) => {
+        const label = positionLabel(w);
+        const isBest = state.scalesSmartPos && i === bestPosIdx && positions.length > 1;
+        return btn(isBest ? `★ ${label}` : label, state.scalesPosition===i, color, `app.set('scalesPosition',${i})`);
+      }).join("");
+    const smartToggle = `<button type="button" class="pill" style="--c:${state.scalesSmartPos?"#e8c547":"#6f665a"};font-size:10px;padding:2px 8px" onclick="app.toggle('scalesSmartPos')" title="Smart position highlights the box with the most scale tones (★)">${state.scalesSmartPos?"★ Smart on":"★ Smart"}</button>`;
 
     const chordSuffix = qual => ({
       maj:"", min:"m", dim:"°", aug:"+",
@@ -3116,7 +3197,7 @@
       ${formulaHtml}
       <div class="card" style="margin-bottom:14px">
         <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start">
-          <div style="flex:1 1 260px"><div class="mini-label">Position</div><div class="row">${posButtons}</div></div>
+          <div style="flex:1 1 260px"><div class="mini-label" style="display:flex;align-items:center;gap:8px">Position ${smartToggle}</div><div class="row">${posButtons}</div></div>
           <div style="flex:1 1 200px"><div class="mini-label">Labels</div><div class="row">${btn("Degrees", state.scalesShowDegrees, color, "app.set('scalesShowDegrees',true)")}${btn("Note names", !state.scalesShowDegrees, color, "app.set('scalesShowDegrees',false)")}</div></div>
         </div>
       </div>
@@ -3455,8 +3536,10 @@
     chords.forEach((ch, i) => {
       if (i === 0) return;
       const info = romanInfoForChord(ch, key, mode);
-      // For vi/Am in major, suggest E7 before it
-      if (info.roman === "vi" || info.roman === "i") {
+      // Works for both major (vi, IV targets) and minor (i, iv, VI, III targets)
+      const isGoodTarget = info.roman === "vi" || info.roman === "i" || info.roman === "iv"
+        || (isMinor && (info.roman === "VI" || info.roman === "III" || info.roman === "iv"));
+      if (isGoodTarget) {
         const secDomRoot = transpose(ch.key, 7); // V of this chord
         const alreadyThere = i > 0 && chords[i-1].key === secDomRoot && isDominantLike(chords[i-1].type);
         if (!alreadyThere) {
@@ -3464,7 +3547,7 @@
           suggestions.push({
             type: "insert", icon: "→", color: "#e87a3a",
             label: `Add ${spell(secDomRoot)}7 before ${spell(ch.key)}${ch.type==="min"?"m":""}`,
-            detail: spell(secDomRoot) + "7 is the V of " + spell(ch.key) + " — creates a directed pull that makes the landing feel earned.",
+            detail: spell(secDomRoot) + "7 is the V of " + spell(ch.key) + (ch.type==="min"?"m":"") + " — creates a directed pull that makes the landing feel earned.",
             insertBefore: i,
             apply: () => { const n=[...chords]; n.splice(i, 0, secDom); return n.slice(0, 8); }
           });
@@ -3472,16 +3555,24 @@
       }
     });
 
-    // 6. Parallel minor swap for the tonic (I→i or i→I)
+    // 6. Parallel swap for the tonic (I→i for major, i→I for minor)
     if (chords.length >= 2) {
       const firstInfo = romanInfoForChord(chords[0], key, mode);
       if (firstInfo.roman === "I") {
         const iMin = { key: chords[0].key, type: "min" };
         suggestions.push({
           type: "swap", icon: "↔", color: "#c47ed4",
-          label: `Try ${spell(chords[0].key)}m to open (parallel minor tonic)`,
-          detail: "Starting on the parallel minor tonic can make the whole progression feel darker and more dramatic.",
+          label: `Try ${spell(chords[0].key)}m to open (parallel minor)`,
+          detail: "Starting on the parallel minor tonic makes the whole progression feel darker and more dramatic.",
           apply: () => { const n=[...chords]; n[0]=iMin; return n; }
+        });
+      } else if (firstInfo.roman === "i") {
+        const iMaj = { key: chords[0].key, type: "maj" };
+        suggestions.push({
+          type: "swap", icon: "↔", color: "#e8c547",
+          label: `Try ${spell(chords[0].key)} major to open (parallel major)`,
+          detail: "Starting on the parallel major tonic lifts the mood — same chords but a brighter, more hopeful feel.",
+          apply: () => { const n=[...chords]; n[0]=iMaj; return n; }
         });
       }
     }
@@ -3507,16 +3598,19 @@
     let result = [...chords];
 
     if (scenarioId === "chorus") {
-      // End on the tonic, make sure it has a strong pre-cadential chord
+      // End on the tonic with a strong pre-cadential chord.
       const home = romanToChord(isMinor ? "i" : "I", key);
-      const dom = romanToChord("V", key);
-      result = result.slice(0, result.length > 3 ? result.length - 1 : result.length);
-      // Ensure second-to-last is dominant-ish
-      if (result.length > 1) {
-        const prevInfo = romanInfoForChord(result[result.length-1], key, isMinor?"minor":"major");
-        if (prevInfo.role !== "tension") result[result.length-1] = dom;
+      const dom  = romanToChord(isMinor ? "V" : "V", key);
+      // Trim the last chord if it's already the tonic (add tension first)
+      result = result.slice(0, result.length > 2 ? result.length - 1 : result.length);
+      // Only replace/add dominant if last chord isn't already dominant-function
+      const lastInfo = result.length ? romanInfoForChord(result[result.length-1], key, isMinor?"minor":"major") : null;
+      if (!lastInfo || (lastInfo.role !== "tension" && lastInfo.roman !== "V" && lastInfo.roman !== "V7")) {
+        // Avoid adding a duplicate of the chord before it
+        const prevRoot = result.length > 1 ? result[result.length-2].key : null;
+        if (dom.key !== prevRoot) result.push(dom);
       }
-      result.push(home);
+      result.push({ ...home });
     }
     else if (scenarioId === "verse") {
       // End on V or V7 to keep tension
@@ -3532,13 +3626,25 @@
       result = result.slice(0, 8);
     }
     else if (scenarioId === "dark") {
-      // Swap the tonic to minor if major, add iv or bVI
-      result = result.map(c => {
-        const info = romanInfoForChord(c, key, isMinor?"minor":"major");
-        if (info.roman === "I") return { ...c, type: "min" };
-        if (info.roman === "IV") return { ...c, type: "min" };
-        return c;
-      });
+      // In major: swap I→minor and IV→minor for a parallel-minor feel.
+      // In minor: deepen the existing minor feel by adding borrowed flat-VI or flattening the V back to v.
+      if (isMinor) {
+        result = result.map(c => {
+          const info = romanInfoForChord(c, key, "minor");
+          // Swap major V back to minor v (remove the harmonic-minor leading tone)
+          if (info.roman === "V" && c.type === "maj") return { ...c, type: "min" };
+          // Swap major VII (Aeolian subtonic) to a dim chord for tension
+          if (info.roman === "VII" && c.type === "maj") return { ...c, type: "dim" };
+          return c;
+        });
+      } else {
+        result = result.map(c => {
+          const info = romanInfoForChord(c, key, "major");
+          if (info.roman === "I")  return { ...c, type: "min" };
+          if (info.roman === "IV") return { ...c, type: "min" };
+          return c;
+        });
+      }
     }
     else if (scenarioId === "lift") {
       // Add a bVII or major VI before the end
@@ -3685,7 +3791,7 @@
         <div class="progression" style="margin-bottom:8px">${esc(display)}</div>
         <div class="row">
           <button type="button" class="pill" style="--c:#e8c547;font-size:11px" onclick="app.playSuggested('${enc}')">Preview</button>
-          <button type="button" class="pill" style="--c:#6dd4a8;font-size:11px" onclick="app.loadSuggestedHere('${enc}')">Use this</button>
+          <button type="button" class="pill" style="--c:#6dd4a8;font-size:11px" onclick="app.loadSuggestedHere('${enc}','${sc.label}')">Use this</button>
         </div>
       </div>`;
     }).join("");
@@ -3845,7 +3951,7 @@
         <div class="mini-label">Scale position to chart</div>
         <div class="row">
           <button type="button" class="pill ${state.scalesPosition===null?"active":""}" style="--c:${scaleDef.color}" onclick="app.set('scalesPosition',null)">Whole neck</button>
-          ${positions.map((w, i) => btn(`Pos ${i+1} (fr ${w[0]}–${w[1]})`, state.scalesPosition === i, scaleDef.color, `app.set('scalesPosition',${i})`)).join("")}
+          ${positions.map((w, i) => btn(positionLabel(w), state.scalesPosition === i, scaleDef.color, `app.set('scalesPosition',${i})`)).join("")}
         </div>
       </div>` : "";
 
@@ -3853,7 +3959,7 @@
     if (effective === "scale") {
       previewLabel = `${spell(state.scalesKey)} ${scaleDef.label}`;
       const posLabel = state.scalesPosition != null && positions[state.scalesPosition]
-        ? ` · Position ${state.scalesPosition + 1} (frets ${positions[state.scalesPosition][0]}–${positions[state.scalesPosition][1]})`
+        ? ` · ${positionLabel(positions[state.scalesPosition])}`
         : " · Whole neck";
       previewSub = `Scale chart${posLabel}. Degree labels appear on every scale note. To change the scale itself, open Fretboard → Scales.`;
     } else if (effective === "progression" && hasProg) {
@@ -4034,6 +4140,14 @@
     setMode(mode) {
       if (state.mode === "metronome" && mode !== "metronome") { audio.stopMetronome(); state.metroRunning = false; state.metroCurrentBeat = -1; }
       if (state.mode === "progression" && mode !== "progression") { audio.stopProgression(); }
+      // Entering Studio fresh — clear any stale insert position
+      // Also sync the analysis key so Studio reflects where you were working
+      if (mode === "suggest" && state.mode !== "suggest") {
+        state.suggestInsertIdx = null;
+        if (state.selectedKey && state.selectedKey !== state.suggestKey) {
+          state.suggestKey = state.selectedKey;
+        }
+      }
       state.mode = mode; render._scrollLeft = null; render();
     },
     setSelectedKey(k) { state.selectedKey = k; state.diatonicKey = k; render(); },
@@ -4044,18 +4158,49 @@
     setScaleChordMode(mode) { state.scalesChordMode = mode === "triad" ? "triad" : "seventh"; state.scalesHighlightChord = null; render(); },
     toggleScaleChord(i) { state.scalesHighlightChord = state.scalesHighlightChord === i ? null : i; render(); },
     playScaleRun(root, intervals) {
-      // Play the scale ascending then descending, at the user's tempo, at real-ish register.
+      // Traditional scale playback: ascend from root to octave, then descend back to root.
+      // Octave management: increment when a note's chromatic index wraps (i.e. the next
+      // pitch-class is lower than the previous, meaning we crossed a C boundary).
       const up = intervals.map(iv => transpose(root, iv));
-      const seq = [...up, transpose(root, 12), ...up.slice().reverse()];
-      const step = Math.max(0.18, (Number(state.progTempo) || 800) / 1000 * 0.4);
-      let oct = 3, prevIdx = -1;
-      seq.forEach((n, i) => {
-        const idx = CHROMATIC.indexOf(n);
-        if (i > 0 && idx <= prevIdx && i <= up.length) oct++;
-        if (i > up.length && idx >= prevIdx) oct = Math.max(3, oct - (idx > prevIdx ? 1 : 0));
-        prevIdx = idx;
-        audio.playNote(n, i <= up.length ? 4 : 4, 0.45, i * step);
+      const octaveRoot = transpose(root, 12); // same note, one octave higher
+      // Full sequence: ascending notes + the octave root + descending notes + final root
+      const ascending  = up;                              // e.g. C D E F G A B
+      const descending = [...up].reverse();               // e.g. B A G F E D C (back to root)
+      // Scale playback at a singable pace — 0.5s per note ≈ 120 BPM quarter notes.
+      // Independent of progTempo (which controls chord playback, not scale practice).
+      const step = 0.5;
+
+      let time = 0;
+      let oct = 4; // start at octave 4
+      let prevChromatic = CHROMATIC.indexOf(ascending[0]);
+
+      // Play ascending: each note gets one tick, octave increments when chromatic index wraps
+      ascending.forEach((note, i) => {
+        const ci = CHROMATIC.indexOf(note);
+        if (i > 0 && ci <= prevChromatic) oct++; // wrapped — crossed an octave boundary
+        prevChromatic = ci;
+        audio.playNote(note, oct, 0.45, time);
+        time += step;
       });
+
+      // The octave root — same chromatic index as root, but one octave higher than whatever we ended on
+      const rootCi = CHROMATIC.indexOf(root);
+      if (rootCi <= prevChromatic) oct++; // root wraps from the 7th
+      audio.playNote(root, oct, 0.5, time);
+      time += step;
+      prevChromatic = rootCi;
+      // oct is now at the top octave
+
+      // Play descending: same logic in reverse — decrement oct when index wraps upward
+      descending.forEach(note => {
+        const ci = CHROMATIC.indexOf(note);
+        if (ci >= prevChromatic) oct--; // descending through an octave boundary
+        prevChromatic = ci;
+        audio.playNote(note, oct, 0.45, time);
+        time += step;
+      });
+      // Note: descending already ends on the root (same note as the starting root)
+      // so we don't need an explicit final root — it's the last note of descending.
     },
     setFretRange(a,b) { state.fretRange = [a,b]; render(); },
     loadDiatonic(root, type) { state.selectedKey = root; state.selectedType = type; render(); },
@@ -4125,7 +4270,21 @@
     playIdentified(root, key) { audio.playChord(buildTones(root, CHORD_TYPES[key].intervals), true); },
     // Modes
     setModeParentKey(k) { state.modeParentKey = k; render(); },
-    playScale(root, intervals) { intervals.forEach((iv, i) => audio.playNote(transpose(root, iv), 4, 0.5, i * 0.18)); },
+    playScale(root, intervals) {
+      // Ascending-only preview (used by modes cards). Same octave logic as playScaleRun.
+      const step = 0.5; // singable pace, same as playScaleRun
+      let oct = 4, prevCi = CHROMATIC.indexOf(root);
+      intervals.forEach((iv, i) => {
+        const note = transpose(root, iv);
+        const ci = CHROMATIC.indexOf(note);
+        if (i > 0 && ci <= prevCi) oct++;
+        prevCi = ci;
+        audio.playNote(note, oct, 0.45, i * step);
+      });
+      // Land on the octave root
+      if (CHROMATIC.indexOf(root) <= prevCi) oct++;
+      audio.playNote(root, oct, 0.45, intervals.length * step);
+    },
     // Suggester
     setSuggestKey(k) { state.suggestKey = k; state.suggestIdeaOffset = 0; state.suggestShowAllIdeas = false; render(); },
     previewNextSuggestion(enc) { try { const chords = JSON.parse(decodeURIComponent(enc)); audio.playProgression(chords, false); } catch(e) {} },
@@ -4309,7 +4468,7 @@
         render();
       } catch (e) {}
     },
-    loadSuggestedHere(enc) {
+    loadSuggestedHere(enc, label) {
       try {
         const chords = JSON.parse(decodeURIComponent(enc));
         app._rememberProgression();
@@ -4317,7 +4476,7 @@
         state.editingIdx = 0;
         state.suggestInsertIdx = null;
         state.suggestFlashIdx = state.progChords.length - 1;
-        toast("Current progression updated");
+        toast(label ? label + " — tap Undo to go back" : "Current progression updated");
         render();
       } catch (e) {}
     },
@@ -4404,6 +4563,18 @@
       state.openStrings = [...t.strings];
       state.openOctaves = t.octaves ? [...t.octaves] : null;
       state.customTuningText = state.openStrings.join(" ");
+      // Default fret range to 12 — the standard, predictable default.
+      // Users can raise this via "Total frets" in Setup.
+      state.maxFrets = 12;
+      state.fretRange = [0, 12];
+      render();
+    },
+    setMaxFrets(n) {
+      if (!n || isNaN(n)) return; // ignore empty/partial — don't snap back
+      const clamped = Math.max(8, Math.min(30, n));
+      state.maxFrets = clamped;
+      // Update the fret range "All" default to match
+      if (state.fretRange[0] === 0) state.fretRange = [0, clamped];
       render();
     },
     setTuning(name) {
